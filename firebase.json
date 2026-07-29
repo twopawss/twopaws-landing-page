@@ -20,7 +20,11 @@
           },
           {
             "key": "X-Frame-Options",
-            "value": "DENY"
+            "value": "SAMEORIGIN"
+          },
+          {
+            "key": "Content-Security-Policy",
+            "value": "frame-ancestors 'self'"
           },
           {
             "key": "Referrer-Policy",
@@ -78,7 +82,19 @@
         "destination": "/index.html"
       },
       {
+        "source": "/login",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/account",
+        "destination": "/index.html"
+      },
+      {
         "source": "/account/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/cart",
         "destination": "/index.html"
       },
       {
@@ -86,7 +102,15 @@
         "destination": "/index.html"
       },
       {
+        "source": "/checkout",
+        "destination": "/index.html"
+      },
+      {
         "source": "/checkout/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/orders",
         "destination": "/index.html"
       },
       {
@@ -94,7 +118,27 @@
         "destination": "/index.html"
       },
       {
+        "source": "/payment",
+        "destination": "/index.html"
+      },
+      {
         "source": "/payment/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/events",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/events/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/organizer",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/organizer/**",
         "destination": "/index.html"
       },
       {

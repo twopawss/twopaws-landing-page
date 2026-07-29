@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { doc, onSnapshot } from "firebase/firestore";
 import ShopShell from "@/components/shop/ShopShell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +23,11 @@ export default function PaymentReturnPage() {
       null
     );
   }, [params]);
+  const eventSlug =
+    params.get("eventSlug") ||
+    window.sessionStorage.getItem("twopaws:pending-event-slug");
+  const pendingEventOrder =
+    window.sessionStorage.getItem("twopaws:pending-event-order");
   const [status, setStatus] = useState<string | null>(null);
   const [orderSummary, setOrderSummary] = useState<{
     totalPrice?: number;
@@ -104,6 +109,20 @@ export default function PaymentReturnPage() {
         clearedGuestCartRef.current = null;
       });
   }, [clearCart, orderId, orderSummary, status]);
+
+  const eventOrderId = orderId || pendingEventOrder;
+  if (
+    eventSlug &&
+    eventOrderId &&
+    (pendingEventOrder || params.get("eventOrder") === "true")
+  ) {
+    return (
+      <Navigate
+        replace
+        to={`/events/${encodeURIComponent(eventSlug)}/payment-result?orderId=${encodeURIComponent(eventOrderId)}`}
+      />
+    );
+  }
 
   return (
     <ShopShell>

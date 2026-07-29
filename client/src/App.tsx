@@ -32,6 +32,12 @@ import AccountPage from "@/pages/account";
 import LoginPage from "@/pages/login";
 import PaymobPaymentPage from "@/pages/payment/paymob";
 import PaymentReturnPage from "@/pages/payment/return";
+import PublicEventPage from "@/pages/events/event-public";
+import EventLeaderboardPage from "@/pages/events/leaderboard";
+import EventPaymentResultPage from "@/pages/events/payment-result";
+import EventOrdersPage from "@/pages/events/event-orders";
+import EventTicketDetailPage from "@/pages/events/ticket-detail";
+import OrganizerPage from "@/pages/organizer/organizer";
 
 const normalizePath = (path: string) => {
   const normalized = path.replace(/\/+$/, "");
@@ -144,6 +150,16 @@ function App() {
                   <Route path="/account" element={<AccountPage />} />
                   <Route path="/payment/paymob" element={<PaymobPaymentPage />} />
                   <Route path="/payment/return" element={<PaymentReturnPage />} />
+                  <Route path="/events/:eventSlug" element={<PublicEventPage />} />
+                  <Route path="/events/:eventSlug/checkout" element={<PublicEventPage />} />
+                  <Route path="/events/:eventSlug/payment-result" element={<EventPaymentResultPage />} />
+                  <Route path="/events/:eventSlug/leaderboard" element={<EventLeaderboardPage />} />
+                  <Route path="/account/event-orders" element={<EventOrdersPage />} />
+                  <Route path="/account/event-tickets/:ticketId" element={<EventTicketDetailPage />} />
+                  <Route path="/organizer" element={<OrganizerPage />} />
+                  <Route path="/organizer/events" element={<OrganizerPage />} />
+                  <Route path="/organizer/events/:eventId" element={<OrganizerPage />} />
+                  <Route path="/organizer/events/:eventId/:section" element={<OrganizerPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
