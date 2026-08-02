@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { trackMetaEvent } from "@/lib/metaPixel";
+import { trackMetaCustomEvent } from "@/lib/metaPixel";
 import Seo from "@/lib/seo/Seo";
 import { ANDROID_STORE_URL, IOS_STORE_URL } from "@/lib/seo/constants";
 
@@ -36,7 +36,7 @@ export default function DownloadRedirect() {
   }, [platform]);
 
   useEffect(() => {
-    trackMetaEvent("Lead", {
+    trackMetaCustomEvent("AppDownloadRedirect", {
       lead_type: "app_download_redirect",
       platform,
       destination: targetUrl,

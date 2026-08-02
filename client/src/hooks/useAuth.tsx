@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   createUserWithEmailAndPassword,
+  getAdditionalUserInfo,
   GoogleAuthProvider,
   onAuthStateChanged,
   OAuthProvider,
@@ -27,6 +28,11 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { isReactSnapPrerender } from "@/lib/isPrerender";
 
+type SocialSignInResult = {
+  user: User;
+  isNewUser: boolean;
+};
+
 type AuthContextValue = {
   user: User | null;
   userDisplayName: string | null;
@@ -40,8 +46,8 @@ type AuthContextValue = {
       phone?: string;
     }
   ) => Promise<User>;
-  signInWithGoogle: () => Promise<User>;
-  signInWithApple: () => Promise<User>;
+  signInWithGoogle: () => Promise<SocialSignInResult>;
+  signInWithApple: () => Promise<SocialSignInResult>;
   signOutUser: () => Promise<void>;
   userRef: ReturnType<typeof doc> | null;
 };
@@ -222,7 +228,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     provider.setCustomParameters({ prompt: "select_account" });
     const credential = await signInWithPopup(auth, provider);
     await upsertUserProfile(credential.user);
-    return credential.user;
+    return {
+      user: credential.user,
+      isNewUser: Boolean(getAdditionalUserInfo(credential)?.isNewUser),
+    };
   }, [upsertUserProfile]);
 
   const signInWithApple = useCallback(async () => {
@@ -231,7 +240,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     provider.addScope("name");
     const credential = await signInWithPopup(auth, provider);
     await upsertUserProfile(credential.user);
-    return credential.user;
+    return {
+      user: credential.user,
+      isNewUser: Boolean(getAdditionalUserInfo(credential)?.isNewUser),
+    };
   }, [upsertUserProfile]);
 
   const signOutUser = useCallback(async () => {

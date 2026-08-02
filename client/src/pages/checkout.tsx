@@ -43,7 +43,12 @@ import { useSuppliers } from "@/hooks/useSuppliers";
 import { formatCurrency } from "@/lib/format";
 import { db, functions } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
+import {
+  createMetaEventId,
+  META_PIXEL_CURRENCY,
+  trackMetaCustomEvent,
+  trackMetaEvent,
+} from "@/lib/metaPixel";
 import Seo from "@/lib/seo/Seo";
 
 const PROMO_STORAGE_KEY = "twopawsPromo";
@@ -157,6 +162,9 @@ export default function CheckoutPage() {
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const checkoutAttemptKeyRef = useRef<string | null>(null);
+  const checkoutTrackingIdRef = useRef<string | null>(null);
+  const initiateCheckoutTrackedRef = useRef(false);
+  const paymentMethodsTrackedRef = useRef(new Set<string>());
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
   const [customerForm, setCustomerForm] = useState<CustomerFormState>({
@@ -313,6 +321,35 @@ export default function CheckoutPage() {
     [cartItems]
   );
 
+  const metaCheckoutItems = useMemo(
+    () =>
+      cartItems
+        .map((item) => {
+          const unitPrice =
+            typeof item.unitPrice === "number"
+              ? item.unitPrice
+              : typeof item.product?.price === "number"
+                ? item.product.price
+                : 0;
+          const id = item.productIdValue ?? item.product?.id ?? item.id;
+          return { id, quantity: item.quantity ?? 1, item_price: unitPrice };
+        })
+        .filter((item) => Boolean(item.id)),
+    [cartItems]
+  );
+  const metaItemCount = useMemo(
+    () => metaCheckoutItems.reduce((sum, item) => sum + item.quantity, 0),
+    [metaCheckoutItems]
+  );
+  const metaCheckoutValue = useMemo(
+    () => metaCheckoutItems.reduce((sum, item) => sum + item.item_price * item.quantity, 0),
+    [metaCheckoutItems]
+  );
+
+  if (!checkoutTrackingIdRef.current) {
+    checkoutTrackingIdRef.current = createMetaEventId("checkout");
+  }
+
   useEffect(() => {
     if (authLoading || checkoutRequestItems.length === 0) {
       setCheckoutSummary(null);
@@ -395,6 +432,51 @@ export default function CheckoutPage() {
   const discount = checkoutSummary?.discount ?? 0;
   const shippingCost = checkoutSummary?.shipping ?? selectedZone?.rateEGP ?? 0;
   const totalPrice = checkoutSummary?.total ?? Math.max(subtotal - discount + shippingCost, 0);
+
+  useEffect(() => {
+    if (initiateCheckoutTrackedRef.current || metaCheckoutItems.length === 0) {
+      return;
+    }
+
+    trackMetaEvent(
+      "InitiateCheckout",
+      {
+        content_ids: metaCheckoutItems.map((item) => item.id),
+        contents: metaCheckoutItems,
+        value: metaCheckoutValue,
+        currency: META_PIXEL_CURRENCY,
+        num_items: metaItemCount,
+      },
+      { eventId: `${checkoutTrackingIdRef.current}_initiate` }
+    );
+    initiateCheckoutTrackedRef.current = true;
+  }, [metaCheckoutItems, metaCheckoutValue, metaItemCount]);
+
+  const handlePaymentMethodChange = (value: string) => {
+    const method = value as "cod" | "paymob";
+    setPaymentMethod(method);
+
+    if (
+      metaCheckoutItems.length === 0
+      || paymentMethodsTrackedRef.current.has(method)
+    ) {
+      return;
+    }
+
+    trackMetaEvent(
+      "AddPaymentInfo",
+      {
+        content_ids: metaCheckoutItems.map((item) => item.id),
+        contents: metaCheckoutItems,
+        value: checkoutSummary?.total ?? metaCheckoutValue,
+        currency: META_PIXEL_CURRENCY,
+        num_items: metaItemCount,
+        payment_method: method,
+      },
+      { eventId: `${checkoutTrackingIdRef.current}_payment_${method}` }
+    );
+    paymentMethodsTrackedRef.current.add(method);
+  };
 
   const resetAddressForm = () => {
     setAddressForm({
@@ -636,34 +718,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    const checkoutItems = cartItems
-      .map((item) => {
-        const unitPrice =
-          typeof item.unitPrice === "number"
-            ? item.unitPrice
-            : typeof item.product?.price === "number"
-              ? item.product.price
-              : 0;
-        const id = item.productIdValue ?? item.product?.id ?? item.id;
-        return { id, quantity: item.quantity ?? 1, item_price: unitPrice };
-      })
-      .filter((item) => Boolean(item.id));
-    const itemCount = checkoutItems.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
-    trackMetaEvent("InitiateCheckout", {
-      content_ids: checkoutItems.map((item) => item.id),
-      contents: checkoutItems,
-      value: checkoutSummary.total,
-      currency: META_PIXEL_CURRENCY,
-      num_items: itemCount,
-    });
-    trackMetaEvent("AddPaymentInfo", {
-      content_ids: checkoutItems.map((item) => item.id),
-      contents: checkoutItems,
-      value: checkoutSummary.total,
-      currency: META_PIXEL_CURRENCY,
-      num_items: itemCount,
-      payment_method: paymentMethod,
-    });
+    const checkoutItems = metaCheckoutItems;
+    const itemCount = metaItemCount;
 
     setSubmitting(true);
     try {
@@ -708,15 +764,19 @@ export default function CheckoutPage() {
       if (!order.orderId || !order.orderNumber) throw new Error("Unable to create order.");
 
       if (paymentMethod === "cod") {
-        trackMetaEvent("Purchase", {
-          content_ids: checkoutItems.map((item) => item.id),
-          contents: checkoutItems,
-          value: order.total,
-          currency: META_PIXEL_CURRENCY,
-          num_items: itemCount,
-          order_id: order.orderId,
-          payment_method: paymentMethod,
-        });
+        trackMetaCustomEvent(
+          "OrderPlaced",
+          {
+            content_ids: checkoutItems.map((item) => item.id),
+            contents: checkoutItems,
+            value: order.total,
+            currency: META_PIXEL_CURRENCY,
+            num_items: itemCount,
+            order_id: order.orderId,
+            payment_method: paymentMethod,
+          },
+          { eventId: createMetaEventId("OrderPlaced", order.orderId) }
+        );
       }
 
       if (paymentMethod === "paymob") {
@@ -1217,7 +1277,7 @@ export default function CheckoutPage() {
               <h3 className="text-lg font-semibold text-slate-900">Payment method</h3>
               <RadioGroup
                 value={paymentMethod}
-                onValueChange={(value) => setPaymentMethod(value as "cod" | "paymob")}
+                onValueChange={handlePaymentMethodChange}
                 className="space-y-2"
               >
                 <label className="flex items-start gap-3 rounded-xl border border-slate-100 p-3">

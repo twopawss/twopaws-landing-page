@@ -11,7 +11,7 @@ import { FaApple, FaGoogle } from "react-icons/fa";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import Seo from "@/lib/seo/Seo";
-import { trackMetaEvent } from "@/lib/metaPixel";
+import { createMetaEventId, trackMetaEvent } from "@/lib/metaPixel";
 
 export default function LoginPage() {
   const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
@@ -39,10 +39,18 @@ export default function LoginPage() {
   const handleSocialSignIn = async (provider: "google" | "apple") => {
     setLoading(true);
     try {
-      if (provider === "google") {
-        await signInWithGoogle();
-      } else {
-        await signInWithApple();
+      const result = provider === "google"
+        ? await signInWithGoogle()
+        : await signInWithApple();
+      if (result.isNewUser) {
+        trackMetaEvent(
+          "CompleteRegistration",
+          {
+            method: provider,
+            source_path: "/login",
+          },
+          { eventId: createMetaEventId("CompleteRegistration", result.user.uid) }
+        );
       }
       navigate(redirectTo);
     } catch (err) {
@@ -83,14 +91,18 @@ export default function LoginPage() {
           return;
         }
         const displayName = `${firstName.trim()} ${lastName.trim()}`.trim();
-        await signUp(email, password, {
+        const newUser = await signUp(email, password, {
           displayName,
           phone: phoneInput,
         });
-        trackMetaEvent("CompleteRegistration", {
-          method: "email",
-          source_path: "/login",
-        });
+        trackMetaEvent(
+          "CompleteRegistration",
+          {
+            method: "email",
+            source_path: "/login",
+          },
+          { eventId: createMetaEventId("CompleteRegistration", newUser.uid) }
+        );
       }
       navigate(redirectTo);
     } catch (err) {

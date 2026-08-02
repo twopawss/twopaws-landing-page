@@ -29,7 +29,7 @@ import { useSuppliers } from "@/hooks/useSuppliers";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
-import { META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
+import { META_PIXEL_CURRENCY, trackMetaCustomEvent, trackMetaEvent } from "@/lib/metaPixel";
 import Seo from "@/lib/seo/Seo";
 import { BASE_URL } from "@/lib/seo/constants";
 import { toPrerenderSafeImageSrc } from "@/lib/prerenderImage";
@@ -210,6 +210,8 @@ export default function ShopPage() {
   const { addItem, cartItems } = useCart();
   const { toast } = useToast();
   const hasRestoredScrollRef = useRef(false);
+  const lastTrackedSearchRef = useRef("");
+  const lastTrackedCategoryRef = useRef("");
   const [totalProductCount, setTotalProductCount] = useState<number | null>(null);
 
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
@@ -360,6 +362,43 @@ export default function ShopPage() {
     maxPrice,
     sort,
   ]);
+
+  useEffect(() => {
+    const query = deferredSearch.trim();
+    if (query.length < 2 || loading) {
+      if (!query) lastTrackedSearchRef.current = "";
+      return;
+    }
+
+    const normalizedQuery = query.toLowerCase();
+    const timer = window.setTimeout(() => {
+      if (lastTrackedSearchRef.current === normalizedQuery) return;
+      trackMetaEvent("Search", {
+        search_string: query,
+        content_category: "products",
+        result_count: filteredProducts.length,
+      });
+      lastTrackedSearchRef.current = normalizedQuery;
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, [deferredSearch, filteredProducts.length, loading]);
+
+  useEffect(() => {
+    if (selectedCategory === "all") {
+      lastTrackedCategoryRef.current = "";
+      return;
+    }
+    if (lastTrackedCategoryRef.current === selectedCategory) return;
+
+    const category = categories.find((item) => item.id === selectedCategory);
+    if (!category) return;
+    trackMetaCustomEvent("ViewCategory", {
+      category_id: category.id,
+      content_category: category.name ?? category.id,
+    });
+    lastTrackedCategoryRef.current = selectedCategory;
+  }, [categories, selectedCategory]);
 
   const hasPriceFilter = minPrice.trim() !== "" || maxPrice.trim() !== "";
   const hasNarrowingQuery =

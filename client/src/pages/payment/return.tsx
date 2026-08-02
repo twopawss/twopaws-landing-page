@@ -5,7 +5,7 @@ import ShopShell from "@/components/shop/ShopShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
-import { META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
+import { createMetaEventId, META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
 import Seo from "@/lib/seo/Seo";
 import { useCart } from "@/hooks/useCart";
 
@@ -84,12 +84,16 @@ export default function PaymentReturnPage() {
     const normalized = status.toUpperCase();
     const isPaid = normalized.includes("PAID") || normalized.includes("SUCCESS");
     if (!isPaid) return;
-    trackMetaEvent("Purchase", {
-      value: orderSummary?.totalPrice ?? 0,
-      currency: META_PIXEL_CURRENCY,
-      order_id: orderId,
-      payment_method: orderSummary?.paymentMethod,
-    });
+    trackMetaEvent(
+      "Purchase",
+      {
+        value: orderSummary?.totalPrice ?? 0,
+        currency: META_PIXEL_CURRENCY,
+        order_id: orderId,
+        payment_method: orderSummary?.paymentMethod,
+      },
+      { eventId: createMetaEventId("Purchase", orderId) }
+    );
     trackedRef.current = orderId;
   }, [orderId, status, orderSummary]);
 

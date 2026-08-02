@@ -7,7 +7,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
-import { initMetaPixel, trackMetaEvent, trackPageView } from "@/lib/metaPixel";
+import {
+  initMetaPixel,
+  persistMetaClickId,
+  trackMetaCustomEvent,
+  trackMetaEvent,
+  trackPageView,
+} from "@/lib/metaPixel";
 import { isReactSnapPrerender } from "@/lib/isPrerender";
 import { ANDROID_STORE_URL, IOS_STORE_URL } from "@/lib/seo/constants";
 import Landing from "@/pages/landing";
@@ -62,6 +68,7 @@ function MetaPixelTracker() {
 
   useEffect(() => {
     if (!enablePixel) return;
+    persistMetaClickId();
     trackPageView();
   }, [enablePixel, location.pathname, location.search]);
 
@@ -101,7 +108,7 @@ function MetaPixelTracker() {
           androidStoreUrl.searchParams.get("id");
       if (!matchesIosStore && !matchesAndroidStore) return;
 
-      trackMetaEvent("Lead", {
+      trackMetaCustomEvent("AppStoreClick", {
         lead_type: "app_download",
         platform: matchesIosStore ? "ios" : "android",
         destination: destinationUrl.href,
