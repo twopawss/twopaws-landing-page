@@ -23,15 +23,18 @@ const links = [
 export default function EventShell({
   children,
   fullWidth = false,
+  hideHeader = false,
 }: {
   children: ReactNode;
   fullWidth?: boolean;
+  hideHeader?: boolean;
 }) {
   const { user, signOutUser } = useAuth();
   return (
     <div className="min-h-screen bg-white text-slate-950">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
+      {!hideHeader && (
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <Sheet>
               <SheetTrigger asChild>
@@ -83,8 +86,9 @@ export default function EventShell({
               <Link to="/login">Sign in</Link>
             </Button>
           )}
-        </div>
-      </header>
+          </div>
+        </header>
+      )}
       <main className={fullWidth ? "w-full" : "mx-auto w-full max-w-[1480px] px-4 sm:px-6 lg:px-8"}>
         {children}
       </main>
