@@ -1,5 +1,5 @@
 import Seo from "@/lib/seo/Seo";
-import { BASE_URL, COMPANY_ADDRESS, COMPANY_ADDRESS_TEXT, COMPANY_LEGAL_NAME, CONTACT_EMAIL, CONTACT_PHONE, SUPPORT_HOURS_TEXT } from "@/lib/seo/constants";
+import { BASE_URL, COMPANY_ADDRESS, COMPANY_ADDRESS_TEXT, COMPANY_LEGAL_NAME, CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_DISPLAY, SUPPORT_HOURS_TEXT } from "@/lib/seo/constants";
 import MarketingIntro from "./MarketingIntro";
 import MarketingShell from "./MarketingShell";
 
@@ -44,7 +44,7 @@ export default function ContactPage() {
         </p>
         {CONTACT_PHONE ? (
           <p>
-            Call or WhatsApp <a className="text-slate-900 underline" href={`tel:${CONTACT_PHONE}`}>{CONTACT_PHONE}</a> during support hours.
+            Call or WhatsApp <a className="text-slate-900 underline" href={`tel:${CONTACT_PHONE}`}>{CONTACT_PHONE_DISPLAY}</a> during support hours.
           </p>
         ) : null}
         <p>

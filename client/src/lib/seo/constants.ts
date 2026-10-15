@@ -22,4 +22,5 @@ export const COMPANY_ADDRESS = {
 export const COMPANY_ADDRESS_TEXT = "Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt";
 export const SUPPORT_HOURS_TEXT = "Saturday to Thursday, 10:00 to 22:00 Cairo time";
 /** Set when the business publishes a support line; the contact page and schema pick it up automatically. */
-export const CONTACT_PHONE = "";
+export const CONTACT_PHONE = "+201055100908";
+export const CONTACT_PHONE_DISPLAY = "0105 510 0908";

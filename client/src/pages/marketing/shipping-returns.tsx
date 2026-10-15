@@ -1,5 +1,5 @@
 import Seo from "@/lib/seo/Seo";
-import { BASE_URL, COMPANY_ADDRESS_TEXT, COMPANY_LEGAL_NAME, CONTACT_EMAIL, CONTACT_PHONE, SUPPORT_HOURS_TEXT } from "@/lib/seo/constants";
+import { BASE_URL, COMPANY_ADDRESS_TEXT, COMPANY_LEGAL_NAME, CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_DISPLAY, SUPPORT_HOURS_TEXT } from "@/lib/seo/constants";
 import MarketingShell from "./MarketingShell";
 
 /**
@@ -145,7 +145,7 @@ export default function ShippingReturnsPage() {
         <h2 className="text-2xl font-semibold text-slate-900">Contact</h2>
         <p>
           {COMPANY_LEGAL_NAME}, {COMPANY_ADDRESS_TEXT}. Email <a className="text-slate-900 underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-          {CONTACT_PHONE ? <> or call <a className="text-slate-900 underline" href={`tel:${CONTACT_PHONE}`}>{CONTACT_PHONE}</a></> : null}. Support hours: {SUPPORT_HOURS_TEXT}.
+          {CONTACT_PHONE ? <> or call <a className="text-slate-900 underline" href={`tel:${CONTACT_PHONE}`}>{CONTACT_PHONE_DISPLAY}</a></> : null}. Support hours: {SUPPORT_HOURS_TEXT}.
         </p>
       </section>
     </MarketingShell>

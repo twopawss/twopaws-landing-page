@@ -3,12 +3,7 @@ import twoPawsLogo from "../../../../attached_assets/logotrans-brand-800.webp";
 import insta from "../../../../attached_assets/instagram.svg";
 import facebook from "../../../../attached_assets/facebook.svg";
 import tiktok from "../../../../attached_assets/tiktok.svg";
-import {
-  ANDROID_STORE_URL,
-  CONTACT_EMAIL,
-  INSTAGRAM_URL,
-  IOS_STORE_URL,
-} from "@/lib/seo/constants";
+import { ANDROID_STORE_URL, CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_DISPLAY, INSTAGRAM_URL, IOS_STORE_URL } from "@/lib/seo/constants";
 
 export default function SiteFooter() {
   return (
@@ -95,6 +90,11 @@ export default function SiteFooter() {
               <li>
                 <a href="/contact/" className="transition-colors hover:text-black">
                   Contact Us
+                </a>
+              </li>
+              <li>
+                <a href={`tel:${CONTACT_PHONE}`} className="transition-colors hover:text-black">
+                  {CONTACT_PHONE_DISPLAY}
                 </a>
               </li>
               <li>
