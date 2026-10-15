@@ -129,3 +129,47 @@ Configure your Paymob dashboard to send webhooks to the deployed `paymobWebhook`
 
 ### Firestore indexes
 No new composite indexes are required with the current queries. If you later add `orderBy` clauses to the cart, address, or order queries, Firestore may prompt you to create composite indexes.
+
+## Build, deploy and CI
+
+`npm run build` runs `vite build` and then `scripts/postbuild.mjs`, which runs
+each post-build step with `SSG_STRICT=true` and stops at the first failure:
+
+1. `generate-product-ssg.mjs` - one `dist/shop/product/<id>/index.html` per product
+2. `generate-shop-ssg.mjs` - `dist/shop/`, `dist/shop/suppliers/`, `dist/shop/supplier/<id>/`
+3. `generate-download-ssg.mjs` - `dist/download/` (noindex, self-canonical)
+4. `run-react-snap.mjs` - prerenders the static marketing routes
+5. `generate-sitemap.mjs` and `generate-merchant-feed.mjs`
+6. `check-dist.mjs` - fails unless `dist/shop/index.html`,
+   `dist/shop/suppliers/index.html`, `dist/download/index.html`, at least one
+   supplier page and at least 1,000 product pages exist with the right canonicals
+
+Never run `vite build` on its own before deploying: it empties `dist/` and
+leaves it without the prerendered pages, and Firebase Hosting serves `/shop/`
+as a copy of the homepage. `firebase.json` has a `predeploy` hook that runs
+`npm run build`, so `firebase deploy --only hosting` always builds first.
+
+The build reads `client/.env` (git-ignored) or the same variables from the
+environment. `REACT_SNAP_SKIP=true` skips only the react-snap step.
+
+### Build secrets
+
+`.github/workflows/ci.yml` builds and runs the dist check on pull requests and
+pushes to `main`. It takes the `VITE_*` values from repository secrets
+(Settings > Secrets and variables > Actions). Required for the build to pass:
+
+- `VITE_FIREBASE_API_KEY` (the public web API key) and `VITE_FIREBASE_PROJECT_ID`:
+  the SSG scripts read products and suppliers through the Firestore REST API
+  with these, and the dist check fails without them.
+
+Set to match `client/.env` so the CI bundle equals the deployed one:
+`VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_APP_ID`,
+`VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`,
+`VITE_GOOGLE_MAPS_API_KEY`, `VITE_GOOGLE_MAPS_MAP_ID`, `VITE_META_PIXEL_ID`.
+
+CI does not deploy. Deploy from a checkout whose `client/.env` is complete:
+
+```bash
+firebase hosting:channel:deploy preview --project pets-13gvj0   # preview URL
+firebase deploy --only hosting --project pets-13gvj0            # live
+```

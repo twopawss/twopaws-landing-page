@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and check dist
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Every VITE_* value the build needs. The Firebase web API key is a public
+      # client key; it is a repository secret only to keep it out of the tree.
+      VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+      VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.VITE_GOOGLE_MAPS_MAP_ID }}
+      VITE_META_PIXEL_ID: ${{ secrets.VITE_META_PIXEL_ID }}
+      # The postbuild scripts read SSG_STRICT themselves; CI=true (set by
+      # Actions) also switches them to strict mode.
+      SSG_STRICT: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check required secrets
+        run: |
+          missing=""
+          for name in VITE_FIREBASE_API_KEY VITE_FIREBASE_PROJECT_ID; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "Missing repository secrets:$missing (see README, 'Build secrets')."
+            exit 1
+          fi
+
+      - name: Install
+        run: npm ci
+
+      # react-snap 1.23 pins puppeteer 1.x, whose bundled Chromium needs
+      # libraries ubuntu-latest no longer ships by default.
+      - name: Install Chromium libraries for react-snap
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2t64 libatk-bridge2.0-0 libatk1.0-0 libcups2 libdrm2 \
+            libgbm1 libgtk-3-0 libnss3 libxcomposite1 libxdamage1 libxfixes3 \
+            libxkbcommon0 libxrandr2 libxss1 libxtst6 fonts-liberation
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Build (vite + SSG + react-snap + sitemap + feed + dist check)
+        run: npm run build
+
+      - name: Dist check
+        run: npm run check:dist
