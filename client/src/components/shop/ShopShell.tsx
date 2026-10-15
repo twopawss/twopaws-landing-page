@@ -1,5 +1,5 @@
 ﻿import type { ReactNode } from "react";
-import { Menu, ShoppingCart } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import twoPawsLogo from "../../../../attached_assets/logotrans-brand-800.webp";
 import SiteFooter from "@/components/layout/SiteFooter";
@@ -20,7 +20,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
-import { useCart } from "@/hooks/useCart";
+import CartBadge from "@/components/shop/CartBadge";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -36,8 +36,6 @@ type ShopShellProps = {
 
 export default function ShopShell({ children, headerContent }: ShopShellProps) {
   const { user, userDisplayName, signOutUser } = useAuth();
-  const { cart } = useCart();
-  const itemCount = cart?.itemCount ?? 0;
   const userLabel = userDisplayName || user?.email?.split("@")[0] || "Account";
   const userEmail = user?.email || "Signed in user";
   const userInitial = userLabel.charAt(0).toUpperCase();
@@ -87,18 +85,7 @@ export default function ShopShell({ children, headerContent }: ShopShellProps) {
             </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/cart"
-              className="relative inline-flex items-center justify-center rounded-full border border-slate-200 p-2 text-slate-700 hover:border-brand-green-dark hover:text-brand-green-dark"
-              aria-label="Cart"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -right-2 -top-2 inline-flex min-w-[20px] items-center justify-center rounded-full bg-brand-olive px-1.5 text-xs font-semibold text-brand-dark">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
+            <CartBadge />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
