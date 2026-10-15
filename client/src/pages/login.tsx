@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ShopShell from "@/components/shop/ShopShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -213,6 +213,13 @@ export default function LoginPage() {
                 onChange={(event) => setPassword(event.target.value)}
               />
             </div>
+            {mode === "signin" && (
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-sm font-medium text-brand-green-dark underline-offset-4 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
             <Button
               className="w-full bg-brand-green-dark text-white"
               onClick={handleSubmit}
