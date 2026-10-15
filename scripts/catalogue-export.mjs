@@ -77,25 +77,7 @@ export const fetchFacets = (env = resolveEnv()) => callCatalogue(env, "catalogue
 
 export const fetchFirstPage = (env, params) => callCatalogue(env, "catalogueBrowse", { limit: 24, ...params });
 
-export const taxonomy = JSON.parse(fs.readFileSync(path.join(root, "shared", "catalogueTaxonomy.json"), "utf8"));
-export const taxonomyPets = Object.entries(taxonomy.pets).map(([key, pet]) => ({ key, ...pet }));
-export const taxonomyCategories = taxonomy.categories;
-export const categoryPath = (category) => `/shop/${category.pet}/${category.slug}/`;
-export const petPath = (pet) => `/shop/${pet.key}/`;
-
-const normalize = (value) => String(value ?? "").normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().trim();
-
-/** The taxonomy category a product belongs to: the first category whose raw names and pet type match. Same rule as the client. */
-export const categoryForProduct = (product) => {
-  const raw = new Set((product.categoryNames ?? []).map(normalize));
-  const pets = new Set(product.petTypes ?? []);
-  for (const category of taxonomyCategories) {
-    const pet = taxonomyPets.find((p) => p.key === category.pet);
-    const petOk = !pet?.petType || pets.has(pet.petType);
-    if (petOk && category.raw.some((name) => raw.has(normalize(name)))) return category;
-  }
-  return null;
-};
+export { TAXONOMY_CATEGORIES as taxonomyCategories, TAXONOMY_PETS as taxonomyPets, categoryForProduct, categoryPath, petPath } from "../shared/catalogueTaxonomy.js";
 
 export const cheapestOffer = (product) => [...(product.offers ?? [])].sort((a, b) => a.sellingPriceMinor - b.sellingPriceMinor)[0] ?? null;
 export const offersForVariant = (product, variantId) => (product.offers ?? []).filter((o) => o.variantId === variantId).sort((a, b) => a.sellingPriceMinor - b.sellingPriceMinor);
@@ -160,9 +142,12 @@ export const upsertStructuredData = (html, id, payload) => {
   const pattern = new RegExp(`<script[^>]*id=["']${escapeRegExp(id)}["'][\\s\\S]*?<\\/script>`, "i");
   return pattern.test(html) ? html.replace(pattern, next) : html.replace("</head>", `  ${next}\n</head>`);
 };
-/** Puts prerendered page content inside the app root; React replaces it on hydration (main.tsx uses createRoot). */
-export const setRootContent = (html, content) =>
-  html.replace(/<div id="root">[\s\S]*?<\/div>\s*(?=<script)/i, `<div id="root">${content}</div>\n    `);
+/** Puts prerendered page content inside the app root; React replaces it on hydration (main.tsx uses createRoot).
+ * The generators read the vite template before react-snap runs, so the root must still be empty. */
+export const setRootContent = (html, content) => {
+  if (!/<div id="root">\s*<\/div>/i.test(html)) throw new Error("setRootContent: dist/index.html has no empty #root (did react-snap already run?)");
+  return html.replace(/<div id="root">\s*<\/div>/i, `<div id="root">${content}</div>`);
+};
 
 export const applyCoreSeo = ({ html, baseUrl, title, description, canonicalPath, ogType = "website", ogImage, robots }) => {
   const canonicalUrl = `${baseUrl}${canonicalPath}`;

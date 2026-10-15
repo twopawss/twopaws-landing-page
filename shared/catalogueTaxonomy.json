@@ -307,6 +307,15 @@
         "Horse"
       ],
       "description": "Feed, supplements and care products for horses."
+    },
+    {
+      "pet": "pets",
+      "slug": "accessories",
+      "name": "Bowls, carriers and supplies",
+      "nameAr": "أواني وحقائب ومستلزمات",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies",
+      "raw": [],
+      "description": "Bowls, feeders, water fountains, carriers, strollers and other supplies for cats and dogs."
     }
   ]
 }
