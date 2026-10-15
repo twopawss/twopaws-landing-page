@@ -36,8 +36,19 @@ requireFile("index.html");
 requireCanonical("shop/index.html", "https://twopaws.pet/shop/");
 requireCanonical("shop/suppliers/index.html", "https://twopaws.pet/shop/suppliers/");
 requireCanonical("download/index.html", "https://twopaws.pet/download/");
-requireFile("sitemap.xml");
-requireFile("merchant-feed.xml");
+requireCanonical("shop/cats/dry-food/index.html", "https://twopaws.pet/shop/cats/dry-food/");
+requireCanonical("shop/dogs/dry-food/index.html", "https://twopaws.pet/shop/dogs/dry-food/");
+const sitemap = requireFile("sitemap.xml");
+const feed = requireFile("merchant-feed.xml");
+// Every product URL in the sitemap must be a catalogue slug URL; a legacy products/{id} URL means a stale generator ran.
+if (sitemap !== null) {
+  const productLocs = [...sitemap.matchAll(/<loc>([^<]*\/shop\/product\/[^<]*)<\/loc>/g)].map((m) => m[1]);
+  const legacy = productLocs.filter((loc) => !/-product_[a-zA-Z0-9]+\/$/.test(loc) && !/\/product_[a-zA-Z0-9]+\/$/.test(loc));
+  if (!productLocs.length) problems.push("sitemap.xml lists no product URLs");
+  if (legacy.length) problems.push(`sitemap.xml has ${legacy.length} legacy product URL(s), e.g. ${legacy[0]}`);
+  if (!sitemap.includes("/shop/cats/litter/")) problems.push("sitemap.xml lacks the category pages");
+}
+if (feed !== null && (feed.match(/<item>/g) ?? []).length < 500) problems.push("merchant-feed.xml has fewer than 500 items");
 
 const supplierDir = path.join(distDir, "shop", "supplier");
 const supplierPages = fs.existsSync(supplierDir)
@@ -50,11 +61,12 @@ if (supplierPages < 1) {
 }
 
 const productDir = path.join(distDir, "shop", "product");
-const productPages = fs.existsSync(productDir)
-  ? fs.readdirSync(productDir).filter((id) =>
-      fs.existsSync(path.join(productDir, id, "index.html"))
-    ).length
-  : 0;
+const productDirs = fs.existsSync(productDir)
+  ? fs.readdirSync(productDir).filter((id) => fs.existsSync(path.join(productDir, id, "index.html")))
+  : [];
+const productPages = productDirs.length;
+const legacyDirs = productDirs.filter((id) => !/(^|-)product_[a-zA-Z0-9]+$/.test(id));
+if (legacyDirs.length) problems.push(`${legacyDirs.length} legacy product page(s) in dist/shop/product, e.g. ${legacyDirs[0]}`);
 if (productPages < MIN_PRODUCT_PAGES) {
   problems.push(
     `only ${productPages} dist/shop/product/*/index.html pages, expected at least ${MIN_PRODUCT_PAGES}`

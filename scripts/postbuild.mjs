@@ -15,6 +15,7 @@ import { spawnSync } from "child_process";
  */
 const STEPS = [
   "generate-product-ssg.mjs",
+  "generate-category-ssg.mjs",
   "generate-shop-ssg.mjs",
   "generate-download-ssg.mjs",
   "run-react-snap.mjs",

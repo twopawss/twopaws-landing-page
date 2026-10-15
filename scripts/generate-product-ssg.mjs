@@ -1,210 +1,15 @@
-import fs from "fs";
-import path from "path";
 import {
-  buildCatalogSeoPlan,
-  buildSeoDescription,
-  getSupplierId,
-} from "./catalog-seo.mjs";
+  CURRENCY, applyCoreSeo, brandSlugPath, categoryForProduct, categoryPath, cheapestOffer, escapeHtml, fetchCatalogueProducts,
+  formatEgp, gridHtml, offersForVariant, productDescription, productSlugPath, productTitle, readTemplate, resolveBaseUrl, resolveEnv,
+  setRootContent, shellHtml, upsertStructuredData, writePage,
+} from "./catalogue-export.mjs";
 
-const DEFAULT_BASE_URL = "https://twopaws.pet";
-const DEFAULT_CURRENCY = "EGP";
-const DEFAULT_BRAND = "TwoPaws";
-
-const readEnvFile = (filePath) => {
-  if (!fs.existsSync(filePath)) return {};
-  const content = fs.readFileSync(filePath, "utf8");
-  return content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("#") && line.includes("="))
-    .reduce((acc, line) => {
-      const [key, ...rest] = line.split("=");
-      acc[key] = rest.join("=").trim();
-      return acc;
-    }, {});
-};
-
-const resolveEnv = (root) => {
-  const fileEnv = readEnvFile(path.join(root, "client", ".env"));
-  return { ...fileEnv, ...process.env };
-};
-
-const resolveBaseUrl = (env) =>
-  (env.VITE_SITE_URL || env.SITE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
-
-const escapeHtml = (value = "") =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-
-const toSeoDescription = (value, maxLength = 160) => {
-  const cleaned = String(value || "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!cleaned) return "";
-  if (cleaned.length <= maxLength) return cleaned;
-  return `${cleaned.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
-};
-
-const coerceNumber = (value) => {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string") {
-    const parsed = Number.parseFloat(value);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return null;
-};
-
-const extractFirestoreValue = (value) => {
-  if (!value || typeof value !== "object") return undefined;
-  if ("stringValue" in value) return value.stringValue;
-  if ("integerValue" in value) return Number.parseInt(value.integerValue, 10);
-  if ("doubleValue" in value) return Number(value.doubleValue);
-  if ("booleanValue" in value) return Boolean(value.booleanValue);
-  if ("timestampValue" in value) return value.timestampValue;
-  if ("referenceValue" in value) return value.referenceValue;
-  if ("arrayValue" in value) {
-    const values = Array.isArray(value.arrayValue?.values)
-      ? value.arrayValue.values
-      : [];
-    return values.map(extractFirestoreValue);
-  }
-  if ("mapValue" in value) {
-    const fields = value.mapValue?.fields ?? {};
-    const result = {};
-    Object.entries(fields).forEach(([fieldKey, fieldValue]) => {
-      result[fieldKey] = extractFirestoreValue(fieldValue);
-    });
-    return result;
-  }
-  if ("nullValue" in value) return null;
-  return undefined;
-};
-
-const extractFirestoreDocument = (doc) => {
-  const fields = doc?.fields ?? {};
-  const result = {};
-  Object.entries(fields).forEach(([key, value]) => {
-    result[key] = extractFirestoreValue(value);
-  });
-  return result;
-};
-
-const fetchProductDocs = async (projectId, apiKey) => {
-  if (!projectId || !apiKey) return [];
-
-  const docs = [];
-  let pageToken = "";
-
-  while (true) {
-    const url = new URL(
-      `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/products`
-    );
-    url.searchParams.set("pageSize", "500");
-    url.searchParams.set("key", apiKey);
-    if (pageToken) {
-      url.searchParams.set("pageToken", pageToken);
-    }
-
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Product SSG fetch failed (${res.status}).`);
-    }
-
-    const data = await res.json();
-    const items = Array.isArray(data.documents) ? data.documents : [];
-    items.forEach((doc) => {
-      if (!doc?.name) return;
-      const id = doc.name.split("/").pop();
-      if (!id) return;
-      docs.push({
-        id,
-        ...extractFirestoreDocument(doc),
-      });
-    });
-
-    pageToken = data.nextPageToken || "";
-    if (!pageToken) break;
-  }
-
-  return docs;
-};
-
-const fetchShippingZones = async (projectId, apiKey, supplierId) => {
-  if (!projectId || !apiKey || !supplierId) return [];
-  const url = new URL(
-    `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/suppliers/${supplierId}/shippingZones`
-  );
-  url.searchParams.set("pageSize", "100");
-  url.searchParams.set("key", apiKey);
-  const response = await fetch(url);
-  if (!response.ok) return [];
-  const payload = await response.json();
-  return (payload.documents ?? []).map((document) => extractFirestoreDocument(document));
-};
-
-const fetchSupplier = async (projectId, apiKey, supplierId) => {
-  if (!projectId || !apiKey || !supplierId) return null;
-  const url = new URL(
-    `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/suppliers/${supplierId}`
-  );
-  url.searchParams.set("key", apiKey);
-  const response = await fetch(url);
-  if (!response.ok) return null;
-  return extractFirestoreDocument(await response.json());
-};
-
-const absoluteUrl = (baseUrl, value) => {
-  if (!value) return null;
-  if (String(value).startsWith("http")) return String(value);
-  const normalized = String(value).startsWith("/")
-    ? String(value)
-    : `/${String(value)}`;
-  return `${baseUrl}${normalized}`;
-};
-
-const getPrimaryImage = (product, baseUrl) => {
-  const raw = product.photo_url;
-  if (Array.isArray(raw) && raw.length > 0) return absoluteUrl(baseUrl, raw[0]);
-  if (typeof raw === "string") return absoluteUrl(baseUrl, raw);
-  return `${baseUrl}/og-image.webp`;
-};
-
-const getOfferPrice = (product) => {
-  const regular = coerceNumber(product.price) ?? 0;
-  const sale = coerceNumber(product.sale_price);
-  const onSale = Boolean(product.on_sale);
-  if (onSale && sale && sale > 0) return sale;
-  return regular;
-};
-
-const getFirstString = (source, keys) => {
-  if (!source || typeof source !== "object") return undefined;
-  for (const key of keys) {
-    const value = source[key];
-    if (typeof value === "string" && value.trim()) {
-      return value.trim();
-    }
-  }
-  return undefined;
-};
-
-const normalizeGtin = (value) => {
-  if (!value) return undefined;
-  const digits = String(value).replace(/\D+/g, "");
-  if ([8, 12, 13, 14].includes(digits.length)) return digits;
-  return undefined;
-};
-
-const resolveItemCondition = (value) => {
-  const raw = String(value || "").trim().toLowerCase();
-  if (raw.includes("used")) return "https://schema.org/UsedCondition";
-  if (raw.includes("refurb")) return "https://schema.org/RefurbishedCondition";
-  return "https://schema.org/NewCondition";
-};
+/**
+ * Prerenders one page per purchasable catalogue product at /shop/product/{slug}-{id}/ with the
+ * catalogue's own title, description, price, H1, breadcrumb and Product schema in the static HTML.
+ * Legacy /shop/product/{legacyId}/ pages are no longer written: Hosting rewrites them to the
+ * shopProductRedirect function, which 301s to the slug URL.
+ */
 
 const buildPriceValidUntil = (daysAhead = 30) => {
   const date = new Date();
@@ -212,252 +17,111 @@ const buildPriceValidUntil = (daysAhead = 30) => {
   return date.toISOString().slice(0, 10);
 };
 
-const getImageList = (product, baseUrl) => {
-  const raw = product.photo_url;
-  const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
-  const resolved = values
-    .map((value) => absoluteUrl(baseUrl, value))
-    .filter(Boolean);
-  if (resolved.length > 0) return resolved;
-  return [`${baseUrl}/og-image.webp`];
-};
-
-const setTitle = (html, value) => {
-  const next = `<title>${escapeHtml(value)}</title>`;
-  if (/<title>[\s\S]*?<\/title>/i.test(html)) {
-    return html.replace(/<title>[\s\S]*?<\/title>/i, next);
-  }
-  return html.replace("</head>", `  ${next}\n</head>`);
-};
-
-const upsertMetaByName = (html, name, content) => {
-  const next = `<meta name="${name}" content="${escapeHtml(content)}" />`;
-  const pattern = new RegExp(
-    `<meta\\s+name=["']${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*>`,
-    "i"
-  );
-  if (pattern.test(html)) {
-    return html.replace(pattern, next);
-  }
-  return html.replace("</head>", `  ${next}\n</head>`);
-};
-
-const upsertMetaByProperty = (html, property, content) => {
-  const next = `<meta property="${property}" content="${escapeHtml(content)}" />`;
-  const pattern = new RegExp(
-    `<meta\\s+property=["']${property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*>`,
-    "i"
-  );
-  if (pattern.test(html)) {
-    return html.replace(pattern, next);
-  }
-  return html.replace("</head>", `  ${next}\n</head>`);
-};
-
-const upsertCanonical = (html, canonicalUrl) => {
-  const next = `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`;
-  if (/<link\s+rel=["']canonical["'][^>]*>/i.test(html)) {
-    return html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, next);
-  }
-  return html.replace("</head>", `  ${next}\n</head>`);
-};
-
-const upsertStructuredData = (html, id, payload) => {
-  const safeJson = JSON.stringify(payload).replaceAll("<", "\\u003c");
-  const next = `<script id="${id}" type="application/ld+json">${safeJson}</script>`;
-  const pattern = new RegExp(
-    `<script[^>]*id=["']${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][\\s\\S]*?<\\/script>`,
-    "i"
-  );
-  if (pattern.test(html)) {
-    return html.replace(pattern, next);
-  }
-  return html.replace("</head>", `  ${next}\n</head>`);
-};
-
-const buildProductHtml = (template, product, baseUrl, canonicalProductId, supplierInfo) => {
-  const productName = String(product.name || "Product");
-  const supplierName = String(supplierInfo?.name ?? "").trim();
-  const baseDescription = buildSeoDescription(product);
-  const description = toSeoDescription(
-    supplierName
-      ? `Shop ${productName} from ${supplierName} on TwoPaws Egypt. ${baseDescription}`
-      : baseDescription
-  );
-  const canonicalPath = `/shop/product/${canonicalProductId}/`;
+const buildProductHtml = (template, baseUrl, product, related) => {
+  const canonicalPath = productSlugPath(product.id, product.name);
   const canonicalUrl = `${baseUrl}${canonicalPath}`;
-  const imageUrls = getImageList(product, baseUrl);
-  const imageUrl = imageUrls[0] || getPrimaryImage(product, baseUrl);
-  const offerPrice = getOfferPrice(product);
-  const quantity = coerceNumber(product.quantity) ?? 0;
-  const sku =
-    getFirstString(product, ["sku", "item_sku", "itemSku"]) || product.id;
-  const brandName =
-    getFirstString(product, [
-      "brand",
-      "brand_name",
-      "brandName",
-      "manufacturer",
-      "vendor",
-    ]) || DEFAULT_BRAND;
-  const mpn = getFirstString(product, [
-    "mpn",
-    "manufacturer_part_number",
-    "manufacturerPartNumber",
-  ]);
-  const gtin = normalizeGtin(
-    getFirstString(product, [
-      "gtin",
-      "gtin8",
-      "gtin12",
-      "gtin13",
-      "gtin14",
-      "barcode",
-      "barcodeNumber",
-      "barcode_number",
-      "ean",
-      "upc",
-    ])
-  );
-  const productCategory = getFirstString(product, [
-    "google_product_category",
-    "product_type",
-    "categoryName",
-  ]);
-  const itemCondition = resolveItemCondition(
-    getFirstString(product, ["condition", "itemCondition", "item_condition"])
-  );
-  const priceValidUntil = buildPriceValidUntil();
+  const title = productTitle(product);
+  const description = productDescription(product);
+  const category = categoryForProduct(product);
+  const offer = cheapestOffer(product);
+  const prices = product.offers.map((o) => o.sellingPriceMinor);
+  const supplierNames = [...new Set(product.offers.map((o) => o.supplierName).filter(Boolean))];
+  const images = (product.images ?? []).filter((url) => String(url).startsWith("http"));
 
+  const offers = prices.length > 1
+    ? {
+        "@type": "AggregateOffer",
+        priceCurrency: CURRENCY,
+        lowPrice: (Math.min(...prices) / 100).toFixed(2),
+        highPrice: (Math.max(...prices) / 100).toFixed(2),
+        offerCount: prices.length,
+        availability: "https://schema.org/InStock",
+        url: canonicalUrl,
+      }
+    : {
+        "@type": "Offer",
+        "@id": `${canonicalUrl}#offer`,
+        priceCurrency: CURRENCY,
+        price: (product.minimumPriceMinor / 100).toFixed(2),
+        availability: "https://schema.org/InStock",
+        itemCondition: "https://schema.org/NewCondition",
+        url: canonicalUrl,
+        priceValidUntil: buildPriceValidUntil(),
+        seller: supplierNames[0] ? { "@type": "Organization", name: supplierNames[0] } : undefined,
+      };
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Product",
     "@id": `${canonicalUrl}#product`,
-    name: productName,
+    name: product.name,
     description,
     url: canonicalUrl,
-    image: imageUrls,
-    sku,
-    mpn,
-    gtin,
-    category: productCategory,
-    brand: {
-      "@type": "Brand",
-      name: brandName,
-    },
-    offers: {
-      "@type": "Offer",
-      "@id": `${canonicalUrl}#offer`,
-      priceCurrency: DEFAULT_CURRENCY,
-      price: offerPrice,
-      availability:
-        quantity > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
-      itemCondition,
-      url: canonicalUrl,
-      priceValidUntil,
-      shippingDetails: supplierInfo?.shippingZone && Number(supplierInfo.shippingZone.rateEGP) >= 0
-        ? {
-            "@type": "OfferShippingDetails",
-            shippingRate: {
-              "@type": "MonetaryAmount",
-              value: Number(supplierInfo.shippingZone.rateEGP),
-              currency: DEFAULT_CURRENCY,
-            },
-            shippingDestination: {
-              "@type": "DefinedRegion",
-              addressCountry: "EG",
-            },
-          }
-        : undefined,
-      seller: {
-        "@type": "Organization",
-        name: supplierName || "TwoPaws",
-        url: supplierName
-          ? `${baseUrl}/shop/supplier/${getSupplierId(product)}/`
-          : baseUrl,
-      },
-    },
+    image: images.length ? images : undefined,
+    sku: product.id,
+    category: category?.googleProductCategory,
+    brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+    offers,
+  };
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Shop", item: `${baseUrl}/shop/` },
+      ...(category ? [{ "@type": "ListItem", position: 2, name: category.name, item: `${baseUrl}${categoryPath(category)}` }] : []),
+      { "@type": "ListItem", position: category ? 3 : 2, name: product.name, item: canonicalUrl },
+    ],
   };
 
-  let html = template;
-  const seoTitle = supplierName
-    ? `${productName} from ${supplierName} | TwoPaws Shop`
-    : `${productName} | TwoPaws Shop`;
-  html = setTitle(html, seoTitle);
-  html = upsertMetaByName(html, "description", description);
-  html = upsertCanonical(html, canonicalUrl);
-  html = upsertMetaByProperty(html, "og:type", "product");
-  html = upsertMetaByProperty(html, "og:title", seoTitle);
-  html = upsertMetaByProperty(html, "og:description", description);
-  html = upsertMetaByProperty(html, "og:url", canonicalUrl);
-  html = upsertMetaByProperty(html, "og:image", imageUrl);
-  html = upsertMetaByName(html, "twitter:title", seoTitle);
-  html = upsertMetaByName(html, "twitter:description", description);
-  html = upsertMetaByName(html, "twitter:image", imageUrl);
+  const variantRows = product.variants.map((variant) => {
+    const rows = offersForVariant(product, variant.id);
+    if (!rows.length) return "";
+    return `<li class="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3"><span class="text-sm font-semibold text-slate-900">${escapeHtml(variant.label)}</span><span class="text-sm text-slate-600">${rows.map((o) => `${escapeHtml(o.supplierName ?? o.supplierId)} ${escapeHtml(formatEgp(o.sellingPriceMinor))}`).join(" · ")}</span></li>`;
+  }).join("");
+  const body = shellHtml(
+    `<nav aria-label="Breadcrumb" class="text-xs text-slate-500"><a href="/shop/">Shop</a>${category ? ` › <a href="${categoryPath(category)}">${escapeHtml(category.name)}</a>` : ""}${product.brand ? ` › <a href="${brandSlugPath(product.brand)}">${escapeHtml(product.brand)}</a>` : ""}</nav>`
+    + `<div class="grid gap-8 lg:grid-cols-2"><div class="rounded-2xl border border-slate-100 bg-slate-50">${images[0] ? `<img src="${escapeHtml(images[0])}" alt="${escapeHtml(product.name)}" class="mx-auto max-h-[420px] w-auto max-w-full object-contain p-4" />` : ""}</div>`
+    + `<div class="space-y-6">${product.brand ? `<a href="${brandSlugPath(product.brand)}" class="text-sm font-semibold uppercase tracking-wide text-slate-500">${escapeHtml(product.brand)}</a>` : ""}`
+    + `<h1 class="text-2xl font-semibold text-slate-900 sm:text-3xl">${escapeHtml(product.name)}</h1>`
+    + `<p class="text-3xl font-semibold text-brand-green-dark">${prices.length > 1 || product.variants.length > 1 ? "From " : ""}${escapeHtml(formatEgp(product.minimumPriceMinor))}${offer?.regularPriceMinor > offer?.sellingPriceMinor ? ` <span class="text-lg font-normal text-slate-400 line-through">${escapeHtml(formatEgp(offer.regularPriceMinor))}</span>` : ""}</p>`
+    + `<p class="text-sm text-slate-600">Sold by ${escapeHtml(supplierNames.join(", ") || "TwoPaws suppliers")} with delivery in Cairo and Giza.</p>`
+    + (variantRows ? `<ul class="space-y-2">${variantRows}</ul>` : "")
+    + `<a href="${canonicalPath}" class="inline-flex rounded-full bg-brand-green-dark px-5 py-2 text-sm font-semibold text-white">Add to cart</a>`
+    + `</div></div>`
+    + (product.description ? `<section class="space-y-2"><h2 class="text-xl font-semibold text-slate-900">About this product</h2><p class="whitespace-pre-line text-slate-600">${escapeHtml(product.description)}</p></section>` : "")
+    + (related.length ? `<section class="space-y-4"><h2 class="text-2xl font-semibold text-slate-900">${category ? `More in ${escapeHtml(category.name)}` : "You may also like"}</h2>${gridHtml(baseUrl, related)}</section>` : "")
+  );
+
+  let html = applyCoreSeo({ html: template, baseUrl, title, description, canonicalPath, ogType: "product", ogImage: images[0] });
   html = upsertStructuredData(html, "product-jsonld", structuredData);
-  const canonicalContext = `<script>window.__TWOPAWS_PRODUCT_CANONICAL__=${JSON.stringify({
-    sourceId: product.id,
-    canonicalId: canonicalProductId,
-  }).replaceAll("<", "\\u003c")};</script>`;
-  html = html.replace("</head>", `  ${canonicalContext}\n</head>`);
+  html = upsertStructuredData(html, "breadcrumb-jsonld", breadcrumb);
+  html = setRootContent(html, body);
   return html;
 };
 
 const writeProductPages = async () => {
-  const root = process.cwd();
-  const distDir = path.join(root, "dist");
-  const templatePath = path.join(distDir, "index.html");
-
-  if (!fs.existsSync(templatePath)) {
-    throw new Error("Product SSG: dist/index.html not found. Run vite build first.");
-  }
-
-  const env = resolveEnv(root);
+  const env = resolveEnv();
   const baseUrl = resolveBaseUrl(env);
-  const template = fs.readFileSync(templatePath, "utf8");
-  const productDocs = await fetchProductDocs(
-    env.VITE_FIREBASE_PROJECT_ID,
-    env.VITE_FIREBASE_API_KEY
-  );
+  const template = readTemplate();
+  const { items, generation } = await fetchCatalogueProducts(env);
+  if (!items.length) throw new Error("Product SSG: the catalogue export returned no products.");
 
-  if (!productDocs.length) {
-    console.warn("Product SSG: no products found.");
-    return;
+  const byCategory = new Map();
+  for (const product of items) {
+    const category = categoryForProduct(product);
+    const key = category ? `${category.pet}/${category.slug}` : "";
+    const list = byCategory.get(key) ?? [];
+    list.push(product);
+    byCategory.set(key, list);
   }
-
-  const plan = buildCatalogSeoPlan(productDocs);
-  const supplierIds = [...new Set(plan.eligible.map(getSupplierId).filter(Boolean))];
-  const supplierEntries = await Promise.all(supplierIds.map(async (supplierId) => {
-    const [supplier, zones] = await Promise.all([
-      fetchSupplier(env.VITE_FIREBASE_PROJECT_ID, env.VITE_FIREBASE_API_KEY, supplierId),
-      fetchShippingZones(env.VITE_FIREBASE_PROJECT_ID, env.VITE_FIREBASE_API_KEY, supplierId),
-    ]);
-    const cheapest = zones
-      .filter((zone) => Number.isFinite(Number(zone.rateEGP)) && Number(zone.rateEGP) >= 0)
-      .sort((a, b) => Number(a.rateEGP) - Number(b.rateEGP))[0] ?? null;
-    return [supplierId, { ...(supplier ?? {}), shippingZone: cheapest }];
-  }));
-  const supplierById = new Map(supplierEntries);
-
-  for (const product of plan.eligible) {
-    const routeDir = path.join(distDir, "shop", "product", product.id);
-    fs.mkdirSync(routeDir, { recursive: true });
-    const canonicalProductId = plan.canonicalById.get(product.id) ?? product.id;
-    const html = buildProductHtml(
-      template,
-      product,
-      baseUrl,
-      canonicalProductId,
-      supplierById.get(getSupplierId(product)) ?? null,
-    );
-    fs.writeFileSync(path.join(routeDir, "index.html"), html, "utf8");
+  let written = 0;
+  for (const product of items) {
+    const category = categoryForProduct(product);
+    const pool = (byCategory.get(category ? `${category.pet}/${category.slug}` : "") ?? []).filter((p) => p.id !== product.id);
+    const related = pool.slice(0, 8);
+    writePage(productSlugPath(product.id, product.name), buildProductHtml(template, baseUrl, product, related));
+    written += 1;
   }
-
-  console.log(
-    `Product SSG: generated ${plan.eligible.length} page(s), canonicalized ${plan.canonicalById.size} duplicate(s), excluded ${plan.excluded.length} incomplete record(s).`
-  );
+  console.log(`Product SSG: generated ${written} catalogue product page(s) from index generation ${generation}.`);
 };
 
 writeProductPages().catch((err) => {
