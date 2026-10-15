@@ -31,12 +31,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Seo from "@/lib/seo/Seo";
-import {
-  ANDROID_STORE_URL,
-  BASE_URL,
-  INSTAGRAM_URL,
-  IOS_STORE_URL,
-} from "@/lib/seo/constants";
+import { ANDROID_STORE_URL, BASE_URL, COMPANY_ADDRESS, COMPANY_LEGAL_NAME, CONTACT_EMAIL, CONTACT_PHONE, FACEBOOK_URL, INSTAGRAM_URL, IOS_STORE_URL, LINKEDIN_URL, TIKTOK_URL } from "@/lib/seo/constants";
 
 type OfferItem = {
   iconSrc?: string;
@@ -128,10 +123,17 @@ export default function Landing() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${BASE_URL}/#organization`,
     name: "TwoPaws",
+    legalName: COMPANY_LEGAL_NAME,
     url: BASE_URL,
+    logo: `${BASE_URL}/logotrans.png`,
+    email: CONTACT_EMAIL,
+    ...(CONTACT_PHONE ? { telephone: CONTACT_PHONE } : {}),
+    address: { "@type": "PostalAddress", ...COMPANY_ADDRESS },
+    contactPoint: [{ "@type": "ContactPoint", contactType: "customer service", email: CONTACT_EMAIL, ...(CONTACT_PHONE ? { telephone: CONTACT_PHONE } : {}), areaServed: "EG", availableLanguage: ["en", "ar"] }],
     areaServed: "Egypt",
-    sameAs: [INSTAGRAM_URL, IOS_STORE_URL, ANDROID_STORE_URL],
+    sameAs: [INSTAGRAM_URL, FACEBOOK_URL, TIKTOK_URL, LINKEDIN_URL, IOS_STORE_URL, ANDROID_STORE_URL],
   };
 
   const mobileApplicationSchema = {
@@ -143,9 +145,10 @@ export default function Landing() {
     offers: {
       "@type": "Offer",
       price: "0",
-      priceCurrency: "USD",
+      priceCurrency: "EGP",
     },
     downloadUrl: [IOS_STORE_URL, ANDROID_STORE_URL],
+    publisher: { "@id": `${BASE_URL}/#organization` },
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -803,8 +806,7 @@ export default function Landing() {
           {/* --- Bottom Bar ---------------------------------------------- */}
           <div className="border-t border-gray-200 pt-8 flex flex-col sm:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              (c) {new Date().getFullYear()} TwoPaws Digital Solutions. All
-              rights reserved.
+              (c) {new Date().getFullYear()} TwoPaws Digital Solutions LLC. Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt. All rights reserved.
             </p>
           </div>
         </div>

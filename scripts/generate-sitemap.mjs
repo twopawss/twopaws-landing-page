@@ -3,7 +3,7 @@ import path from "path";
 import { brandPages, categoryPath, fetchCatalogueProducts, fetchFacets, petPath, productSlugPath, resolveBaseUrl, resolveEnv, taxonomyCategories, taxonomyPets } from "./catalogue-export.mjs";
 
 /** Sitemap from the catalogue: static pages, pet and category pages, brand pages, supplier pages and every purchasable product at its slug URL. */
-const STATIC_ROUTES = ["/", "/about/", "/features/", "/egypt/", "/privacy/", "/terms/", "/contact/", "/shop/", "/shop/suppliers/"];
+const STATIC_ROUTES = ["/", "/about/", "/features/", "/egypt/", "/privacy/", "/terms/", "/contact/", "/shipping-and-returns/", "/shop/", "/shop/suppliers/"];
 
 const buildSitemap = async () => {
   const env = resolveEnv();

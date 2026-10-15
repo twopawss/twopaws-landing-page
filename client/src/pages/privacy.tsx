@@ -176,7 +176,7 @@ export default function Privacy() {
               <p>We may update this Policy; well change the Last updated date above and, where required, provide in-app or email notice. If changes materially affect your rights, we will seek consent where required.</p>
 
               <h2 className="text-2xl font-bold mt-6">13) Contact</h2>
-              <p>TwoPaws Digital Solutions LLC - Privacy<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>
+              <p>TwoPaws Digital Solutions LLC - Privacy<br />Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>
             </CardContent>
           </Card>
         </div>

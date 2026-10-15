@@ -93,11 +93,13 @@ export default function SiteFooter() {
             <h3 className="mb-4 font-semibold">Support</h3>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <a
-                  href={`mailto:${CONTACT_EMAIL}`}
-                  className="transition-colors hover:text-black"
-                >
+                <a href="/contact/" className="transition-colors hover:text-black">
                   Contact Us
+                </a>
+              </li>
+              <li>
+                <a href="/shipping-and-returns/" className="transition-colors hover:text-black">
+                  Shipping &amp; Returns
                 </a>
               </li>
               <li>
@@ -136,7 +138,7 @@ export default function SiteFooter() {
 
         <div className="flex flex-col items-center justify-between border-t border-gray-200 pt-8 sm:flex-row">
           <p className="text-sm text-gray-400">
-            (c) {new Date().getFullYear()} TwoPaws Digital Solutions. All rights reserved.
+            (c) {new Date().getFullYear()} TwoPaws Digital Solutions LLC. Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt. All rights reserved.
           </p>
         </div>
       </div>

@@ -405,6 +405,10 @@ export default function CatalogueCheckoutPage() {
           <Button className="w-full bg-brand-olive text-brand-dark" onClick={handleCheckout} disabled={submitting || quoteLoading || cartEmpty || !quote}>
             {submitting ? "Placing order..." : paymentMethod === "card" ? "Continue to payment" : "Place order"}
           </Button>
+          <p className="text-center text-xs text-slate-500">
+            By placing an order you accept our <Link to="/terms/" className="underline">terms</Link> and{" "}
+            <Link to="/shipping-and-returns/" className="underline">shipping and returns policy</Link>.
+          </p>
         </div>
       </div>
     </ShopShell>

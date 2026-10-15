@@ -213,7 +213,7 @@ export default function Terms() {
               <p>We may update these Terms; well update the Last updated date above and, where required, provide in-app or email notice. Continued use after changes means you accept the updated Terms.</p>
 
               <h2 className="text-2xl font-bold mt-6">19) Contact</h2>
-              <p>TwoPaws Digital Solutions LLC - Legal<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>
+              <p>TwoPaws Digital Solutions LLC - Legal<br />Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>
             </CardContent>
           </Card>
         </div>

@@ -208,6 +208,14 @@
         "destination": "/index.html"
       },
       {
+        "source": "/shipping-and-returns",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/shipping-and-returns/**",
+        "destination": "/index.html"
+      },
+      {
         "source": "/terms",
         "destination": "/index.html"
       },

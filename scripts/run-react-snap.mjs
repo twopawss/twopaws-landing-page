@@ -15,6 +15,7 @@ const STATIC_ROUTES = [
   "/privacy/",
   "/terms/",
   "/contact/",
+  "/shipping-and-returns/",
 ];
 
 const readEnvFile = (filePath) => {

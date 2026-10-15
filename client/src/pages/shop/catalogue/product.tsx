@@ -333,6 +333,7 @@ export default function CatalogueProductPage() {
                 ) : (
                   <p className="mt-3 text-sm text-slate-500">Delivery is priced at checkout.</p>
                 )}
+                <p className="mt-1 text-xs text-slate-500"><Link to="/shipping-and-returns/" className="underline">Delivery, returns and refunds</Link></p>
               </div>
 
               {product.therapeutic ? <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">This is a therapeutic product. Check its suitability with your vet before purchasing.</p> : null}
