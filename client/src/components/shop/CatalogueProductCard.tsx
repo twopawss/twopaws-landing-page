@@ -23,7 +23,11 @@ function CatalogueProductCard({ product, cartQuantity = 0, onAdd, onNavigate }: 
     ? `${supplierCount} suppliers`
     : offer?.supplierName ?? product.suppliers?.[0]?.name ?? undefined;
   const regular = offer?.regularPriceMinor && offer.regularPriceMinor > offer.sellingPriceMinor ? offer.regularPriceMinor : null;
-  const variantLabel = product.variants.length === 1 ? product.variants[0].label : product.variants.length > 1 ? `${product.variants.length} sizes` : null;
+  // A single variant whose label is just the product name again adds nothing to the card.
+  const singleLabel = product.variants.length === 1 ? product.variants[0].label.trim() : "";
+  const variantLabel = product.variants.length > 1
+    ? `${product.variants.length} sizes`
+    : singleLabel && singleLabel.toLowerCase() !== product.name.trim().toLowerCase() ? singleLabel : null;
   const productHref = `/shop/product/${product.id}/`;
   const isInCart = cartQuantity > 0;
 

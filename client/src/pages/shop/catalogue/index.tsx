@@ -180,7 +180,9 @@ export default function CatalogueShopPage() {
 
   useEffect(() => {
     if (isReactSnapPrerender()) return;
-    getFacets().then(setFacets).catch(() => setFacets({ categories: [], brands: [], suppliers: [] }));
+    getFacets()
+      .then((data) => setFacets({ categories: Array.isArray(data.categories) ? data.categories : [], brands: Array.isArray(data.brands) ? data.brands : [], suppliers: Array.isArray(data.suppliers) ? data.suppliers : [] }))
+      .catch(() => setFacets({ categories: [], brands: [], suppliers: [] }));
   }, []);
 
   const sortMode = SORT_OPTIONS.find((option) => option.value === sort)?.mode ?? "all";
@@ -327,10 +329,11 @@ export default function CatalogueShopPage() {
   const hasPriceFilter = Boolean(appliedPrice.min || appliedPrice.max);
   const activeFilterCount = (selectedCategory !== "all" ? 1 : 0) + (selectedBrand !== "all" ? 1 : 0) + (selectedSupplier !== "all" ? 1 : 0) + (hasPriceFilter ? 1 : 0);
 
-  const catalogueSupplierIds = useMemo(() => new Set((facets?.suppliers ?? []).map((s) => s.id)), [facets]);
+  // Only suppliers with purchasable catalogue products are offered; without facets every active supplier is shown.
+  const catalogueSupplierIds = useMemo(() => (Array.isArray(facets?.suppliers) ? new Set(facets.suppliers.map((s) => s.id)) : null), [facets]);
   const pickerSuppliers = useMemo(
-    () => (facets ? suppliers.filter((s) => catalogueSupplierIds.has(s.id)) : suppliers),
-    [suppliers, facets, catalogueSupplierIds]
+    () => (catalogueSupplierIds ? suppliers.filter((s) => catalogueSupplierIds.has(s.id)) : suppliers),
+    [suppliers, catalogueSupplierIds]
   );
   const categories = facets?.categories ?? [];
   const visibleCategories = showAllCategories ? categories : categories.slice(0, 10);
