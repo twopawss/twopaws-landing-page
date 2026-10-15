@@ -120,7 +120,7 @@ export default function CatalogueCartPage() {
                   <div className="flex-1">
                     <Link to={line.productId ? `/shop/product/${line.productId}/` : "/shop/"} className="text-lg font-semibold text-slate-900 hover:text-brand-green-dark">{line.name}</Link>
                     <p className="text-sm text-slate-500">
-                      {unavailable ? line.label : [line.label, line.supplierName ? `from ${line.supplierName}` : ""].filter(Boolean).join(" · ")}
+                      {unavailable ? line.label : [line.label.trim().toLowerCase() === line.name.trim().toLowerCase() ? "" : line.label, line.supplierName ? `from ${line.supplierName}` : ""].filter(Boolean).join(" · ")}
                     </p>
                     {!unavailable && <p className="text-sm text-slate-500">{formatMinor(line.unitPriceMinor)} each</p>}
                   </div>

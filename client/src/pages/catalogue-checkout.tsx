@@ -373,7 +373,7 @@ export default function CatalogueCheckoutPage() {
               <h3 className="text-lg font-semibold text-slate-900">Order summary</h3>
               {(quote?.items ?? lines).map((line) => (
                 <div key={line.id} className="flex items-start justify-between gap-2 text-xs text-slate-600">
-                  <span className="line-clamp-2">{line.quantity} × {line.name}{line.label ? ` (${line.label})` : ""}{line.supplierName ? ` · ${line.supplierName}` : ""}</span>
+                  <span className="line-clamp-2">{line.quantity} × {line.name}{line.label && line.label.trim().toLowerCase() !== line.name.trim().toLowerCase() ? ` (${line.label})` : ""}{line.supplierName ? ` · ${line.supplierName}` : ""}</span>
                   <span className="shrink-0">{formatMinor(line.lineTotalMinor)}</span>
                 </div>
               ))}
