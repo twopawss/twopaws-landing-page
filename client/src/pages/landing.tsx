@@ -157,7 +157,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-poppins">
+    <div className="min-h-screen bg-white">
       <Seo
         title="TwoPaws | Pet care app in Egypt"
         description="TwoPaws connects pet families in Egypt with vets, clinics, a supplies marketplace, community features, and delivery."
@@ -339,7 +339,11 @@ export default function Landing() {
 
               {/* Dog */}
               <img
-                src="/iStock-157527277.webp"
+                src="/hero-dog-916.webp"
+                srcSet="/hero-dog-460.webp 460w, /hero-dog-916.webp 916w"
+                sizes="(min-width: 1024px) 364px, 60vw"
+                width={916}
+                height={1184}
                 alt="Dog"
                 decoding="async"
                 fetchPriority="high"

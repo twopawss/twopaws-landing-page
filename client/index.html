@@ -16,12 +16,17 @@
     <meta name="application-name" content="TwoPaws" />
     <meta name="theme-color" content="#FEC329" />
 
-    <!-- Fonts: Inter for premium, legible UI typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts are self-hosted (see src/index.css); preload the two the first paint needs. -->
+    <link rel="preload" href="/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/marvin.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Landing hero image (the LCP element). -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="image"
+      href="/hero-dog-916.webp"
+      imagesrcset="/hero-dog-460.webp 460w, /hero-dog-916.webp 916w"
+      imagesizes="(min-width: 1024px) 364px, 60vw"
+      fetchpriority="high"
     />
   </head>
   <body>

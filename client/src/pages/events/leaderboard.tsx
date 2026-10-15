@@ -7,7 +7,7 @@ import { getPublicLeaderboard } from "@/features/events/api";
 import { errorMessage, eventTime } from "@/features/events/format";
 import type { PublicCompetition, PublicEntry, PublicEvent } from "@/features/events/types";
 import Seo from "@/lib/seo/Seo";
-import twoPawsEventBarLogo from "../../../../attached_assets/twopaws-event-bar-logo.png";
+import twoPawsEventBarLogo from "../../../../attached_assets/twopaws-event-bar-logo-600.webp";
 
 type LeaderboardData = {
   event: PublicEvent;
@@ -102,7 +102,7 @@ export default function PublicLeaderboardPage() {
         <header className="flex flex-wrap items-center justify-between gap-4 bg-brand-dark px-5 py-4 text-white sm:px-8">
           <div className="flex items-center gap-4">
             {isFullscreen ? (
-              <img src={twoPawsEventBarLogo} alt="TwoPaws" className="h-12 w-auto object-contain sm:h-14" />
+              <img src={twoPawsEventBarLogo} alt="TwoPaws" width={600} height={137} className="h-12 w-auto object-contain sm:h-14" />
             ) : (
               <PawPrint className="h-8 w-8 text-brand-olive" />
             )}
