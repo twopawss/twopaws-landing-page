@@ -11,7 +11,7 @@ import {
 
 const MIN_BRAND_PRODUCTS = Number.parseInt(process.env.MIN_BRAND_PRODUCTS ?? "3", 10);
 
-const buildLandingHtml = ({ template, baseUrl, title, h1, intro, canonicalPath, crumbs, products, total, chips }) => {
+const buildLandingHtml = ({ template, baseUrl, title, h1, intro, canonicalPath, crumbs, products, total, chips, sections = [], faq = [] }) => {
   const canonicalUrl = `${baseUrl}${canonicalPath}`;
   const description = intro.length <= 155 ? intro : intro.slice(0, 155).replace(/\s+\S*$/, "");
   const itemList = {
@@ -37,8 +37,12 @@ const buildLandingHtml = ({ template, baseUrl, title, h1, intro, canonicalPath, 
     + (chips.length ? `<div class="flex flex-wrap gap-2">${chips.map((c) => `<a href="${c.path}" class="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">${escapeHtml(c.name)}</a>`).join("")}</div>` : "")
     + `<p class="text-sm text-slate-500">${total} products</p></header>`
     + gridHtml(baseUrl, products)
+    + (sections.length ? `<section class="space-y-6 rounded-lg border border-slate-200 bg-white p-5">${sections.map((s) => `<div class="space-y-2"><h2 class="text-xl font-semibold text-slate-900">${escapeHtml(s.heading)}</h2><p class="text-slate-600">${escapeHtml(s.body)}</p></div>`).join("")}`
+      + (faq.length ? `<div class="space-y-3"><h2 class="text-xl font-semibold text-slate-900">Questions about ${escapeHtml(h1.toLowerCase())}</h2><dl class="space-y-3">${faq.map((f) => `<div><dt class="font-semibold text-slate-900">${escapeHtml(f.q)}</dt><dd class="mt-1 text-slate-600">${escapeHtml(f.a)}</dd></div>`).join("")}</dl></div>` : "")
+      + `</section>` : "")
   );
   let html = applyCoreSeo({ html: template, baseUrl, title, description, canonicalPath });
+  if (faq.length) html = upsertStructuredData(html, "faq-jsonld", { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) });
   html = upsertStructuredData(html, "collection-jsonld", collection);
   html = upsertStructuredData(html, "itemlist-jsonld", itemList);
   html = upsertStructuredData(html, "breadcrumb-jsonld", breadcrumb);
@@ -67,6 +71,7 @@ const writeLandingPages = async () => {
       writePage(categoryPath(category), buildLandingHtml({
         template, baseUrl, title: `${category.name} in Egypt | TwoPaws Shop`, h1: category.name, intro: category.description,
         canonicalPath: categoryPath(category), crumbs: [{ name: pet.name, path: petPath(pet) }], products: result.items, total: result.total, chips,
+        sections: category.sections ?? [], faq: category.faq ?? [],
       }));
       written += 1;
     }

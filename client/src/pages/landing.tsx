@@ -106,19 +106,39 @@ export default function Landing() {
   const faqs = [
     {
       question: "Is TwoPaws free to use?",
-      answer: "Yes! TwoPaws is completely free to download and use.",
+      answer: "Yes. The TwoPaws app is free to download and use on iOS and Android. You only pay for what you order from the shop or book with a vet or pet hotel.",
     },
     {
       question: "Which cities in Egypt do you cover?",
-      answer:
-        "We currently cover Cairo with plans to expand to more governorates soon.",
+      answer: "The shop delivers across Cairo and Giza, most orders the same day, with the North Coast served in season through the app. Vet booking and pet hotels cover Greater Cairo, and we are adding governorates as partners join.",
+    },
+    {
+      question: "What can I buy in the TwoPaws shop?",
+      answer: "Over 2,000 products from verified Egyptian suppliers: dry and wet food for cats and dogs, litter, treats, toys, collars and leashes, beds, flea and tick care, vitamins and grooming, all at supplier prices with delivery fees shown before you pay.",
+    },
+    {
+      question: "How do I book a vet?",
+      answer: "Open the Vets tab in the app, pick a clinic or a home-visit vet near you, choose a time and confirm. You get reminders, and the visit notes land in your pet's health record.",
     },
     {
       question: "Can I track multiple pets?",
-      answer:
-        "Absolutely! You can add unlimited pets to your account. Each pet gets their own profile with separate health records, vaccination schedules, and vet history. Perfect for multi-pet families!",
+      answer: "Yes. Add as many pets as you like. Each one gets its own profile with health records, vaccination schedule, heat cycle tracking and vet history.",
+    },
+    {
+      question: "How do I pay and can I return items?",
+      answer: "Pay cash on delivery or by card and mobile wallet through Paymob. Unopened items can be returned within 7 days, and damaged or wrong items are replaced or refunded in full.",
     },
   ];
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
 
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -165,7 +185,7 @@ export default function Landing() {
         title="TwoPaws | Pet care app in Egypt"
         description="TwoPaws connects pet families in Egypt with vets, clinics, a supplies marketplace, community features, and delivery."
         canonicalUrl="/"
-        structuredData={[organizationSchema, mobileApplicationSchema]}
+        structuredData={[organizationSchema, mobileApplicationSchema, faqSchema]}
       />
 
       <div className="w-full bg-white">
@@ -181,24 +201,18 @@ export default function Landing() {
 
             {/* Desktop */}
             <div className="hidden items-center gap-7 text-sm font-medium text-gray-600 md:flex">
-              <button
-                onClick={() => scrollToSection("features")}
-                className="transition-colors hover:text-brand-purple"
-              >
+              <a href="#features" className="transition-colors hover:text-brand-purple">
                 Features
-              </button>
-              <button
-                onClick={() => scrollToSection("about")}
-                className="transition-colors hover:text-brand-purple"
-              >
+              </a>
+              <a href="/about/" className="transition-colors hover:text-brand-purple">
                 About
-              </button>
-              <button
-                onClick={() => scrollToSection("faq")}
-                className="transition-colors hover:text-brand-purple"
-              >
+              </a>
+              <a href="#faq" className="transition-colors hover:text-brand-purple">
                 FAQ
-              </button>
+              </a>
+              <a href="/contact/" className="transition-colors hover:text-brand-purple">
+                Contact
+              </a>
               <a
                 href="/shop/"
                 className="transition-colors hover:text-brand-purple"
@@ -254,24 +268,15 @@ export default function Landing() {
           {isMobileMenuOpen ? (
             <div className="border-t border-gray-100 px-4 py-4 md:hidden">
               <div className="flex flex-col gap-3 text-sm font-medium text-gray-700">
-                <button
-                  onClick={() => scrollToSection("features")}
-                  className="text-left"
-                >
+                <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>
                   Features
-                </button>
-                <button
-                  onClick={() => scrollToSection("about")}
-                  className="text-left"
-                >
-                  About
-                </button>
-                <button
-                  onClick={() => scrollToSection("faq")}
-                  className="text-left"
-                >
+                </a>
+                <a href="/about/">About</a>
+                <a href="/egypt/">TwoPaws in Egypt</a>
+                <a href="/contact/">Contact</a>
+                <a href="#faq" onClick={() => setIsMobileMenuOpen(false)}>
                   FAQ
-                </button>
+                </a>
                 <a href="/shop/">Shop</a>
                 <a href="/terms/">Terms &amp; Conditions</a>
                 <a href="/privacy/">Privacy Policy</a>
@@ -316,6 +321,9 @@ export default function Landing() {
                   YOUR PET,
                   <br />
                   OUR PRIORITY
+                  <span className="mt-2 block font-sans text-[0.65rem] font-semibold normal-case leading-snug tracking-normal text-white sm:mt-3 sm:text-base lg:text-lg">
+                    Egypt&apos;s pet care app: vets, pet hotels, shop and health tracking
+                  </span>
                 </h1>
                 <div className="mt-4 flex flex-row gap-1 sm:gap-3 sm:items-center">
                   <Button
@@ -592,7 +600,7 @@ export default function Landing() {
                         {faq.question}
                       </span>
                     </AccordionTrigger>
-                    <AccordionContent className="px-6 pb-5">
+                    <AccordionContent forceMount className="px-6 pb-5">
                       <p className="text-lg leading-tight text-brand-yellow sm:text-xl">
                         {faq.answer}
                       </p>
@@ -736,38 +744,12 @@ export default function Landing() {
             <div>
               <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-gray-400">
-                <li>
-                  <button
-                    onClick={() => scrollToSection?.("features")}
-                    className="hover:text-black transition-colors"
-                  >
-                    Features
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => scrollToSection?.("about")}
-                    className="hover:text-black transition-colors"
-                  >
-                    About&nbsp;Us
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => scrollToSection?.("testimonials")}
-                    className="hover:text-black transition-colors"
-                  >
-                    Reviews
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => scrollToSection?.("faq")}
-                    className="hover:text-black transition-colors"
-                  >
-                    FAQ
-                  </button>
-                </li>
+                <li><a href="#features" className="hover:text-black transition-colors">Features</a></li>
+                <li><a href="/about/" className="hover:text-black transition-colors">About Us</a></li>
+                <li><a href="/egypt/" className="hover:text-black transition-colors">TwoPaws in Egypt</a></li>
+                <li><a href="/contact/" className="hover:text-black transition-colors">Contact</a></li>
+                <li><a href="/shipping-and-returns/" className="hover:text-black transition-colors">Shipping &amp; Returns</a></li>
+                <li><a href="#faq" className="hover:text-black transition-colors">FAQ</a></li>
               </ul>
             </div>
 

@@ -7,6 +7,8 @@ export type TaxonomyCategory = {
   googleProductCategory: string;
   raw: string[];
   description: string;
+  sections?: { heading: string; body: string }[];
+  faq?: { q: string; a: string }[];
 };
 type ProductLike = { name?: string; categoryNames?: string[]; petTypes?: string[] };
 export declare const TAXONOMY_PETS: TaxonomyPet[];

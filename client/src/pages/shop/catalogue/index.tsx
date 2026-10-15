@@ -363,7 +363,8 @@ export default function CatalogueShopPage() {
     { "@context": "https://schema.org", "@type": "CollectionPage", name: landing ? landing.h1 : "TwoPaws Shop", description: shopDescription, url: `${BASE_URL}${canonicalPath}`, isPartOf: { "@type": "WebSite", name: "TwoPaws", url: BASE_URL } },
     { "@context": "https://schema.org", "@type": "ItemList", name: landing ? `${landing.h1} products` : "TwoPaws Shop products", ...(total !== null ? { numberOfItems: total } : {}), itemListElement: items.slice(0, 24).map((product, index) => ({ "@type": "ListItem", position: index + 1, name: product.name, url: `${BASE_URL}${productSlugPath(product.id, product.name)}` })) },
     ...(landing ? [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Shop", item: `${BASE_URL}/shop/` }, ...landing.crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 2, name: c.name, item: `${BASE_URL}${c.path}` })), { "@type": "ListItem", position: landing.crumbs.length + 2, name: landing.h1, item: `${BASE_URL}${canonicalPath}` }] }] : []),
-  ], [items, total, landing, shopDescription, canonicalPath]);
+    ...(taxonomyCategory?.faq?.length ? [{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: taxonomyCategory.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }] : []),
+  ], [items, total, landing, shopDescription, canonicalPath, taxonomyCategory]);
 
   const headerSearch = (
     <div className="mx-auto flex w-full max-w-[980px] items-center gap-2">
@@ -561,6 +562,29 @@ export default function CatalogueShopPage() {
             ))}
           </section>
 
+          {taxonomyCategory?.sections?.length ? (
+            <section className="space-y-6 rounded-lg border border-slate-200 bg-white p-5">
+              {taxonomyCategory.sections.map((block) => (
+                <div key={block.heading} className="space-y-2">
+                  <h2 className="text-xl font-semibold text-slate-900">{block.heading}</h2>
+                  <p className="text-slate-600">{block.body}</p>
+                </div>
+              ))}
+              {taxonomyCategory.faq?.length ? (
+                <div className="space-y-3">
+                  <h2 className="text-xl font-semibold text-slate-900">Questions about {taxonomyCategory.name.toLowerCase()}</h2>
+                  <dl className="space-y-3">
+                    {taxonomyCategory.faq.map((item) => (
+                      <div key={item.q}>
+                        <dt className="font-semibold text-slate-900">{item.q}</dt>
+                        <dd className="mt-1 text-slate-600">{item.a}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
           <footer className="flex flex-wrap items-center justify-center gap-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
             <div className="flex items-center justify-center gap-2">
               <button type="button" className="rounded-md border border-slate-200 px-3 py-1 disabled:opacity-50" disabled={loading || currentPage === 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft className="h-4 w-4" /></button>

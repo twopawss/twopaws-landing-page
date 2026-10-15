@@ -34,7 +34,31 @@
         "Cat Food Virbac",
         "royal canin"
       ],
-      "description": "Dry cat food from Royal Canin, Purina, Reflex and more, for kittens, adults, seniors and sterilised cats. Compare supplier prices and get it delivered in Cairo and Giza."
+      "description": "Dry cat food from Royal Canin, Purina, Reflex and more, for kittens, adults, seniors and sterilised cats. Compare supplier prices and get it delivered in Cairo and Giza.",
+      "sections": [
+        {
+          "heading": "How to choose dry food for your cat",
+          "body": "Start with life stage: kitten formulas up to 12 months, adult from one to seven years, senior after that, and sterilised or indoor recipes if your cat is neutered or rarely goes out. Look for a named meat as the first ingredient and a protein content above 30%. Cats with urinary, kidney or skin problems should use a veterinary diet such as Royal Canin Urinary S/O or Hepatic only on a vet's advice."
+        },
+        {
+          "heading": "Brands and pack sizes on TwoPaws",
+          "body": "Royal Canin, Purina Pro Plan, Reflex, Brit, Ozzo, Meow Mix and local brands such as Naomi and Procat, in packs from 400 g trial bags to 10 kg and 20 kg economy sacks. The same product is often sold by two or three suppliers; the cheapest offer is shown first and you choose the supplier at checkout."
+        }
+      ],
+      "faq": [
+        {
+          "q": "How much dry food does a cat need per day?",
+          "a": "An average 4 kg adult cat eats 50 to 70 g of dry food a day, split into two meals. Follow the feeding table on the pack and adjust for weight, activity and whether you also feed wet food."
+        },
+        {
+          "q": "Is it safe to switch brands?",
+          "a": "Yes, but do it over 7 to 10 days, mixing a growing share of the new food into the old one, to avoid an upset stomach."
+        },
+        {
+          "q": "When will my cat food arrive?",
+          "a": "Cairo orders from PetYard, Zima Pets and Dogzone are usually delivered the same day; Giza within 1 to 2 days. The exact fee and time appear at checkout."
+        }
+      ]
     },
     {
       "pet": "cats",
@@ -47,7 +71,31 @@
         "cat wet",
         "Soft Food"
       ],
-      "description": "Pouches, cans and loaf wet food for cats and kittens, from Sheba and Whiskas to Royal Canin veterinary diets."
+      "description": "Pouches, cans and loaf wet food for cats and kittens, from Sheba and Whiskas to Royal Canin veterinary diets.",
+      "sections": [
+        {
+          "heading": "Pouches, cans, loaf or gravy",
+          "body": "Wet food adds water to a cat's diet, which helps the urinary tract, and is the easiest way to feed picky or senior cats. Pouches (85 g) suit a single meal, cans suit multi-cat homes, and loaf, pate and jelly textures let you match what your cat already likes. Complete recipes can replace dry food; complementary ones are toppers only."
+        },
+        {
+          "heading": "What you will find here",
+          "body": "Everyday pouches from Sheba, Whiskas, Felix, Tomi and Club 4 Paws, kitten and sterilised recipes, and veterinary wet diets from Royal Canin and Purina Pro Plan for urinary, renal and recovery care."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Can I mix wet and dry food?",
+          "a": "Yes. A common pattern is one pouch of wet food a day plus dry food available for grazing, reducing the dry portion by about 20 g per pouch."
+        },
+        {
+          "q": "How long does an opened pouch last?",
+          "a": "Serve immediately and refrigerate leftovers in a covered container for up to 24 hours. Discard anything left out for more than four hours in Cairo heat."
+        },
+        {
+          "q": "Do you deliver chilled products?",
+          "a": "Pouches and cans are shelf-stable and ship normally. Fresh food is a separate category delivered chilled."
+        }
+      ]
     },
     {
       "pet": "cats",
@@ -60,7 +108,31 @@
         "litter",
         "cat liiter"
       ],
-      "description": "Clumping, bentonite, silica and scented cat litter in every bag size, delivered to your door in Cairo and Giza."
+      "description": "Clumping, bentonite, silica and scented cat litter in every bag size, delivered to your door in Cairo and Giza.",
+      "sections": [
+        {
+          "heading": "Which litter type fits your home",
+          "body": "Clumping bentonite is the Egyptian standard: cheap, easy to scoop and sold in 5 to 20 litre bags. Silica crystals absorb more and are lighter to carry up stairs but cost more per month. Tofu and wood litters are flushable and low-dust, which matters in small flats and for cats with asthma. Scented litters mask odour but some cats refuse them; unscented is the safe first choice."
+        },
+        {
+          "heading": "Bag sizes and delivery",
+          "body": "Litter is heavy, which is exactly why ordering it on TwoPaws makes sense: 10 and 20 litre bags from Benty Sandy, Cat Kota, Garfield, Sani Cat and Cat's White are delivered to your door in Cairo and Giza for the same EGP 50 fee as any other order from that supplier."
+        }
+      ],
+      "faq": [
+        {
+          "q": "How often should I change cat litter?",
+          "a": "Scoop clumps daily, top up as needed, and replace all the litter every one to two weeks for clumping clay, or monthly for silica, washing the tray each time."
+        },
+        {
+          "q": "How much litter does one cat use?",
+          "a": "About 10 litres a month for one cat with a standard tray. Two cats need two trays."
+        },
+        {
+          "q": "Why has my cat stopped using the tray?",
+          "a": "Usually a dirty tray, a new scent, a box that is too small, or a medical issue such as cystitis. Try unscented litter and a bigger tray, and see a vet if it continues."
+        }
+      ]
     },
     {
       "pet": "cats",
@@ -72,7 +144,31 @@
         "treats & biscuits",
         "Cat Treats"
       ],
-      "description": "Treats, sticks and lickable snacks for cats, including Temptations, Inaba Churu and dental treats."
+      "description": "Treats, sticks and lickable snacks for cats, including Temptations, Inaba Churu and dental treats.",
+      "sections": [
+        {
+          "heading": "Treats that are good for cats",
+          "body": "Treats should stay under 10% of daily calories. Crunchy treats such as Temptations and Dreamies work for training and dental cleaning; lickable sticks such as Inaba Churu are ideal for giving medicine or rewarding a nervous cat; freeze-dried meat is the highest-protein option. Avoid treats with sugar or garlic."
+        },
+        {
+          "heading": "Brands available",
+          "body": "Temptations, Dreamies, Inaba Churu, Perfecto, Robust and Reflex treats from Cairo suppliers, delivered with the rest of your order."
+        }
+      ],
+      "faq": [
+        {
+          "q": "How many treats can I give a day?",
+          "a": "Follow the pack, usually 10 to 15 small crunchy treats or one lickable stick a day for an adult cat, less for kittens."
+        },
+        {
+          "q": "Are dental treats worth it?",
+          "a": "They help reduce plaque but do not replace brushing or a vet dental check once a year."
+        },
+        {
+          "q": "Can kittens have treats?",
+          "a": "From about 12 weeks, in tiny amounts, and only treats labelled for kittens or all life stages."
+        }
+      ]
     },
     {
       "pet": "cats",
@@ -118,7 +214,31 @@
         "dray food for dog Puppies",
         "royal canin"
       ],
-      "description": "Dry dog food for puppies, adults and seniors of every breed size, from Royal Canin, Purina Pro Plan, Brit and Taste of the Wild."
+      "description": "Dry dog food for puppies, adults and seniors of every breed size, from Royal Canin, Purina Pro Plan, Brit and Taste of the Wild.",
+      "sections": [
+        {
+          "heading": "Choosing dry food by size and age",
+          "body": "Dog food is formulated by breed size as well as age: Mini for dogs under 10 kg, Medium for 10 to 25 kg, Maxi for 25 to 45 kg and Giant above that, each with puppy, adult and senior stages. Puppies need a puppy formula until 12 months (18 months for giant breeds). Dogs with allergies, joint problems or sensitive digestion have dedicated recipes from Royal Canin, Purina Pro Plan and Brit."
+        },
+        {
+          "heading": "Sizes, brands and prices",
+          "body": "Packs run from 1.5 kg to 20 kg, and the per-kilo price drops sharply in the large sacks. Royal Canin, Purina Pro Plan, Brit, Taste of the Wild, Belcando, Reflex and local brands are all here at supplier prices, with the cheapest supplier shown first."
+        }
+      ],
+      "faq": [
+        {
+          "q": "How much should I feed my dog?",
+          "a": "Use the feeding table on the pack for your dog's target adult weight, then adjust by watching body condition: you should feel the ribs without seeing them."
+        },
+        {
+          "q": "Large breed puppy or regular puppy food?",
+          "a": "Large and giant breed puppies need the large-breed formula, which controls calcium and growth rate to protect their joints."
+        },
+        {
+          "q": "Can I order 20 kg sacks for delivery?",
+          "a": "Yes. Heavy sacks are delivered in Cairo and Giza at the supplier's standard fee, usually the same or next day."
+        }
+      ]
     },
     {
       "pet": "dogs",
@@ -154,7 +274,31 @@
         "treats & biscuits",
         "Dog Treats"
       ],
-      "description": "Chews, biscuits, dental sticks and training treats for dogs."
+      "description": "Chews, biscuits, dental sticks and training treats for dogs.",
+      "sections": [
+        {
+          "heading": "Treats for training, chewing and teeth",
+          "body": "Small soft treats are best for training because they are eaten fast. Dental sticks and chew bones keep teeth clean and give a dog something to do; pick the size for your dog's weight so they cannot be swallowed whole. Jerky and biscuits are everyday rewards. Keep all treats under 10% of daily calories."
+        },
+        {
+          "heading": "Brands on TwoPaws",
+          "body": "Pedigree Dentastix, Wags, Reflex, Woof & Fetch, Kong dental and local chews, all from Cairo suppliers at supplier prices."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Are rawhide bones safe?",
+          "a": "They can splinter and cause blockages. Pressed or vegetable chews and rubber toys are safer choices."
+        },
+        {
+          "q": "Can puppies have treats?",
+          "a": "From 8 weeks, in tiny pieces, and only soft treats until adult teeth are in."
+        },
+        {
+          "q": "How do I use treats for training?",
+          "a": "Reward within two seconds of the behaviour, keep pieces pea-sized, and fade treats out as the behaviour becomes reliable."
+        }
+      ]
     },
     {
       "pet": "dogs",
@@ -186,7 +330,31 @@
         "DOG Harness",
         "DOG Leash"
       ],
-      "description": "Collars, retractable leashes and padded harnesses for walks and training."
+      "description": "Collars, retractable leashes and padded harnesses for walks and training.",
+      "sections": [
+        {
+          "heading": "Collar, harness or head halter",
+          "body": "A flat collar carries the ID tag and suits calm walkers. A harness spreads pressure across the chest and is kinder for puppies, small breeds and pullers; Air Mesh harnesses are the most popular in Cairo heat. Retractable Flexi leashes give freedom in open areas but a fixed 1.2 to 1.8 m leash is safer on streets."
+        },
+        {
+          "heading": "Getting the size right",
+          "body": "Measure the neck or chest with a tape and leave two fingers of space. Each product lists the sizes in stock per supplier; Flexi, Dogness and Nylon ranges cover dogs from 2 kg to 50 kg."
+        }
+      ],
+      "faq": [
+        {
+          "q": "When can a puppy start wearing a harness?",
+          "a": "From 8 to 10 weeks for short, supervised sessions indoors, before the first walks."
+        },
+        {
+          "q": "Which leash for a dog that pulls?",
+          "a": "A front-clip harness with a fixed leash. Avoid retractable leashes until the dog walks on a loose leash."
+        },
+        {
+          "q": "Can I return a collar that does not fit?",
+          "a": "Yes, unused and in its packaging within 7 days, collected free from your address."
+        }
+      ]
     },
     {
       "pet": "dogs",
@@ -242,7 +410,31 @@
         "frontline",
         "Omni guard"
       ],
-      "description": "Spot-ons, sprays, collars and tablets against fleas and ticks for cats and dogs, including Frontline and Bravecto."
+      "description": "Spot-ons, sprays, collars and tablets against fleas and ticks for cats and dogs, including Frontline and Bravecto.",
+      "sections": [
+        {
+          "heading": "Spot-on, collar, tablet or spray",
+          "body": "Monthly spot-on drops such as Frontline or Fipet go on the skin at the back of the neck and are the simplest routine for cats and dogs. Collars such as Seresto last up to 8 months. Chewable tablets such as Bravecto and NexGard work for three months and are the best choice for dogs that swim or are bathed often. Sprays treat an existing infestation and the home. Always match the product to the species and weight band; dog products can be fatal to cats."
+        },
+        {
+          "heading": "Protection in Cairo all year",
+          "body": "Ticks and fleas are active year-round in Egypt's climate, so treatment should not stop in winter. TwoPaws carries Frontline, Fipet, Bravecto, Virbac Effipro, Omni Guard and Pets Republic products from licensed suppliers."
+        }
+      ],
+      "faq": [
+        {
+          "q": "How often should I treat my pet?",
+          "a": "Monthly for most spot-ons and sprays, every three months for Bravecto tablets, and every 8 months for a Seresto collar, following the pack for your pet's weight."
+        },
+        {
+          "q": "Can I use dog flea treatment on a cat?",
+          "a": "No. Permethrin products for dogs are toxic to cats. Use only products labelled for cats."
+        },
+        {
+          "q": "My pet still has fleas after treatment. Why?",
+          "a": "Eggs in the home hatch for weeks. Treat all pets in the house, wash bedding at 60 degrees, vacuum daily and use a home spray; the product itself keeps working."
+        }
+      ]
     },
     {
       "pet": "pets",
@@ -271,7 +463,31 @@
         "shampoo Virbac",
         "Perfuim"
       ],
-      "description": "Shampoos, conditioners and deodorising sprays for cats and dogs."
+      "description": "Shampoos, conditioners and deodorising sprays for cats and dogs.",
+      "sections": [
+        {
+          "heading": "Choosing a shampoo",
+          "body": "Pet skin has a different pH from ours, so use shampoos made for cats or dogs. Oatmeal and aloe formulas suit sensitive or itchy skin, medicated shampoos from Virbac treat fungal and bacterial problems on a vet's advice, and waterless foams or wipes keep cats fresh without a bath. Perfumes and deodorising sprays such as Omni Guard are for between baths, never on broken skin."
+        },
+        {
+          "heading": "What is in stock",
+          "body": "Virbac, Pets Republic, Omni Guard, Bergamo, Rich and local brands, delivered from Cairo suppliers with your other items."
+        }
+      ],
+      "faq": [
+        {
+          "q": "How often should I bathe my dog?",
+          "a": "Every four to six weeks for most dogs, more often in summer if they swim or get dirty, less for dogs with dry skin."
+        },
+        {
+          "q": "Do cats need baths?",
+          "a": "Rarely. Healthy cats groom themselves; bathe only when soiled, elderly or on vet advice, using a cat shampoo and warm water."
+        },
+        {
+          "q": "Is pet perfume safe?",
+          "a": "Yes when made for pets and used lightly on the coat, away from the face. Stop if you see scratching or sneezing."
+        }
+      ]
     },
     {
       "pet": "pets",
@@ -284,7 +500,31 @@
         "Pet Grooming Supplies",
         "brush"
       ],
-      "description": "Brushes, combs, nail clippers and deshedding tools."
+      "description": "Brushes, combs, nail clippers and deshedding tools.",
+      "sections": [
+        {
+          "heading": "The grooming kit every home needs",
+          "body": "A slicker brush or deshedding tool for the coat, a steel comb for knots, nail clippers with a safety guard, ear cleaner and a toothbrush. Long-haired cats and double-coated dogs need brushing several times a week in the Cairo shedding seasons of spring and autumn; short coats once a week is enough."
+        },
+        {
+          "heading": "Tools on TwoPaws",
+          "body": "Brushes, combs, deshedding tools, clippers and trimmers from Nunbell, Pets Republic, Kiki Kat and professional ranges, with free returns on unused tools within 7 days."
+        }
+      ],
+      "faq": [
+        {
+          "q": "How often should I trim my pet's nails?",
+          "a": "Every three to four weeks for indoor cats and dogs that walk on soft ground; dogs walked on pavement wear them down naturally."
+        },
+        {
+          "q": "How do I stop my cat shedding so much?",
+          "a": "Daily brushing during spring and autumn, a quality diet with omega-3, and a deshedding tool once a week."
+        },
+        {
+          "q": "Can I use human clippers or shampoo?",
+          "a": "Clippers yes, with a pet blade; shampoo no, human products irritate pet skin."
+        }
+      ]
     },
     {
       "pet": "pets",
