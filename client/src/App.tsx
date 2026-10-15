@@ -1,13 +1,10 @@
-﻿import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/hooks/useAuth";
-import { CartProvider } from "@/hooks/useCart";
-import { CatalogueCartProvider } from "@/hooks/useCatalogueCart";
 import { isCatalogueShop } from "@/lib/shopBackend";
 import {
   initMetaPixel,
@@ -19,40 +16,59 @@ import {
 import { isReactSnapPrerender } from "@/lib/isPrerender";
 import { ANDROID_STORE_URL, IOS_STORE_URL } from "@/lib/seo/constants";
 import Landing from "@/pages/landing";
-import AboutPage from "@/pages/marketing/about";
-import ContactPage from "@/pages/marketing/contact";
-import EgyptPage from "@/pages/marketing/egypt";
-import FeaturesPage from "@/pages/marketing/features";
-import NotFound from "@/pages/not-found";
-import Terms from "@/pages/terms";
-import Privacy from "@/pages/privacy";
-import DeleteAccount from "@/pages/delete-account";
-import { ForgotPasswordPage, ResetPasswordPage } from "@/pages/password-reset";
-import DownloadRedirect from "@/pages/download";
-import ShopPage from "@/pages/shop";
-import SuppliersPage from "@/pages/shop/suppliers";
-import SupplierShopPage from "@/pages/shop/supplier";
-import ProductDetailPage from "@/pages/shop/product";
-import CatalogueShopPage from "@/pages/shop/catalogue";
-import CatalogueSupplierPage from "@/pages/shop/catalogue/supplier";
-import CatalogueProductPage from "@/pages/shop/catalogue/product";
-import CartPage from "@/pages/cart";
-import CatalogueCartPage from "@/pages/catalogue-cart";
-import CheckoutPage from "@/pages/checkout";
-import CatalogueCheckoutPage from "@/pages/catalogue-checkout";
-import OrdersPage from "@/pages/orders";
-import OrderDetailPage from "@/pages/order-detail";
-import AccountPage from "@/pages/account";
-import LoginPage from "@/pages/login";
-import PaymobPaymentPage from "@/pages/payment/paymob";
-import PaymentReturnPage from "@/pages/payment/return";
-import CataloguePaymentReturnPage from "@/pages/payment/catalogue-return";
-import PublicEventPage from "@/pages/events/event-public";
-import EventLeaderboardPage from "@/pages/events/leaderboard";
-import EventPaymentResultPage from "@/pages/events/payment-result";
-import EventOrdersPage from "@/pages/events/event-orders";
-import EventTicketDetailPage from "@/pages/events/ticket-detail";
-import OrganizerPage from "@/pages/organizer/organizer";
+
+// Every route except the landing page is code-split. The Firebase-backed routes additionally sit
+// under FirebaseShell (a lazy layout route), so the Firebase SDK is not downloaded or initialised
+// until one of them renders.
+const FirebaseShell = lazy(() => import("@/app/FirebaseShell"));
+const AboutPage = lazy(() => import("@/pages/marketing/about"));
+const ContactPage = lazy(() => import("@/pages/marketing/contact"));
+const EgyptPage = lazy(() => import("@/pages/marketing/egypt"));
+const FeaturesPage = lazy(() => import("@/pages/marketing/features"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Terms = lazy(() => import("@/pages/terms"));
+const Privacy = lazy(() => import("@/pages/privacy"));
+const DeleteAccount = lazy(() => import("@/pages/delete-account"));
+const ForgotPasswordPage = lazy(() =>
+  import("@/pages/password-reset").then((m) => ({ default: m.ForgotPasswordPage })),
+);
+const ResetPasswordPage = lazy(() =>
+  import("@/pages/password-reset").then((m) => ({ default: m.ResetPasswordPage })),
+);
+const DownloadRedirect = lazy(() => import("@/pages/download"));
+const ShopPage = lazy(() => import("@/pages/shop"));
+const SuppliersPage = lazy(() => import("@/pages/shop/suppliers"));
+const SupplierShopPage = lazy(() => import("@/pages/shop/supplier"));
+const ProductDetailPage = lazy(() => import("@/pages/shop/product"));
+const CatalogueShopPage = lazy(() => import("@/pages/shop/catalogue"));
+const CatalogueSupplierPage = lazy(() => import("@/pages/shop/catalogue/supplier"));
+const CatalogueProductPage = lazy(() => import("@/pages/shop/catalogue/product"));
+const CartPage = lazy(() => import("@/pages/cart"));
+const CatalogueCartPage = lazy(() => import("@/pages/catalogue-cart"));
+const CheckoutPage = lazy(() => import("@/pages/checkout"));
+const CatalogueCheckoutPage = lazy(() => import("@/pages/catalogue-checkout"));
+const OrdersPage = lazy(() => import("@/pages/orders"));
+const OrderDetailPage = lazy(() => import("@/pages/order-detail"));
+const AccountPage = lazy(() => import("@/pages/account"));
+const LoginPage = lazy(() => import("@/pages/login"));
+const PaymobPaymentPage = lazy(() => import("@/pages/payment/paymob"));
+const PaymentReturnPage = lazy(() => import("@/pages/payment/return"));
+const CataloguePaymentReturnPage = lazy(() => import("@/pages/payment/catalogue-return"));
+const PublicEventPage = lazy(() => import("@/pages/events/event-public"));
+const EventLeaderboardPage = lazy(() => import("@/pages/events/leaderboard"));
+const EventPaymentResultPage = lazy(() => import("@/pages/events/payment-result"));
+const EventOrdersPage = lazy(() => import("@/pages/events/event-orders"));
+const EventTicketDetailPage = lazy(() => import("@/pages/events/ticket-detail"));
+const OrganizerPage = lazy(() => import("@/pages/organizer/organizer"));
+
+/** Shown while a route chunk downloads. Kept minimal so it never competes with the page itself. */
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-white" aria-busy="true">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-purple/20 border-t-brand-purple" />
+    </div>
+  );
+}
 
 const normalizePath = (path: string) => {
   const normalized = path.replace(/\/+$/, "");
@@ -146,31 +162,25 @@ const SupplierPage = isCatalogueShop ? CatalogueSupplierPage : SupplierShopPage;
 const CartRoutePage = isCatalogueShop ? CatalogueCartPage : CartPage;
 const CheckoutRoutePage = isCatalogueShop ? CatalogueCheckoutPage : CheckoutPage;
 const PaymentReturnRoutePage = isCatalogueShop ? CataloguePaymentReturnPage : PaymentReturnPage;
-/** The legacy cart provider stays mounted on the legacy backend only; the catalogue cart is always available for product_* pages. */
-function ShopProviders({ children }: { children: React.ReactNode }) {
-  if (isCatalogueShop) return <CatalogueCartProvider>{children}</CatalogueCartProvider>;
-  return <CartProvider>{children}</CartProvider>;
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <TooltipProvider>
-          <AuthProvider>
-            <ShopProviders>
-              <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-                <Toaster />
-                <MetaPixelTracker />
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/features" element={<FeaturesPage />} />
-                  <Route path="/egypt" element={<EgyptPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/download" element={<DownloadRedirect />} />
+          <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+            <Toaster />
+            <MetaPixelTracker />
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/features" element={<FeaturesPage />} />
+                <Route path="/egypt" element={<EgyptPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/download" element={<DownloadRedirect />} />
+                <Route element={<FirebaseShell />}>
                   <Route path="/delete-account" element={<DeleteAccount />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -196,11 +206,11 @@ function App() {
                   <Route path="/organizer/events" element={<OrganizerPage />} />
                   <Route path="/organizer/events/:eventId" element={<OrganizerPage />} />
                   <Route path="/organizer/events/:eventId/:section" element={<OrganizerPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </ShopProviders>
-          </AuthProvider>
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
         </TooltipProvider>
       </HelmetProvider>
     </QueryClientProvider>
