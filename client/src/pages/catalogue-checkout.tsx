@@ -210,7 +210,8 @@ export default function CatalogueCheckoutPage() {
 
       if (order.guestCheckoutToken) {
         window.sessionStorage.setItem(`${PAYMOB_GUEST_TOKEN_STORAGE_PREFIX}${order.orderId}`, order.guestCheckoutToken);
-        window.sessionStorage.setItem(GUEST_PENDING_ORDER_STORAGE_KEY, order.orderId);
+        // The pending marker tells the return page to clear the guest cart once the card payment is confirmed; cash clears it here.
+        if (paymentMethod === "card") window.sessionStorage.setItem(GUEST_PENDING_ORDER_STORAGE_KEY, order.orderId);
       }
 
       if (paymentMethod === "card") {
