@@ -358,7 +358,9 @@ export default function Landing() {
 
               {/* Cat */}
               <img
-                src="/iStock-1143440918.webp"
+                src="/hero-cat-498.webp"
+                width={498}
+                height={458}
                 alt="Cat"
                 decoding="async"
                 fetchPriority="low"
