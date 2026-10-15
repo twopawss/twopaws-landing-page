@@ -25,6 +25,8 @@ import CartBadge from "@/components/shop/CartBadge";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/shop/", label: "Shop" },
+  { href: "/shop/cats/dry-food/", label: "Cats" },
+  { href: "/shop/dogs/dry-food/", label: "Dogs" },
   { href: "/orders", label: "Orders" },
   { href: "/account", label: "Account" },
 ];

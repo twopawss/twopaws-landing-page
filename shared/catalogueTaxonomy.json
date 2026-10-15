@@ -1,0 +1,312 @@
+{
+  "_comment": "Category taxonomy for twopaws.pet. Each category maps raw supplier categoryNames (as they appear in catalogueBrowse facets) and an optional petType onto one landing page at /shop/{pet}/{slug}/. Matching is case- and accent-insensitive. Edit here; the build and the client read this file.",
+  "pets": {
+    "cats": {
+      "petType": "cat",
+      "name": "Cats",
+      "nameAr": "قطط",
+      "description": "Everything for your cat in Egypt: dry and wet food, litter, treats, toys and care, delivered in Cairo and Giza from trusted suppliers."
+    },
+    "dogs": {
+      "petType": "dog",
+      "name": "Dogs",
+      "nameAr": "كلاب",
+      "description": "Dog food, treats, collars, beds and care from TwoPaws suppliers, with same-day delivery across Cairo and Giza."
+    },
+    "pets": {
+      "petType": "",
+      "name": "All pets",
+      "nameAr": "كل الحيوانات",
+      "description": "Health, grooming and supplies for cats, dogs, birds and horses from TwoPaws suppliers in Egypt."
+    }
+  },
+  "categories": [
+    {
+      "pet": "cats",
+      "slug": "dry-food",
+      "name": "Cat dry food",
+      "nameAr": "دراي فود قطط",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Cat Supplies > Cat Food",
+      "raw": [
+        "Dry food",
+        "dray food",
+        "Cat Food",
+        "Cat Food Virbac",
+        "royal canin"
+      ],
+      "description": "Dry cat food from Royal Canin, Purina, Reflex and more, for kittens, adults, seniors and sterilised cats. Compare supplier prices and get it delivered in Cairo and Giza."
+    },
+    {
+      "pet": "cats",
+      "slug": "wet-food",
+      "name": "Cat wet food",
+      "nameAr": "ويت فود قطط",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Cat Supplies > Cat Food",
+      "raw": [
+        "wet food",
+        "cat wet",
+        "Soft Food"
+      ],
+      "description": "Pouches, cans and loaf wet food for cats and kittens, from Sheba and Whiskas to Royal Canin veterinary diets."
+    },
+    {
+      "pet": "cats",
+      "slug": "litter",
+      "name": "Cat litter",
+      "nameAr": "رمل قطط",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Cat Supplies > Cat Litter",
+      "raw": [
+        "cat litter",
+        "litter",
+        "cat liiter"
+      ],
+      "description": "Clumping, bentonite, silica and scented cat litter in every bag size, delivered to your door in Cairo and Giza."
+    },
+    {
+      "pet": "cats",
+      "slug": "treats",
+      "name": "Cat treats",
+      "nameAr": "مكافآت قطط",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Cat Supplies > Cat Treats",
+      "raw": [
+        "treats & biscuits",
+        "Cat Treats"
+      ],
+      "description": "Treats, sticks and lickable snacks for cats, including Temptations, Inaba Churu and dental treats."
+    },
+    {
+      "pet": "cats",
+      "slug": "toys",
+      "name": "Cat toys",
+      "nameAr": "ألعاب قطط",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Cat Supplies > Cat Toys",
+      "raw": [
+        "toys",
+        "cat toy",
+        "pet toys"
+      ],
+      "description": "Teasers, balls, tunnels and scratchers to keep indoor cats active."
+    },
+    {
+      "pet": "cats",
+      "slug": "accessories",
+      "name": "Cat accessories",
+      "nameAr": "مستلزمات قطط",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Cat Supplies",
+      "raw": [
+        "accessories",
+        "cat accessories",
+        "Beds",
+        "Pet supplies",
+        "Animals & Pet Supplies",
+        "Animals & Pet Supplies Virbac"
+      ],
+      "description": "Beds, carriers, bowls, collars and litter boxes for cats."
+    },
+    {
+      "pet": "dogs",
+      "slug": "dry-food",
+      "name": "Dog dry food",
+      "nameAr": "دراي فود كلاب",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Food",
+      "raw": [
+        "Dry food",
+        "dray food",
+        "Dog Food",
+        "Dog Food Virbac",
+        "Prescription Dog Food",
+        "dray food for dog Puppies",
+        "royal canin"
+      ],
+      "description": "Dry dog food for puppies, adults and seniors of every breed size, from Royal Canin, Purina Pro Plan, Brit and Taste of the Wild."
+    },
+    {
+      "pet": "dogs",
+      "slug": "wet-food",
+      "name": "Dog wet food",
+      "nameAr": "ويت فود كلاب",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Food",
+      "raw": [
+        "wet food",
+        "Soft Food"
+      ],
+      "description": "Canned and pouch wet food for dogs, including veterinary diets."
+    },
+    {
+      "pet": "dogs",
+      "slug": "fresh-food",
+      "name": "Fresh dog food",
+      "nameAr": "أكل طازج للكلاب",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Food",
+      "raw": [
+        "Fresh Food",
+        "Freshfood"
+      ],
+      "description": "Freshly cooked, portioned dog meals delivered chilled in Cairo and Giza."
+    },
+    {
+      "pet": "dogs",
+      "slug": "treats",
+      "name": "Dog treats",
+      "nameAr": "مكافآت كلاب",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Treats",
+      "raw": [
+        "treats & biscuits",
+        "Dog Treats"
+      ],
+      "description": "Chews, biscuits, dental sticks and training treats for dogs."
+    },
+    {
+      "pet": "dogs",
+      "slug": "toys",
+      "name": "Dog toys",
+      "nameAr": "ألعاب كلاب",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Toys",
+      "raw": [
+        "toys",
+        "Dog Toys",
+        "pet toys",
+        "fox shape"
+      ],
+      "description": "Chew toys, balls, ropes and puzzle toys for dogs of every size, including Kong."
+    },
+    {
+      "pet": "dogs",
+      "slug": "collars-leashes",
+      "name": "Collars, leashes and harnesses",
+      "nameAr": "أطواق وسلاسل",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Collars & Harnesses",
+      "raw": [
+        "Air Mesh Collar",
+        "Air Mesh Leash",
+        "Air Mesh Harness",
+        "Flexi Leash",
+        "flexi",
+        "Nylon Collar",
+        "DOG Harness",
+        "DOG Leash"
+      ],
+      "description": "Collars, retractable leashes and padded harnesses for walks and training."
+    },
+    {
+      "pet": "dogs",
+      "slug": "beds",
+      "name": "Dog beds and houses",
+      "nameAr": "أسرّة كلاب",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Beds",
+      "raw": [
+        "Beds",
+        "DOG BED",
+        "dogs house"
+      ],
+      "description": "Beds, mats and houses for dogs indoors and outdoors."
+    },
+    {
+      "pet": "dogs",
+      "slug": "training-pads",
+      "name": "Training pads and diapers",
+      "nameAr": "مفارش تدريب",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Diaper Pads & Liners",
+      "raw": [
+        "Dog Diaper Pads & Liners",
+        "pad"
+      ],
+      "description": "Absorbent training pads and diapers for puppies and senior dogs."
+    },
+    {
+      "pet": "dogs",
+      "slug": "accessories",
+      "name": "Dog accessories",
+      "nameAr": "مستلزمات كلاب",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Dog Supplies",
+      "raw": [
+        "accessories",
+        "Dog Supplies",
+        "dog bowl",
+        "Pet supplies",
+        "Animals & Pet Supplies",
+        "Animals & Pet Supplies Virbac"
+      ],
+      "description": "Bowls, feeders, carriers, muzzles and travel gear for dogs."
+    },
+    {
+      "pet": "pets",
+      "slug": "flea-and-tick",
+      "name": "Flea and tick control",
+      "nameAr": "مكافحة البراغيث والقراد",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Pet Flea & Tick Control",
+      "raw": [
+        "flea & ticks",
+        "Pet Flea & Tick Control",
+        "Pet Flea & Tick Control Virbac",
+        "frontline",
+        "Omni guard"
+      ],
+      "description": "Spot-ons, sprays, collars and tablets against fleas and ticks for cats and dogs, including Frontline and Bravecto."
+    },
+    {
+      "pet": "pets",
+      "slug": "pharmacy-and-vitamins",
+      "name": "Pharmacy and vitamins",
+      "nameAr": "صيدلية وفيتامينات",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Pet Vitamins & Supplements",
+      "raw": [
+        "Pharmacy & vitamins",
+        "pharmacy",
+        "Virbac",
+        "Pti",
+        "AK",
+        "bi"
+      ],
+      "description": "Supplements, dewormers, ear and eye care and veterinary products for cats and dogs."
+    },
+    {
+      "pet": "pets",
+      "slug": "shampoo-and-perfume",
+      "name": "Shampoo and perfume",
+      "nameAr": "شامبو وعطور",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Pet Grooming Supplies",
+      "raw": [
+        "shampoo",
+        "shampoo Virbac",
+        "Perfuim"
+      ],
+      "description": "Shampoos, conditioners and deodorising sprays for cats and dogs."
+    },
+    {
+      "pet": "pets",
+      "slug": "grooming",
+      "name": "Grooming tools",
+      "nameAr": "أدوات تنظيف وعناية",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Pet Grooming Supplies",
+      "raw": [
+        "grooming",
+        "Pet Grooming Supplies",
+        "brush"
+      ],
+      "description": "Brushes, combs, nail clippers and deshedding tools."
+    },
+    {
+      "pet": "pets",
+      "slug": "birds",
+      "name": "Birds",
+      "nameAr": "طيور",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies > Bird Supplies",
+      "raw": [
+        "birds"
+      ],
+      "description": "Seed mixes and supplies for canaries, budgies and parrots."
+    },
+    {
+      "pet": "pets",
+      "slug": "horses",
+      "name": "Horses",
+      "nameAr": "خيول",
+      "googleProductCategory": "Animals & Pet Supplies > Pet Supplies",
+      "raw": [
+        "Horse"
+      ],
+      "description": "Feed, supplements and care products for horses."
+    }
+  ]
+}

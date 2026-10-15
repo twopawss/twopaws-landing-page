@@ -189,6 +189,9 @@ function App() {
                   <Route path="/shop/suppliers" element={<SuppliersPage />} />
                   <Route path="/shop/supplier/:supplierId" element={<SupplierPage />} />
                   <Route path="/shop/product/:productId" element={<ProductLinkPage />} />
+                  {isCatalogueShop && <Route path="/shop/brand/:brand" element={<CatalogueShopPage />} />}
+                  {isCatalogueShop && <Route path="/shop/:pet" element={<CatalogueShopPage />} />}
+                  {isCatalogueShop && <Route path="/shop/:pet/:category" element={<CatalogueShopPage />} />}
                   <Route path="/cart" element={<CartRoutePage />} />
                   <Route path="/checkout" element={<CheckoutRoutePage />} />
                   <Route path="/orders" element={<OrdersPage />} />

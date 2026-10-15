@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
 import ShopShell from "@/components/shop/ShopShell";
 import CatalogueProductCard from "@/components/shop/CatalogueProductCard";
@@ -16,6 +16,7 @@ import { META_PIXEL_CURRENCY, trackMetaCustomEvent, trackMetaEvent } from "@/lib
 import Seo from "@/lib/seo/Seo";
 import { BASE_URL } from "@/lib/seo/constants";
 import { isReactSnapPrerender } from "@/lib/isPrerender";
+import { TAXONOMY_PETS, brandSlugPath, categoriesForPet, categoryPath, findCategory, petByKey, productSlugPath, slugify } from "@/lib/catalogueTaxonomy";
 import {
   browseProducts, callableCode, callableMessage, cheapestOffer, getFacets, suggest,
   type BrowseParams, type BrowseSort, type Facets, type PublicProduct, type Suggestion,
@@ -139,6 +140,11 @@ export function CatalogueSearchBox({
 
 export default function CatalogueShopPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  // Landing modes: /shop/{pet}/{category}/ (taxonomy) and /shop/brand/{brand}/ share this page with /shop/.
+  const { pet: petParam = "", category: categorySlug = "", brand: brandSlug = "" } = useParams();
+  const taxonomyPet = petParam ? petByKey(petParam) : null;
+  const taxonomyCategory = petParam && categorySlug ? findCategory(petParam, categorySlug) : null;
+  const landingMissing = Boolean((petParam && !taxonomyPet) || (categorySlug && !taxonomyCategory));
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -190,12 +196,14 @@ export default function CatalogueShopPage() {
     limit: perPage,
     query: submittedSearch || undefined,
     category: selectedCategory !== "all" ? selectedCategory : undefined,
-    brand: selectedBrand !== "all" ? selectedBrand : undefined,
+    brand: brandSlug || (selectedBrand !== "all" ? selectedBrand : undefined),
     supplierId: selectedSupplier !== "all" ? selectedSupplier : undefined,
     sortMode,
     minPriceMinor: toMinor(appliedPrice.min) || undefined,
     maxPriceMinor: toMinor(appliedPrice.max) || undefined,
-  }), [perPage, submittedSearch, selectedCategory, selectedBrand, selectedSupplier, sortMode, appliedPrice]);
+    categories: taxonomyCategory?.raw,
+    petType: taxonomyPet?.petType || undefined,
+  }), [perPage, submittedSearch, selectedCategory, selectedBrand, brandSlug, selectedSupplier, sortMode, appliedPrice, taxonomyCategory, taxonomyPet]);
   const filterKey = JSON.stringify(browseParams);
 
   // Server paging: the cursor for page n is only known after page n-1 was fetched, so a jump walks
@@ -296,7 +304,7 @@ export default function CatalogueShopPage() {
   const handleAdd = useCallback(async (product: PublicProduct) => {
     if (product.variants.length > 1) {
       handleProductNavigate();
-      navigate(`/shop/product/${product.id}/`);
+      navigate(productSlugPath(product.id, product.name));
       return;
     }
     const offer = cheapestOffer(product);
@@ -340,11 +348,22 @@ export default function CatalogueShopPage() {
   const hiddenCategoryCount = Math.max(categories.length - visibleCategories.length, 0);
   const brands = facets?.brands ?? [];
 
-  const shopDescription = "Shop pet food, accessories, litter, toys, and wellness essentials from trusted TwoPaws suppliers in Egypt with fast delivery in Cairo and Giza.";
+  const brandName = brandSlug ? (brands.find((b) => slugify(b.name) === brandSlug)?.name ?? items.find((p) => slugify(p.brand) === brandSlug)?.brand ?? brandSlug.replace(/-/g, " ")) : "";
+  const landing = taxonomyCategory
+    ? { title: `${taxonomyCategory.name} in Egypt | TwoPaws Shop`, h1: taxonomyCategory.name, intro: taxonomyCategory.description, path: categoryPath(taxonomyCategory), crumbs: [{ name: taxonomyPet?.name ?? petParam, path: `/shop/${petParam}/` }] }
+    : taxonomyPet && !categorySlug
+      ? { title: `${taxonomyPet.name} supplies in Egypt | TwoPaws Shop`, h1: `${taxonomyPet.name}: food, care and supplies`, intro: taxonomyPet.description, path: `/shop/${petParam}/`, crumbs: [] }
+      : brandSlug
+        ? { title: `${brandName} products in Egypt | TwoPaws Shop`, h1: brandName, intro: `Shop ${brandName} pet food and supplies at supplier prices on TwoPaws, with fast delivery in Cairo and Giza.`, path: brandSlugPath(brandSlug), crumbs: [] }
+        : null;
+  const shopDescription = landing ? landing.intro.slice(0, 155) : "Shop pet food, accessories, litter, toys, and wellness essentials from trusted TwoPaws suppliers in Egypt with fast delivery in Cairo and Giza.";
+  const pageTitle = landing ? landing.title : "TwoPaws Shop | Pet Food, Supplies & Accessories in Egypt";
+  const canonicalPath = landing ? landing.path : "/shop/";
   const structuredData = useMemo(() => [
-    { "@context": "https://schema.org", "@type": "CollectionPage", name: "TwoPaws Shop", description: shopDescription, url: `${BASE_URL}/shop/`, isPartOf: { "@type": "WebSite", name: "TwoPaws", url: BASE_URL } },
-    { "@context": "https://schema.org", "@type": "ItemList", name: "TwoPaws Shop products", ...(total !== null ? { numberOfItems: total } : {}), itemListElement: items.slice(0, 24).map((product, index) => ({ "@type": "ListItem", position: index + 1, name: product.name, url: `${BASE_URL}/shop/product/${product.id}/` })) },
-  ], [items, total]);
+    { "@context": "https://schema.org", "@type": "CollectionPage", name: landing ? landing.h1 : "TwoPaws Shop", description: shopDescription, url: `${BASE_URL}${canonicalPath}`, isPartOf: { "@type": "WebSite", name: "TwoPaws", url: BASE_URL } },
+    { "@context": "https://schema.org", "@type": "ItemList", name: landing ? `${landing.h1} products` : "TwoPaws Shop products", ...(total !== null ? { numberOfItems: total } : {}), itemListElement: items.slice(0, 24).map((product, index) => ({ "@type": "ListItem", position: index + 1, name: product.name, url: `${BASE_URL}${productSlugPath(product.id, product.name)}` })) },
+    ...(landing ? [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Shop", item: `${BASE_URL}/shop/` }, ...landing.crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 2, name: c.name, item: `${BASE_URL}${c.path}` })), { "@type": "ListItem", position: landing.crumbs.length + 2, name: landing.h1, item: `${BASE_URL}${canonicalPath}` }] }] : []),
+  ], [items, total, landing, shopDescription, canonicalPath]);
 
   const headerSearch = (
     <div className="mx-auto flex w-full max-w-[980px] items-center gap-2">
@@ -367,8 +386,32 @@ export default function CatalogueShopPage() {
 
   return (
     <ShopShell headerContent={headerSearch}>
-      <Seo title="TwoPaws Shop | Pet Food, Supplies & Accessories in Egypt" description={shopDescription} canonicalUrl="/shop/" ogType="website" structuredData={structuredData} />
-      <div className="grid min-w-0 gap-6 lg:grid-cols-[280px_1fr]">
+      <Seo title={landingMissing ? "Page not found | TwoPaws Shop" : pageTitle} description={shopDescription} canonicalUrl={canonicalPath} ogType="website" structuredData={landingMissing ? undefined : structuredData} noIndex={landingMissing} />
+      {landingMissing ? (
+        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6">
+          <h1 className="text-xl font-semibold text-slate-900">This shop page does not exist</h1>
+          <Button asChild className="bg-brand-green-dark text-white"><Link to="/shop/">Browse the shop</Link></Button>
+        </div>
+      ) : null}
+      {landing && !landingMissing ? (
+        <header className="space-y-3">
+          <nav aria-label="Breadcrumb" className="text-xs text-slate-500">
+            <Link to="/shop/" className="hover:underline">Shop</Link>
+            {landing.crumbs.map((c) => <span key={c.path}> › <Link to={c.path} className="hover:underline">{c.name}</Link></span>)}
+            <span> › {landing.h1}</span>
+          </nav>
+          <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">{landing.h1}</h1>
+          <p className="max-w-3xl text-slate-600">{landing.intro}</p>
+          {taxonomyPet ? (
+            <div className="flex flex-wrap gap-2">
+              {categoriesForPet(petParam).map((c) => (
+                <Link key={c.slug} to={categoryPath(c)} className={`rounded-full border px-3 py-1 text-xs font-semibold ${c.slug === categorySlug ? "border-brand-dark bg-brand-light text-brand-dark" : "border-slate-200 text-slate-700 hover:border-slate-300"}`}>{c.name}</Link>
+              ))}
+            </div>
+          ) : null}
+        </header>
+      ) : null}
+      <div className={`grid min-w-0 gap-6 lg:grid-cols-[280px_1fr] ${landingMissing ? "hidden" : ""}`}>
         <aside className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
           <div className="flex items-center justify-between lg:hidden">
             <p className="text-sm font-semibold text-slate-800">Filters</p>
@@ -397,34 +440,40 @@ export default function CatalogueShopPage() {
               </div>
               <div>
                 <button type="button" className="flex w-full items-center justify-between text-sm font-semibold text-slate-800" onClick={() => setCategoryOpen((v) => !v)}>
-                  Category {categoryOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  Categories {categoryOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
                 {categoryOpen && (
-                  <div className="mt-3 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Checkbox id="cat-all" checked={selectedCategory === "all"} onCheckedChange={() => { setSelectedCategory("all"); resetPaging(); }} className="h-5 w-5 rounded-sm" />
-                      <label htmlFor="cat-all" className="text-sm text-slate-800">All items</label>
-                    </div>
-                    {!facets && Array.from({ length: 6 }).map((_, index) => <Skeleton key={`cat-skeleton-${index}`} className="h-4 w-32 rounded-full" />)}
-                    {visibleCategories.map((category) => (
-                      <div key={category.name} className="flex items-center gap-3">
-                        <Checkbox id={`cat-${category.name}`} checked={selectedCategory === category.name} onCheckedChange={(checked) => { setSelectedCategory(checked ? category.name : "all"); resetPaging(); }} className="h-5 w-5 rounded-sm" />
-                        <label htmlFor={`cat-${category.name}`} className="flex flex-1 items-center justify-between gap-2 text-sm text-slate-800">
-                          <span>{category.name}</span><span className="text-xs text-slate-400">{category.count}</span>
-                        </label>
+                  <div className="mt-3 space-y-4">
+                    <Link to="/shop/" className={`block text-sm ${!landing && selectedCategory === "all" ? "font-semibold text-brand-dark" : "text-slate-800 hover:underline"}`}>All items</Link>
+                    {selectedCategory !== "all" && (
+                      <p className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-700">
+                        <span>Category: {selectedCategory}</span>
+                        <button type="button" className="font-semibold text-brand-green-dark" onClick={() => { setSelectedCategory("all"); resetPaging(); }}>Clear</button>
+                      </p>
+                    )}
+                    {TAXONOMY_PETS.map((pet) => (
+                      <div key={pet.key}>
+                        <Link to={`/shop/${pet.key}/`} className={`text-xs font-semibold uppercase tracking-wide ${petParam === pet.key && !categorySlug ? "text-brand-dark" : "text-slate-500 hover:underline"}`}>{pet.name}</Link>
+                        <ul className="mt-1 space-y-1">
+                          {categoriesForPet(pet.key).slice(0, showAllCategories ? undefined : 6).map((c) => (
+                            <li key={c.slug}>
+                              <Link to={categoryPath(c)} className={`text-sm ${taxonomyCategory === c ? "font-semibold text-brand-dark" : "text-slate-800 hover:underline"}`}>{c.name}</Link>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     ))}
-                    {hiddenCategoryCount > 0 && <button type="button" onClick={() => setShowAllCategories(true)} className="text-sm font-semibold text-brand-green-dark">+ {hiddenCategoryCount} more</button>}
+                    {!showAllCategories && <button type="button" onClick={() => setShowAllCategories(true)} className="text-sm font-semibold text-brand-green-dark">Show all categories</button>}
                   </div>
                 )}
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-800">Brand</p>
-                <Select value={selectedBrand} onValueChange={(value) => { setSelectedBrand(value); resetPaging(); }}>
+                <Select value={brandSlug ? slugify(brandName) : selectedBrand} onValueChange={(value) => { if (brandSlug) { navigate(value === "all" ? "/shop/" : brandSlugPath(value)); return; } setSelectedBrand(value); resetPaging(); }}>
                   <SelectTrigger className="mt-2 h-9"><SelectValue placeholder="All brands" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All brands</SelectItem>
-                    {brands.slice(0, 80).map((brand) => <SelectItem key={brand.name} value={brand.name}>{brand.name} ({brand.count})</SelectItem>)}
+                    {brands.slice(0, 80).map((brand) => <SelectItem key={brand.name} value={brandSlug ? slugify(brand.name) : brand.name}>{brand.name} ({brand.count})</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

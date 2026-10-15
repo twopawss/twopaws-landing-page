@@ -9,6 +9,7 @@ import { useCatalogueCart } from "@/hooks/useCatalogueCart";
 import { useToast } from "@/hooks/use-toast";
 import { META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
 import { callableMessage, formatMinor, type CartLine } from "@/lib/catalogueApi";
+import { productSlugPath } from "@/lib/catalogueTaxonomy";
 import Seo from "@/lib/seo/Seo";
 
 /** The promo code is kept until checkout, where the quote validates it against the server. */
@@ -114,11 +115,11 @@ export default function CatalogueCartPage() {
             return (
               <Card key={line.id} className={`border-slate-100 ${unavailable ? "opacity-80" : ""}`}>
                 <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-                  <Link to={line.productId ? `/shop/product/${line.productId}/` : "/shop/"} className="flex h-20 w-20 items-center justify-center">
+                  <Link to={line.productId ? productSlugPath(line.productId, line.name) : "/shop/"} className="flex h-20 w-20 items-center justify-center">
                     {line.image ? <img src={line.image} alt={line.name} className="h-20 w-20 rounded-xl object-contain" /> : <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-slate-100 text-xs text-slate-400">No image</div>}
                   </Link>
                   <div className="flex-1">
-                    <Link to={line.productId ? `/shop/product/${line.productId}/` : "/shop/"} className="text-lg font-semibold text-slate-900 hover:text-brand-green-dark">{line.name}</Link>
+                    <Link to={line.productId ? productSlugPath(line.productId, line.name) : "/shop/"} className="text-lg font-semibold text-slate-900 hover:text-brand-green-dark">{line.name}</Link>
                     <p className="text-sm text-slate-500">
                       {unavailable ? line.label : [line.label.trim().toLowerCase() === line.name.trim().toLowerCase() ? "" : line.label, line.supplierName ? `from ${line.supplierName}` : ""].filter(Boolean).join(" · ")}
                     </p>

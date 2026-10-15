@@ -46,6 +46,9 @@ export type BrowseParams = {
   sortMode?: BrowseSort;
   minPriceMinor?: number;
   maxPriceMinor?: number;
+  /** Taxonomy pages: any of these raw supplier category names, optionally within one pet type. */
+  categories?: string[];
+  petType?: "dog" | "cat" | "other";
 };
 
 export type BrowseList = {

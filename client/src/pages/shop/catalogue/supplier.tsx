@@ -13,6 +13,7 @@ import { BASE_URL } from "@/lib/seo/constants";
 import { isReactSnapPrerender } from "@/lib/isPrerender";
 import { browseProducts, callableCode, callableMessage, cheapestOffer, type PublicProduct } from "@/lib/catalogueApi";
 import { CatalogueSearchBox } from "@/pages/shop/catalogue";
+import { productSlugPath } from "@/lib/catalogueTaxonomy";
 
 const PAGE_SIZE = 48;
 
@@ -71,7 +72,7 @@ export default function CatalogueSupplierPage() {
   }, [supplierId, fetchPage]);
 
   const handleAdd = useCallback(async (product: PublicProduct) => {
-    if (product.variants.length > 1) { navigate(`/shop/product/${product.id}/`); return; }
+    if (product.variants.length > 1) { navigate(productSlugPath(product.id, product.name)); return; }
     const offer = product.offers.find((o) => o.supplierId === supplierId) ?? cheapestOffer(product);
     if (!offer) return;
     try {
@@ -87,7 +88,7 @@ export default function CatalogueSupplierPage() {
   const seoDescription = supplier ? `Shop ${supplierName} on TwoPaws for pet food, accessories, and essentials with delivery in Egypt.` : "Browse supplier shops on TwoPaws and discover pet products available for delivery in Egypt.";
   const structuredData = useMemo(() => supplierId ? [
     { "@context": "https://schema.org", "@type": "Store", name: supplierName, url: `${BASE_URL}${canonicalPath}`, image: absoluteSupplierLogo ? [absoluteSupplierLogo] : undefined },
-    { "@context": "https://schema.org", "@type": "ItemList", name: `${supplierName} products`, ...(total !== null ? { numberOfItems: total } : {}), itemListElement: products.slice(0, 24).map((product, index) => ({ "@type": "ListItem", position: index + 1, name: product.name, url: `${BASE_URL}/shop/product/${product.id}/` })) },
+    { "@context": "https://schema.org", "@type": "ItemList", name: `${supplierName} products`, ...(total !== null ? { numberOfItems: total } : {}), itemListElement: products.slice(0, 24).map((product, index) => ({ "@type": "ListItem", position: index + 1, name: product.name, url: `${BASE_URL}${productSlugPath(product.id, product.name)}` })) },
   ] : undefined, [absoluteSupplierLogo, canonicalPath, supplierId, supplierName, products, total]);
 
   const headerSearch = (

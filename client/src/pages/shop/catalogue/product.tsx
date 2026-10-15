@@ -16,6 +16,8 @@ import { ANDROID_STORE_URL, BASE_URL, IOS_STORE_URL } from "@/lib/seo/constants"
 import { isReactSnapPrerender } from "@/lib/isPrerender";
 import { toPrerenderSafeImageSrc } from "@/lib/prerenderImage";
 import { isCatalogueShop } from "@/lib/shopBackend";
+import { brandSlugPath, categoryForProduct, categoryPath, productSlugPath } from "@/lib/catalogueTaxonomy";
+import { productIdFromSegment } from "@shared/catalogueSlug";
 import {
   callableMessage, cheapestOffer, formatMinor, getLegacyProduct, getProduct, getRecommendations, isCatalogueProductId, offersForVariant,
   type PublicOffer, type PublicProduct,
@@ -67,10 +69,12 @@ export default function CatalogueProductPage() {
     let cancelled = false;
     setLoading(true); setError(""); setProduct(null); setVariantId(""); setOfferId(""); setSelectedImage(0); setQuantity(1);
     const load = async () => {
-      if (isCatalogueProductId(productId)) {
-        const found = await getProduct(productId);
+      // The URL is /shop/product/{slug}-{id}/ or the bare id (the app's share link); either way the id is at the end.
+      const catalogueProductId = productIdFromSegment(productId) ?? (isCatalogueProductId(productId) ? productId : null);
+      if (catalogueProductId) {
+        const found = await getProduct(catalogueProductId);
         if (cancelled) return;
-        setProduct(found); setCanonicalId(productId);
+        setProduct(found); setCanonicalId(catalogueProductId);
         return;
       }
       const resolved = await getLegacyProduct(productId);
@@ -126,7 +130,8 @@ export default function CatalogueProductPage() {
   const safeImages = images.map((image) => toPrerenderSafeImageSrc(image) ?? image);
   const selectedImageUrl = safeImages[selectedImage] ?? null;
   const productName = product?.name ?? "Product";
-  const canonicalPath = `/shop/product/${canonicalId}/`;
+  const canonicalPath = product ? productSlugPath(canonicalId, product.name) : `/shop/product/${canonicalId}/`;
+  const taxonomyCategory = product ? categoryForProduct(product) : null;
   const primarySupplierName = selectedOffer?.supplierName ?? product?.suppliers?.[0]?.name;
   const seoTitle = product
     ? `${productName}${variantId && product.variants.length > 1 ? ` (${product.variants.find((v) => v.id === variantId)?.label ?? ""})` : ""}${product.brand ? ` | ${product.brand}` : ""} | TwoPaws`
@@ -172,8 +177,8 @@ export default function CatalogueProductPage() {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Shop", item: `${BASE_URL}/shop/` },
-      ...(product.categoryNames[0] ? [{ "@type": "ListItem", position: 2, name: product.categoryNames[0], item: `${BASE_URL}/shop/?cat=${encodeURIComponent(product.categoryNames[0])}` }] : []),
-      { "@type": "ListItem", position: product.categoryNames[0] ? 3 : 2, name: productName, item: `${BASE_URL}${canonicalPath}` },
+      ...(taxonomyCategory ? [{ "@type": "ListItem", position: 2, name: taxonomyCategory.name, item: `${BASE_URL}${categoryPath(taxonomyCategory)}` }] : []),
+      { "@type": "ListItem", position: taxonomyCategory ? 3 : 2, name: productName, item: `${BASE_URL}${canonicalPath}` },
     ],
   } : undefined;
 
@@ -249,8 +254,8 @@ export default function CatalogueProductPage() {
         <>
           <nav aria-label="Breadcrumb" className="text-xs text-slate-500">
             <Link to="/shop/" className="hover:underline">Shop</Link>
-            {product.categoryNames[0] ? <> › <Link to={`/shop/?cat=${encodeURIComponent(product.categoryNames[0])}`} className="hover:underline">{product.categoryNames[0]}</Link></> : null}
-            {product.brand ? <> › <Link to={`/shop/?brand=${encodeURIComponent(product.brand)}`} className="hover:underline">{product.brand}</Link></> : null}
+            {taxonomyCategory ? <> › <Link to={categoryPath(taxonomyCategory)} className="hover:underline">{taxonomyCategory.name}</Link></> : null}
+            {product.brand ? <> › <Link to={brandSlugPath(product.brand)} className="hover:underline">{product.brand}</Link></> : null}
           </nav>
           <div className="grid gap-8 lg:grid-cols-2">
             <div className="space-y-4">
@@ -278,7 +283,7 @@ export default function CatalogueProductPage() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  {product.brand ? <Link to={`/shop/?brand=${encodeURIComponent(product.brand)}`} className="text-sm font-semibold uppercase tracking-wide text-slate-500 hover:underline">{product.brand}</Link> : null}
+                  {product.brand ? <Link to={brandSlugPath(product.brand)} className="text-sm font-semibold uppercase tracking-wide text-slate-500 hover:underline">{product.brand}</Link> : null}
                   {regular ? <Badge className="bg-red-500 text-white">On sale</Badge> : null}
                   {product.therapeutic ? <Badge className="bg-amber-100 text-amber-900">Therapeutic</Badge> : null}
                 </div>

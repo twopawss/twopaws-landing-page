@@ -3,6 +3,7 @@ import { Info } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { cheapestOffer, formatMinor, type PublicProduct } from "@/lib/catalogueApi";
+import { productSlugPath } from "@/lib/catalogueTaxonomy";
 import { toPrerenderSafeImageSrc } from "@/lib/prerenderImage";
 
 type CatalogueProductCardProps = {
@@ -28,7 +29,7 @@ function CatalogueProductCard({ product, cartQuantity = 0, onAdd, onNavigate }: 
   const variantLabel = product.variants.length > 1
     ? `${product.variants.length} sizes`
     : singleLabel && singleLabel.toLowerCase() !== product.name.trim().toLowerCase() ? singleLabel : null;
-  const productHref = `/shop/product/${product.id}/`;
+  const productHref = productSlugPath(product.id, product.name);
   const isInCart = cartQuantity > 0;
 
   return (
