@@ -1,6 +1,6 @@
 import { FirebaseError } from "firebase/app";
 import { httpsCallable } from "firebase/functions";
-import { functions } from "@/lib/firebase";
+import { catalogueFunctions, functions } from "@/lib/firebase";
 import { formatCurrency } from "@/lib/format";
 
 /** Typed client for the catalogue callables in the appfunctions repo (functions/src/commerce/catalogue_*). Amounts are integer piastres. */
@@ -139,7 +139,8 @@ export type OrderStatus = {
   requiresPayment: boolean;
 };
 
-const call = <Req, Res>(name: string) => httpsCallable<Req, Res>(functions, name);
+const CATALOGUE_CALLABLES = new Set(["catalogueBrowse", "catalogueSuggest", "catalogueCart", "catalogueCheckout"]);
+const call = <Req, Res>(name: string) => httpsCallable<Req, Res>(CATALOGUE_CALLABLES.has(name) ? catalogueFunctions : functions, name);
 
 export const browseProducts = async (params: BrowseParams) =>
   (await call<BrowseParams, BrowseList>("catalogueBrowse")(params)).data;

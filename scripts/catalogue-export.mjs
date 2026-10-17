@@ -37,7 +37,7 @@ const callableUrl = (env, name) => {
   if (!projectId) throw new Error("VITE_FIREBASE_PROJECT_ID is required to read the catalogue.");
   return env.CATALOGUE_FUNCTIONS_ORIGIN
     ? `${env.CATALOGUE_FUNCTIONS_ORIGIN.replace(/\/+$/, "")}/${name}`
-    : `https://us-central1-${projectId}.cloudfunctions.net/${name}`;
+    : `https://europe-west1-${projectId}.cloudfunctions.net/${name}`;
 };
 
 export const callCatalogue = async (env, name, data, attempt = 0) => {

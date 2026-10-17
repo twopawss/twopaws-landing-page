@@ -28,5 +28,9 @@ const db = (() => {
 })();
 const storage = getStorage(app);
 const functions = getFunctions(app);
+// The catalogue callables (catalogueBrowse, catalogueSuggest, catalogueCart, catalogueCheckout) run in
+// europe-west1, next to the eur3 Firestore database. Every other callable, including createPaymobPayment,
+// stays in us-central1 and uses `functions`.
+const catalogueFunctions = getFunctions(app, "europe-west1");
 
-export { app, auth, db, storage, functions };
+export { app, auth, db, storage, functions, catalogueFunctions };
