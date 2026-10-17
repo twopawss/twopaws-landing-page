@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Info } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { cheapestOffer, formatMinor, type PublicProduct } from "@/lib/catalogueApi";
+import { cardImage, cheapestOffer, formatMinor, type PublicProduct } from "@/lib/catalogueApi";
 import { productSlugPath } from "@/lib/catalogueTaxonomy";
 import { toPrerenderSafeImageSrc } from "@/lib/prerenderImage";
 
@@ -17,7 +17,7 @@ type CatalogueProductCardProps = {
 function CatalogueProductCard({ product, cartQuantity = 0, onAdd, onNavigate }: CatalogueProductCardProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const photoSrc = toPrerenderSafeImageSrc(product.images[0]);
+  const photoSrc = toPrerenderSafeImageSrc(cardImage(product));
   const offer = cheapestOffer(product);
   const supplierCount = product.supplierIds.length;
   const supplierLabel = supplierCount > 1

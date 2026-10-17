@@ -185,7 +185,8 @@ export const writePage = (relativePath, html) => {
 /** A product card as static HTML for category, brand and recommendation grids. */
 export const productCardHtml = (baseUrl, product) => {
   const offer = cheapestOffer(product);
-  const image = product.images?.[0];
+  // Cards use the 300px thumbnail; product pages, Open Graph and the merchant feed keep the full image.
+  const image = product.thumbnails?.[0] || product.images?.[0];
   const href = productSlugPath(product.id, product.name);
   return `<a href="${href}" class="block h-full"><div class="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">`
     + `<div class="flex h-44 w-full items-center justify-center overflow-hidden bg-white sm:h-56">${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" width="512" height="512" class="h-full w-full object-contain p-4" loading="lazy" decoding="async" />` : ""}</div>`

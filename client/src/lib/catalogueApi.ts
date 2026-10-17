@@ -21,6 +21,8 @@ export type PublicProduct = {
   brand: string;
   description: string;
   images: string[];
+  /** 300px WebP card images, one per entry of `images`; a slot without a thumbnail repeats the full image. Absent on older responses. */
+  thumbnails?: string[];
   categoryNames: string[];
   petTypes: string[];
   lifeStages: string[];
@@ -195,6 +197,9 @@ export const callableMessage = (error: unknown, fallback = "Something went wrong
   error instanceof Error && error.message ? error.message : fallback;
 
 export const formatMinor = (minor: number) => formatCurrency(minor / 100);
+
+/** The image for a product card: the first thumbnail, falling back to the first full-size image. */
+export const cardImage = (product: PublicProduct): string | undefined => product.thumbnails?.[0] || product.images[0];
 
 /** Cheapest offer first; the public projection already sorts, this guards client-side copies. */
 export const cheapestOffer = (product: PublicProduct) =>
