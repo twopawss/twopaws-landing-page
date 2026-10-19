@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "YVBHJVJRDX.com.twopaws.twopaws",
+        "appIDs": ["YVBHJVJRDX.com.twopaws.twopaws"],
+        "paths": ["/shop/product/*"],
+        "components": [
+          { "/": "/shop/product/*", "comment": "Shared product links open the product in the app" }
+        ]
+      }
+    ]
+  }
+}

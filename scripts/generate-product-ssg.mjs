@@ -1,7 +1,7 @@
 import {
   CURRENCY, applyCoreSeo, brandSlugPath, categoryForProduct, categoryPath, cheapestOffer, escapeHtml, fetchCatalogueProducts,
   formatEgp, gridHtml, offersForVariant, productDescription, productSlugPath, productTitle, readTemplate, resolveBaseUrl, resolveEnv,
-  setRootContent, shellHtml, upsertStructuredData, writePage,
+  setRootContent, shellHtml, upsertMetaByName, upsertStructuredData, writePage,
 } from "./catalogue-export.mjs";
 
 /**
@@ -10,6 +10,9 @@ import {
  * Legacy /shop/product/{legacyId}/ pages are no longer written: Hosting rewrites them to the
  * shopProductRedirect function, which 301s to the slug URL.
  */
+
+/** Replaces the site-wide iOS Smart App Banner so "Open" lands on this product in the app. */
+const kIosAppId = "6745481497";
 
 const buildPriceValidUntil = (daysAhead = 30) => {
   const date = new Date();
@@ -92,6 +95,7 @@ const buildProductHtml = (template, baseUrl, product, related) => {
   );
 
   let html = applyCoreSeo({ html: template, baseUrl, title, description, canonicalPath, ogType: "product", ogImage: images[0] });
+  html = upsertMetaByName(html, "apple-itunes-app", `app-id=${kIosAppId}, app-argument=twopaws://twopaws.com/shop/product/${encodeURIComponent(product.id)}`);
   html = upsertStructuredData(html, "product-jsonld", structuredData);
   html = upsertStructuredData(html, "breadcrumb-jsonld", breadcrumb);
   html = setRootContent(html, body);
