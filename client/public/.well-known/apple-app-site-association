@@ -5,9 +5,9 @@
       {
         "appID": "YVBHJVJRDX.com.twopaws.twopaws",
         "appIDs": ["YVBHJVJRDX.com.twopaws.twopaws"],
-        "paths": ["/shop/product/*"],
+        "paths": ["/shop/product/*product_*"],
         "components": [
-          { "/": "/shop/product/*", "comment": "Shared product links open the product in the app" }
+          { "/": "/shop/product/*product_*", "comment": "Catalogue product links open the product in the app; legacy ids stay on the web" }
         ]
       }
     ]
