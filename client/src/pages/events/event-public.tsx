@@ -197,7 +197,7 @@ export default function PublicEventPage() {
       )}`
     : "";
 
-  if (checkoutMode) {
+  if (checkoutMode && event.ticketingEnabled) {
     return (
       <EventShell>
         <Seo title={`Checkout | ${event.title}`} description="Reserve event tickets and pay securely with Paymob." canonicalUrl={`/events/${eventSlug}/checkout`} noIndex />
@@ -296,15 +296,28 @@ export default function PublicEventPage() {
             <div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-brand-dark" />{event.venueName}, {event.venueAddress}</div>
           </div>
           <p className="mt-8 max-w-xl text-lg text-slate-600">{event.description}</p>
-          <Button
-            className="mt-8 h-14 w-fit bg-brand-olive px-8 text-base font-bold text-brand-dark hover:bg-brand-olive/90"
-            onClick={() => document.getElementById("tickets")?.scrollIntoView({ behavior: "smooth" })}
-          >
-            Choose tickets <PawPrint className="ml-2 h-4 w-4" />
-          </Button>
+          {event.ticketingEnabled ? (
+            <Button
+              className="mt-8 h-14 w-fit bg-brand-olive px-8 text-base font-bold text-brand-dark hover:bg-brand-olive/90"
+              onClick={() => document.getElementById("tickets")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              Choose tickets <PawPrint className="ml-2 h-4 w-4" />
+            </Button>
+          ) : competition ? (
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild className="h-14 bg-brand-olive px-8 text-base font-bold text-brand-dark hover:bg-brand-olive/90">
+                <Link to={`/events/${eventSlug}/enter`}>Enter your pet <PawPrint className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button asChild variant="outline" className="h-14 border-brand-dark px-6 text-base text-brand-dark">
+                <Link to={`/events/${eventSlug}/leaderboard`}><Trophy className="mr-2 h-4 w-4" />Live leaderboard</Link>
+              </Button>
+            </div>
+          ) : null}
         </div>
       </section>
 
+      {/* Ticketing is per event: events/{id}.ticketingEnabled. Free events show no ticket UI at all. */}
+      {event.ticketingEnabled && (
       <section id="tickets" className="grid gap-8 py-14 lg:grid-cols-[1fr_360px]">
         <div>
           <h2 className="text-4xl">Choose your tickets</h2>
@@ -360,6 +373,7 @@ export default function PublicEventPage() {
           <p className="mt-3 flex items-center justify-center gap-2 text-xs text-slate-500"><ShieldCheck className="h-4 w-4" />Secure Paymob checkout</p>
         </aside>
       </section>
+      )}
 
       {competition && (
         <section className="border-y border-slate-200 py-14">
