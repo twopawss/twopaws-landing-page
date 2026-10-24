@@ -30,6 +30,17 @@ export const getPublicLeaderboard = (eventSlug: string) =>
     generatedAt: string;
   }>("getPublicEventLeaderboard", { eventSlug });
 
+export const submitCompetitionEntry = (
+  competitionId: string,
+  petId: string,
+  submissionText?: string
+) =>
+  call<{ entryId: string; status: string; existing: boolean }>("submitCompetitionEntry", {
+    competitionId,
+    petId,
+    submissionText: submissionText || "",
+  });
+
 export const castCompetitionVote = (competitionId: string, entryId: string) =>
   call<{
     entryId: string;

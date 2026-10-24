@@ -57,6 +57,7 @@ const PaymentReturnPage = lazy(() => import("@/pages/payment/return"));
 const CataloguePaymentReturnPage = lazy(() => import("@/pages/payment/catalogue-return"));
 const EventsIndexPage = lazy(() => import("@/pages/events/index"));
 const PublicEventPage = lazy(() => import("@/pages/events/event-public"));
+const EventEntryPage = lazy(() => import("@/pages/events/enter"));
 const EventLeaderboardPage = lazy(() => import("@/pages/events/leaderboard"));
 const EventPaymentResultPage = lazy(() => import("@/pages/events/payment-result"));
 const EventOrdersPage = lazy(() => import("@/pages/events/event-orders"));
@@ -207,6 +208,7 @@ function App() {
                   <Route path="/events/:eventSlug/checkout" element={<PublicEventPage />} />
                   <Route path="/events/:eventSlug/payment-result" element={<EventPaymentResultPage />} />
                   <Route path="/events/:eventSlug/leaderboard" element={<EventLeaderboardPage />} />
+                  <Route path="/events/:eventSlug/enter" element={<EventEntryPage />} />
                   <Route path="/account/event-orders" element={<EventOrdersPage />} />
                   <Route path="/account/event-tickets/:ticketId" element={<EventTicketDetailPage />} />
                   <Route path="/organizer" element={<OrganizerPage />} />

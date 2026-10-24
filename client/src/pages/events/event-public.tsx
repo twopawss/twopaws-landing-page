@@ -371,19 +371,21 @@ export default function PublicEventPage() {
                 <div><dt className="font-bold text-brand-dark">Prize</dt><dd className="mt-1 text-slate-600">{competition.prize || "Winner trophy and TwoPaws prize pack"}</dd></div>
                 <div><dt className="font-bold text-brand-dark">Entry deadline</dt><dd className="mt-1 text-slate-600">{eventDate(competition.entriesCloseAt)}</dd></div>
                 <div><dt className="font-bold text-brand-dark">Approved entries</dt><dd className="mt-1 text-slate-600">{competition.approvedEntryCount}</dd></div>
-                <div><dt className="font-bold text-brand-dark">Admission</dt><dd className="mt-1 text-slate-600">Competition entry does not include event admission.</dd></div>
+                {event.ticketingEnabled && <div><dt className="font-bold text-brand-dark">Admission</dt><dd className="mt-1 text-slate-600">Competition entry does not include event admission.</dd></div>}
               </dl>
               {!!competition.rules.length && <ul className="mt-8 space-y-2 text-sm text-slate-600">{competition.rules.map((rule) => <li key={rule} className="flex gap-2"><PawPrint className="h-4 w-4 text-brand-olive" />{rule}</li>)}</ul>}
               <Button asChild variant="outline" className="mt-8 border-brand-dark text-brand-dark"><Link to={`/events/${eventSlug}/leaderboard`}><Trophy className="mr-2 h-4 w-4" />View live leaderboard</Link></Button>
             </div>
             <div className="rounded-2xl border border-brand-olive bg-brand-cream p-7 sm:p-9">
-              <h3 className="text-3xl">Enter Your Pet through the TwoPaws App</h3>
-              <p className="mt-3 text-slate-700">Pet submissions remain app-only. You do not need an event ticket to enter.</p>
+              <h3 className="text-3xl">Enter Your Pet</h3>
+              <p className="mt-3 text-slate-700">Sign in, add your pet's name and photo, and you're in. Entries are reviewed by the organiser before they appear on the leaderboard.</p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Button asChild className="bg-slate-950 text-white"><a href={deepLink}>Open TwoPaws App</a></Button>
-                <Button asChild variant="outline"><a href={IOS_STORE_URL} target="_blank" rel="noreferrer">App Store <ExternalLink className="ml-2 h-4 w-4" /></a></Button>
-                <Button asChild variant="outline"><a href={ANDROID_STORE_URL} target="_blank" rel="noreferrer">Google Play <ExternalLink className="ml-2 h-4 w-4" /></a></Button>
+                <Button asChild className="bg-brand-dark text-white"><Link to={`/events/${eventSlug}/enter`}><PawPrint className="mr-2 h-4 w-4" />Enter on the website</Link></Button>
+                <Button asChild variant="outline"><a href={deepLink}>Open in the app</a></Button>
               </div>
+              <p className="mt-4 text-xs text-slate-500">
+                Don't have the app yet? <a href={IOS_STORE_URL} target="_blank" rel="noreferrer" className="underline">App Store</a> · <a href={ANDROID_STORE_URL} target="_blank" rel="noreferrer" className="underline">Google Play <ExternalLink className="inline h-3 w-3" /></a>
+              </p>
             </div>
           </div>
         </section>

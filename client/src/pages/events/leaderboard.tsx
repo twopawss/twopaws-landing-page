@@ -205,7 +205,10 @@ export default function PublicLeaderboardPage() {
             )}
             <Link to={`/events/${eventSlug}`} className="text-lg font-bold">{data.event.title}</Link>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {!isFullscreen && !published && (
+              <Button asChild className="bg-brand-olive text-brand-dark hover:bg-brand-olive/90"><Link to={`/events/${eventSlug}/enter`}><PawPrint className="mr-2 h-4 w-4" />Enter your pet</Link></Button>
+            )}
             <Button variant="outline" onClick={() => void fullscreen()} className="border-white bg-transparent text-white hover:bg-white/10 hover:text-white"><Expand className="mr-2 h-4 w-4" />{isFullscreen ? "Exit fullscreen" : "Fullscreen"}</Button>
           </div>
         </header>
