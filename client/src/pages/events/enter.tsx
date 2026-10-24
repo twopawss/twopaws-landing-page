@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
+  Timestamp,
+  arrayUnion,
   collection,
   doc,
   getDocs,
+  orderBy,
   query,
   serverTimestamp,
-  setDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Check, ImagePlus, PawPrint, RefreshCw, Trophy } from "lucide-react";
@@ -25,8 +28,11 @@ import { errorMessage, eventTime } from "@/features/events/format";
 import type { PublicEventResponse } from "@/features/events/types";
 
 type OwnedPet = { id: string; name: string; breed: string; species: string; photoUrl: string };
+type PetType = { id: string; name: string };
+type Breed = { id: string; name: string; size: string };
 
-const SPECIES = ["Dog", "Cat", "Other"];
+const GENDERS = ["Male", "Female"];
+const todayIso = () => new Date().toISOString().slice(0, 10);
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const MAX_PHOTO_EDGE = 1600;
 
@@ -69,8 +75,12 @@ export default function EventEntryPage() {
   const [ownedPets, setOwnedPets] = useState<OwnedPet[] | null>(null);
   const [selectedPetId, setSelectedPetId] = useState<string | "new">("new");
   const [petName, setPetName] = useState("");
-  const [species, setSpecies] = useState(SPECIES[0]);
-  const [breed, setBreed] = useState("");
+  const [petTypes, setPetTypes] = useState<PetType[] | null>(null);
+  const [typeId, setTypeId] = useState("dog");
+  const [breeds, setBreeds] = useState<Breed[] | null>(null);
+  const [breedId, setBreedId] = useState("");
+  const [gender, setGender] = useState("");
+  const [birthday, setBirthday] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [about, setAbout] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -117,6 +127,50 @@ export default function EventEntryPage() {
     };
   }, [user]);
 
+  // Species and breeds come from petTypes/{type} and petTypes/{type}/petBreed, the same
+  // catalogue the app's Add Pet page reads, so web-created pets carry the same values.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getDocs(query(collection(db, "petTypes"), orderBy("name")))
+      .then((snap) => {
+        if (cancelled) return;
+        const types = snap.docs.map((typeDoc) => ({ id: typeDoc.id, name: String(typeDoc.get("name") || typeDoc.id) }));
+        setPetTypes(types);
+        setTypeId((current) => (types.some((type) => type.id === current) ? current : types[0]?.id || ""));
+      })
+      .catch(() => {
+        if (!cancelled) setPetTypes([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !typeId) return;
+    let cancelled = false;
+    setBreeds(null);
+    setBreedId("");
+    getDocs(query(collection(db, "petTypes", typeId, "petBreed"), orderBy("name")))
+      .then((snap) => {
+        if (cancelled) return;
+        setBreeds(
+          snap.docs.map((breedDoc) => ({
+            id: breedDoc.id,
+            name: String(breedDoc.get("name") || ""),
+            size: String(breedDoc.get("size") || "").trim(),
+          }))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setBreeds([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, typeId]);
+
   const photoPreview = useMemo(() => (photo ? URL.createObjectURL(photo) : ""), [photo]);
   useEffect(() => () => {
     if (photoPreview) URL.revokeObjectURL(photoPreview);
@@ -138,9 +192,30 @@ export default function EventEntryPage() {
     event.preventDefault();
     if (!user || !competition) return;
     const creatingPet = selectedPetId === "new";
-    if (creatingPet && (!petName.trim() || !photo)) {
-      toast({ title: "Almost there", description: "A pet name and a photo are required.", variant: "destructive" });
-      return;
+    const type = petTypes?.find((item) => item.id === typeId);
+    const breed = breeds?.find((item) => item.id === breedId);
+    if (creatingPet) {
+      const missing = !petName.trim()
+        ? "a pet name"
+        : !type
+          ? "a pet type"
+          : !breed
+            ? "a breed"
+            : !GENDERS.includes(gender)
+              ? "a gender"
+              : !birthday
+                ? "a birthday"
+                : !photo
+                  ? "a photo"
+                  : "";
+      if (missing) {
+        toast({ title: "Almost there", description: `Please add ${missing}.`, variant: "destructive" });
+        return;
+      }
+      if (new Date(birthday).getTime() > Date.now()) {
+        toast({ title: "Check the birthday", description: "Birthday cannot be in the future.", variant: "destructive" });
+        return;
+      }
     }
     setSubmitting(true);
     try {
@@ -153,25 +228,31 @@ export default function EventEntryPage() {
         await uploadBytes(photoRef, blob, { contentType: blob.type || photo.type });
         const photoUrl = await getDownloadURL(photoRef);
         const petRef = doc(collection(db, "pets"));
-        // Same shape the app writes, so the pet shows up in the owner's app profile too.
-        await setDoc(petRef, {
-          petId: petRef,
-          userId: doc(db, "users", user.uid),
+        // Mirrors the app's createOnboardingPet action field for field (species and breed names
+        // from petTypes, size from the breed or "variable", petId self-reference) and appends the
+        // pet to users/{uid}.petIds in the same batch, exactly as the app does.
+        const batch = writeBatch(db);
+        batch.set(petRef, {
           name: petName.trim().slice(0, 100),
-          species,
-          breed: breed.trim().slice(0, 100),
-          photo_url: [photoUrl],
-          gender: "",
-          size: "",
-          notes: "",
-          noMarried: 0,
-          isLost: false,
+          species: type!.name,
+          breed: breed!.name,
+          gender,
+          birthday: Timestamp.fromDate(new Date(`${birthday}T12:00:00`)),
           availableForAdoption: false,
-          availableForMarriage: false,
-          vaccinated: false,
-          spayed: false,
           created_time: serverTimestamp(),
+          availableForMarriage: false,
+          isLost: false,
+          userId: doc(db, "users", user.uid),
+          photo_url: [photoUrl],
+          notes: "",
+          spayed: false,
+          vaccinated: false,
+          size: breed!.size || "variable",
+          noMarried: 0,
+          petId: petRef,
         });
+        batch.update(doc(db, "users", user.uid), { petIds: arrayUnion(petRef) });
+        await batch.commit();
         petId = petRef.id;
         enteredName = petName.trim();
       }
@@ -307,19 +388,49 @@ export default function EventEntryPage() {
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="grid gap-2">
-                <Label htmlFor="pet-species">Species</Label>
+                <Label htmlFor="pet-type">Pet type</Label>
                 <select
-                  id="pet-species"
-                  value={species}
-                  onChange={(event) => setSpecies(event.target.value)}
+                  id="pet-type"
+                  value={typeId}
+                  onChange={(event) => setTypeId(event.target.value)}
+                  disabled={!petTypes}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  {SPECIES.map((option) => <option key={option} value={option}>{option}</option>)}
+                  {(petTypes || []).map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
                 </select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="pet-breed">Breed</Label>
-                <Input id="pet-breed" value={breed} onChange={(event) => setBreed(event.target.value)} maxLength={100} placeholder="e.g. Golden Retriever" />
+                <select
+                  id="pet-breed"
+                  value={breedId}
+                  onChange={(event) => setBreedId(event.target.value)}
+                  disabled={!breeds}
+                  required
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">{breeds ? (breeds.length ? "Choose a breed" : "No breeds listed") : "Loading breeds…"}</option>
+                  {(breeds || []).map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="pet-gender">Gender</Label>
+                <select
+                  id="pet-gender"
+                  value={gender}
+                  onChange={(event) => setGender(event.target.value)}
+                  required
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">Choose</option>
+                  {GENDERS.map((option) => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="pet-birthday">Birthday</Label>
+                <Input id="pet-birthday" type="date" value={birthday} max={todayIso()} onChange={(event) => setBirthday(event.target.value)} required />
               </div>
             </div>
             <div className="grid gap-2">
