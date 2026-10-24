@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { GeoPoint } from "firebase/firestore";
 import ShopShell from "@/components/shop/ShopShell";
+import MyPets from "@/components/account/MyPets";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -215,6 +216,8 @@ export default function AccountPage() {
         <p className="text-sm font-semibold text-brand-olive">Account</p>
         <h1 className="text-3xl font-semibold text-slate-900">Your account</h1>
       </header>
+
+      <MyPets uid={user.uid} />
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
