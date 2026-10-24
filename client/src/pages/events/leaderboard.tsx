@@ -55,7 +55,12 @@ export default function PublicLeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(() => Boolean(document.fullscreenElement));
-  const countdown = useCountdown(data?.competition.votingEndAt || null);
+  // Before the window opens the countdown runs to the opening time, then to the close.
+  const votingStartMillis = data?.competition.votingStartAt ? new Date(data.competition.votingStartAt).getTime() : 0;
+  const votingNotStarted = Boolean(votingStartMillis) && Date.now() < votingStartMillis;
+  const countdown = useCountdown(
+    votingNotStarted ? data?.competition.votingStartAt || null : data?.competition.votingEndAt || null
+  );
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
@@ -216,7 +221,11 @@ export default function PublicLeaderboardPage() {
         <section className="px-4 pb-12 pt-10 text-center sm:px-8">
           <h1 className="text-5xl text-brand-dark sm:text-7xl">{data.competition.title}</h1>
           <p className="mt-3 text-xl font-bold text-brand-dark">
-            {published ? "Final results" : `Voting closes at ${eventTime(data.competition.votingEndAt)}`}
+            {published
+              ? "Final results"
+              : votingNotStarted
+                ? `Voting opens at ${eventTime(data.competition.votingStartAt)}`
+                : `Voting closes at ${eventTime(data.competition.votingEndAt)}`}
           </p>
           {!published && countdown && <p className="mt-2 font-mono text-5xl font-black tracking-wider text-brand-dark sm:text-7xl">{countdown}</p>}
           {showVoting && (
