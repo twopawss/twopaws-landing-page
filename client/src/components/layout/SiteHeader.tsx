@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Menu } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import twoPawsLogo from "../../../../attached_assets/logotrans-brand-800.webp";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,14 +25,19 @@ export const siteNavLinks = [
   { href: "/contact/", label: "Contact" },
 ];
 
+/** Sign in / Sign up, returning the visitor to the page they were on (the login page's default is the shop). */
 export function SignedOutActions() {
+  const location = useLocation();
+  const onLoginPage = location.pathname.replace(/\/+$/, "") === "/login";
+  const redirect = onLoginPage ? "" : `redirect=${encodeURIComponent(`${location.pathname}${location.search}`)}`;
+  const joiner = redirect ? "&" : "";
   return (
     <div className="flex items-center gap-2">
       <Button asChild variant="outline" className="border-slate-200">
-        <Link to="/login">Sign in</Link>
+        <Link to={`/login${redirect ? `?${redirect}` : ""}`}>Sign in</Link>
       </Button>
       <Button asChild className="hidden bg-brand-green-dark text-white sm:inline-flex">
-        <Link to="/login?mode=signup">Sign up</Link>
+        <Link to={`/login?mode=signup${joiner}${redirect}`}>Sign up</Link>
       </Button>
     </div>
   );
