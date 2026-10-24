@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Menu, ShoppingCart } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import twoPawsLogo from "../../../../attached_assets/logotrans-brand-800.webp";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/sheet";
 
 /**
- * The one site header. Every page family renders it: landing, marketing and policy pages pass no
- * `actions` and get the static signed-out controls (so those pages still never load Firebase);
- * pages under FirebaseShell pass <AccountActions /> for the live cart count and account menu.
+ * The one site header. Every page family renders it. Landing, marketing and policy pages pass no
+ * `actions` and show only the Download call to action (so those pages still never load Firebase);
+ * pages under FirebaseShell pass <AccountActions /> for the account menu, with the cart where it
+ * applies (shop pages).
  */
 export const siteNavLinks = [
   { href: "/", label: "Home" },
@@ -23,23 +24,6 @@ export const siteNavLinks = [
   { href: "/about/", label: "About" },
   { href: "/contact/", label: "Contact" },
 ];
-
-export function CartLink({ itemCount = 0 }: { itemCount?: number }) {
-  return (
-    <Link
-      to="/cart"
-      className="relative inline-flex items-center justify-center rounded-full border border-slate-200 p-2 text-slate-700 hover:border-brand-green-dark hover:text-brand-green-dark"
-      aria-label="Cart"
-    >
-      <ShoppingCart className="h-5 w-5" />
-      {itemCount > 0 && (
-        <span className="absolute -right-2 -top-2 inline-flex min-w-[20px] items-center justify-center rounded-full bg-brand-olive px-1.5 text-xs font-semibold text-brand-dark">
-          {itemCount}
-        </span>
-      )}
-    </Link>
-  );
-}
 
 export function SignedOutActions() {
   return (
@@ -55,7 +39,7 @@ export function SignedOutActions() {
 }
 
 type SiteHeaderProps = {
-  /** Right-hand controls. Defaults to a static cart link plus Sign in / Sign up. */
+  /** Right-hand controls next to the Download button; omitted on pages that need no account. */
   actions?: ReactNode;
   /** Optional second row under the nav, e.g. the shop search box. */
   children?: ReactNode;
@@ -104,15 +88,10 @@ export default function SiteHeader({ actions, children }: SiteHeaderProps) {
           ))}
         </nav>
         <div className="col-start-3 flex items-center gap-2 sm:gap-3">
-          <Button asChild className="hidden h-9 rounded-md bg-brand-purple px-5 text-white hover:opacity-90 lg:inline-flex">
+          <Button asChild className={`h-9 rounded-md bg-brand-purple px-5 text-white hover:opacity-90 ${actions ? "hidden lg:inline-flex" : ""}`}>
             <a href="/download/">Download</a>
           </Button>
-          {actions ?? (
-            <>
-              <CartLink />
-              <SignedOutActions />
-            </>
-          )}
+          {actions}
         </div>
       </div>
       {children ? (

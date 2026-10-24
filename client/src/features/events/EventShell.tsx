@@ -14,7 +14,7 @@ export default function EventShell({
 }) {
   return (
     <div className="min-h-screen bg-white text-slate-950">
-      {!hideHeader && <SiteHeader actions={<AccountActions />} />}
+      {!hideHeader && <SiteHeader actions={<AccountActions cart={false} />} />}
       <main className={fullWidth ? "w-full" : "mx-auto w-full max-w-[1480px] px-4 sm:px-6 lg:px-8"}>
         {children}
       </main>

@@ -12,10 +12,11 @@ import CartBadge from "@/components/shop/CartBadge";
 import { SignedOutActions } from "@/components/layout/SiteHeader";
 
 /**
- * Header controls for pages under FirebaseShell: live cart count and the account menu.
- * Needs AuthProvider and a cart provider, so landing and marketing pages must not render it.
+ * Header controls for pages under FirebaseShell: the account menu, plus the live cart count on
+ * shop pages. Needs AuthProvider (and a cart provider when `cart` is on), so landing and
+ * marketing pages must not render it.
  */
-export default function AccountActions() {
+export default function AccountActions({ cart = true }: { cart?: boolean }) {
   const { user, userDisplayName, signOutUser } = useAuth();
   const userLabel = userDisplayName || user?.email?.split("@")[0] || "Account";
   const userInitial = userLabel.charAt(0).toUpperCase();
@@ -23,7 +24,7 @@ export default function AccountActions() {
 
   return (
     <>
-      <CartBadge />
+      {cart && <CartBadge />}
       {user ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
