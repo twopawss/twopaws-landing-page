@@ -1,16 +1,14 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Linkedin,
   Map as FoldedMap,
   MapPin,
-  Menu,
   Search,
-  X,
 } from "lucide-react";
 import insta from "../../../attached_assets/instagram.svg";
 import facebook from "../../../attached_assets/facebook.svg";
 import tiktok from "../../../attached_assets/tiktok.svg";
+import SiteHeader from "@/components/layout/SiteHeader";
 import twoPawsLogo from "../../../attached_assets/logotrans-brand-800.webp";
 import aiVetIcon from "@assets/aivet-320.webp";
 import vetsIcon from "@assets/vets-320.webp";
@@ -101,7 +99,6 @@ function OfferCell({ item }: { item: OfferItem }) {
 }
 
 export default function Landing() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const faqs = [
     {
@@ -175,7 +172,6 @@ export default function Landing() {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
-      setIsMobileMenuOpen(false);
     }
   };
 
@@ -189,107 +185,7 @@ export default function Landing() {
       />
 
       <div className="w-full bg-white">
-        <nav className="relative z-50 border-b border-gray-100 bg-white">
-          <div className="mx-auto flex min-h-[64px] w-full max-w-[1500px] items-center justify-between px-4 sm:px-8 lg:px-10">
-            <a href="/" className="flex shrink-0 items-center">
-              <img
-                src={twoPawsLogo}
-                alt="TwoPaws"
-                className="h-10 w-auto sm:h-12"
-              />
-            </a>
-
-            {/* Desktop */}
-            <div className="hidden items-center gap-7 text-sm font-medium text-gray-600 md:flex">
-              <a href="#features" className="transition-colors hover:text-brand-purple">
-                Features
-              </a>
-              <a href="/about/" className="transition-colors hover:text-brand-purple">
-                About
-              </a>
-              <a href="#faq" className="transition-colors hover:text-brand-purple">
-                FAQ
-              </a>
-              <a href="/contact/" className="transition-colors hover:text-brand-purple">
-                Contact
-              </a>
-              <a
-                href="/shop/"
-                className="transition-colors hover:text-brand-purple"
-              >
-                Shop
-              </a>
-              <a
-                href="/terms/"
-                className="transition-colors hover:text-brand-purple"
-              >
-                Terms &amp; Conditions
-              </a>
-              <a
-                href="/privacy/"
-                className="transition-colors hover:text-brand-purple"
-              >
-                Privacy Policy
-              </a>
-            </div>
-
-            <div className="hidden md:block">
-              <Button
-                asChild
-                className="h-9 rounded-md bg-brand-purple px-5 text-white hover:opacity-90"
-              >
-                <a href="/download/">Download</a>
-              </Button>
-            </div>
-
-            {/* Mobile actions */}
-            <div className="flex items-center gap-2 md:hidden">
-              <a
-                href="/shop/"
-                className="inline-flex h-10 items-center rounded-md border border-brand-purple/25 px-3 text-sm font-semibold text-brand-purple"
-              >
-                Shop
-              </a>
-              <button
-                className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-brand-purple/25 bg-white text-brand-purple"
-                onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-                aria-label="Toggle menu"
-                aria-expanded={isMobileMenuOpen}
-              >
-                {isMobileMenuOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {isMobileMenuOpen ? (
-            <div className="border-t border-gray-100 px-4 py-4 md:hidden">
-              <div className="flex flex-col gap-3 text-sm font-medium text-gray-700">
-                <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>
-                  Features
-                </a>
-                <a href="/about/">About</a>
-                <a href="/egypt/">TwoPaws in Egypt</a>
-                <a href="/contact/">Contact</a>
-                <a href="#faq" onClick={() => setIsMobileMenuOpen(false)}>
-                  FAQ
-                </a>
-                <a href="/shop/">Shop</a>
-                <a href="/terms/">Terms &amp; Conditions</a>
-                <a href="/privacy/">Privacy Policy</a>
-                <Button
-                  asChild
-                  className="mt-2 w-full rounded-md bg-brand-purple text-white hover:opacity-90"
-                >
-                  <a href="/download/">Download</a>
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </nav>
+        <SiteHeader />
 
         {/* HERO (matches reference) */}
         <section className="relative z-20 bg-brand-yellow">

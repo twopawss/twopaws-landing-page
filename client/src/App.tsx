@@ -55,6 +55,7 @@ const LoginPage = lazy(() => import("@/pages/login"));
 const PaymobPaymentPage = lazy(() => import("@/pages/payment/paymob"));
 const PaymentReturnPage = lazy(() => import("@/pages/payment/return"));
 const CataloguePaymentReturnPage = lazy(() => import("@/pages/payment/catalogue-return"));
+const EventsIndexPage = lazy(() => import("@/pages/events/index"));
 const PublicEventPage = lazy(() => import("@/pages/events/event-public"));
 const EventLeaderboardPage = lazy(() => import("@/pages/events/leaderboard"));
 const EventPaymentResultPage = lazy(() => import("@/pages/events/payment-result"));
@@ -201,6 +202,7 @@ function App() {
                   <Route path="/account" element={<AccountPage />} />
                   <Route path="/payment/paymob" element={<PaymobPaymentPage />} />
                   <Route path="/payment/return" element={<PaymentReturnRoutePage />} />
+                  <Route path="/events" element={<EventsIndexPage />} />
                   <Route path="/events/:eventSlug" element={<PublicEventPage />} />
                   <Route path="/events/:eventSlug/checkout" element={<PublicEventPage />} />
                   <Route path="/events/:eventSlug/payment-result" element={<EventPaymentResultPage />} />
