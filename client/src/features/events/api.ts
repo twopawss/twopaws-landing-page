@@ -1,5 +1,6 @@
+import { doc, getDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { functions } from "@/lib/firebase";
+import { db, functions } from "@/lib/firebase";
 import type {
   EventOrderStatus,
   OrganizerDashboard,
@@ -28,6 +29,42 @@ export const getPublicLeaderboard = (eventSlug: string) =>
     entries: PublicEntry[];
     generatedAt: string;
   }>("getPublicEventLeaderboard", { eventSlug });
+
+export const castCompetitionVote = (competitionId: string, entryId: string) =>
+  call<{
+    entryId: string;
+    voteCount: number;
+    votesUsed: number;
+    maxVotes: number;
+  }>("castCompetitionVote", { competitionId, entryId });
+
+// Mirrors `deterministicId("competition-ballot", competitionId, uid)` in
+// functions/src/events/shared.ts: sha256 of the colon-joined parts, first 40 hex chars.
+const ballotDocId = async (competitionId: string, uid: string) => {
+  const bytes = new TextEncoder().encode(
+    ["competition-ballot", competitionId, uid].join(":")
+  );
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (value) =>
+    value.toString(16).padStart(2, "0")
+  )
+    .join("")
+    .slice(0, 40);
+};
+
+// The signed-in user's own ballot (rules allow a voter to read it). Returns the
+// ids of the entries they have voted for; empty when they have not voted yet.
+export const getMyCompetitionBallot = async (
+  competitionId: string,
+  uid: string
+): Promise<string[]> => {
+  const snap = await getDoc(
+    doc(db, "competitionVotes", await ballotDocId(competitionId, uid))
+  );
+  if (!snap.exists()) return [];
+  const refs = (snap.get("entryRefs") as Array<{ id: string }> | undefined) || [];
+  return refs.map((ref) => ref.id);
+};
 
 export const createEventOrder = (input: {
   eventId: string;

@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Expand, PawPrint, RefreshCw, Trophy } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Check, Expand, Heart, PawPrint, RefreshCw, Trophy } from "lucide-react";
 import EventShell from "@/features/events/EventShell";
 import { Button } from "@/components/ui/button";
-import { getPublicLeaderboard } from "@/features/events/api";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import {
+  castCompetitionVote,
+  getMyCompetitionBallot,
+  getPublicLeaderboard,
+} from "@/features/events/api";
 import { errorMessage, eventTime } from "@/features/events/format";
 import type { PublicCompetition, PublicEntry, PublicEvent } from "@/features/events/types";
 import Seo from "@/lib/seo/Seo";
@@ -14,6 +20,17 @@ type LeaderboardData = {
   competition: PublicCompetition;
   entries: PublicEntry[];
   generatedAt: string;
+};
+
+// Mirrors isCompetitionVotingOpen in functions/src/events/shared.ts; the callable
+// is the authority, this only decides whether to show the button.
+const isVotingOpen = (competition: PublicCompetition, now: number) => {
+  if (!["ENTRIES_OPEN", "ENTRIES_CLOSED", "VOTING_OPEN"].includes(competition.status)) {
+    return false;
+  }
+  const opens = competition.votingStartAt ? new Date(competition.votingStartAt).getTime() : 0;
+  const closes = competition.votingEndAt ? new Date(competition.votingEndAt).getTime() : 0;
+  return (!opens || now >= opens) && (!closes || now < closes);
 };
 
 const useCountdown = (target: string | null) => {
@@ -39,6 +56,55 @@ export default function PublicLeaderboardPage() {
   const [error, setError] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(() => Boolean(document.fullscreenElement));
   const countdown = useCountdown(data?.competition.votingEndAt || null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const [votedEntryIds, setVotedEntryIds] = useState<string[] | null>(null);
+  const [votingEntryId, setVotingEntryId] = useState<string | null>(null);
+  const competitionId = data?.competition.id || null;
+
+  useEffect(() => {
+    if (!user || !competitionId) {
+      setVotedEntryIds(null);
+      return;
+    }
+    let cancelled = false;
+    getMyCompetitionBallot(competitionId, user.uid)
+      .then((ids) => {
+        if (!cancelled) setVotedEntryIds(ids);
+      })
+      .catch(() => {
+        if (!cancelled) setVotedEntryIds([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, competitionId]);
+
+  const vote = async (entry: PublicEntry) => {
+    if (!data) return;
+    if (!user) {
+      navigate(`/login?redirect=${encodeURIComponent(`/events/${eventSlug}/leaderboard`)}`);
+      return;
+    }
+    setVotingEntryId(entry.id);
+    try {
+      const result = await castCompetitionVote(data.competition.id, entry.id);
+      setVotedEntryIds((current) => [...(current || []), entry.id]);
+      toast({
+        title: `Your vote for ${entry.petName} is in`,
+        description:
+          result.maxVotes > 1
+            ? `${result.votesUsed} of ${result.maxVotes} votes used.`
+            : undefined,
+      });
+      void load(true);
+    } catch (reason) {
+      toast({ title: "Vote not counted", description: errorMessage(reason), variant: "destructive" });
+    } finally {
+      setVotingEntryId(null);
+    }
+  };
 
   const load = async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -94,10 +160,41 @@ export default function PublicLeaderboardPage() {
   const top = data.entries.slice(0, 3);
   const rest = data.entries.slice(3);
   const published = data.competition.status === "RESULTS_PUBLISHED";
+  const votingOpen = isVotingOpen(data.competition, Date.now());
+  const maxVotes = Math.max(1, Math.min(10, data.competition.maxVotesPerUser || 1));
+  const votesUsed = votedEntryIds?.length || 0;
+  const showVoting = votingOpen && !isFullscreen;
+
+  const renderVoteButton = (entry: PublicEntry, compact = false) => {
+    if (!showVoting) return null;
+    const voted = Boolean(votedEntryIds?.includes(entry.id));
+    const exhausted = Boolean(user) && !voted && votesUsed >= maxVotes;
+    const busy = votingEntryId === entry.id;
+    const size = compact ? "sm" : "default";
+    if (voted) {
+      return (
+        <Button size={size} disabled className="bg-brand-dark text-white disabled:opacity-100" aria-label={`You voted for ${entry.petName}`}>
+          <Check className="mr-2 h-4 w-4" />Voted
+        </Button>
+      );
+    }
+    return (
+      <Button
+        size={size}
+        onClick={() => void vote(entry)}
+        disabled={busy || exhausted || authLoading || (Boolean(user) && votedEntryIds === null)}
+        className="bg-brand-olive text-brand-dark hover:bg-brand-olive/90"
+        aria-label={user ? `Vote for ${entry.petName}` : `Sign in to vote for ${entry.petName}`}
+      >
+        {busy ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Heart className="mr-2 h-4 w-4" />}
+        {!user ? "Sign in to vote" : exhausted ? "No votes left" : "Vote"}
+      </Button>
+    );
+  };
 
   return (
     <EventShell fullWidth hideHeader={isFullscreen}>
-      <Seo title={`${data.competition.title} Leaderboard | ${data.event.title}`} description="Live, read-only Pet of the Event results." canonicalUrl={`/events/${eventSlug}/leaderboard`} noIndex />
+      <Seo title={`${data.competition.title} Leaderboard | ${data.event.title}`} description="Live Pet of the Event results. Sign in to vote for your favourite pet." canonicalUrl={`/events/${eventSlug}/leaderboard`} noIndex />
       <div className={`${isFullscreen ? "min-h-screen" : "min-h-[calc(100vh-72px)]"} bg-brand-cream/55`}>
         <header className="flex flex-wrap items-center justify-between gap-4 bg-brand-dark px-5 py-4 text-white sm:px-8">
           <div className="flex items-center gap-4">
@@ -119,6 +216,17 @@ export default function PublicLeaderboardPage() {
             {published ? "Final results" : `Voting closes at ${eventTime(data.competition.votingEndAt)}`}
           </p>
           {!published && countdown && <p className="mt-2 font-mono text-5xl font-black tracking-wider text-brand-dark sm:text-7xl">{countdown}</p>}
+          {showVoting && (
+            <p className="mx-auto mt-4 max-w-xl text-slate-600">
+              {!user
+                ? "Sign in with your TwoPaws account to vote for your favourite pet."
+                : maxVotes > 1
+                  ? `You have ${Math.max(0, maxVotes - votesUsed)} of ${maxVotes} votes left.`
+                  : votesUsed
+                    ? "Thanks for voting! One vote per person."
+                    : "Pick your favourite pet below. One vote per person."}
+            </p>
+          )}
           {!top.length ? (
             <div className="mx-auto mt-16 max-w-xl rounded-2xl border border-brand-olive bg-white p-10">
               <PawPrint className="mx-auto h-14 w-14 text-brand-olive" />
@@ -139,6 +247,7 @@ export default function PublicLeaderboardPage() {
                         {rank === 1 && <Trophy className="mx-auto mb-2 h-7 w-7" />}
                         <h2 className="text-3xl">{entry.petName}</h2>
                         <p>{entry.petBreed || entry.petSpecies}</p>
+                        {showVoting && <div className="mt-4">{renderVoteButton(entry)}</div>}
                       </div>
                     </article>
                   );
@@ -147,10 +256,11 @@ export default function PublicLeaderboardPage() {
               {!!rest.length && (
                 <div className="mx-auto mt-10 max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm">
                   {rest.map((entry, index) => (
-                    <div key={entry.id} className="grid grid-cols-[48px_56px_1fr] items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-0 sm:grid-cols-[64px_64px_1fr] sm:px-6">
+                    <div key={entry.id} className={`grid items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-0 sm:px-6 ${showVoting ? "grid-cols-[48px_56px_1fr_auto] sm:grid-cols-[64px_64px_1fr_auto]" : "grid-cols-[48px_56px_1fr] sm:grid-cols-[64px_64px_1fr]"}`}>
                       <span className="text-center text-2xl font-black text-brand-dark">{index + 4}</span>
                       <img src={entry.petImageUrl} alt="" className="h-12 w-12 rounded-full object-cover sm:h-14 sm:w-14" />
                       <div><p className="text-lg font-bold sm:text-xl">{entry.petName}</p><p className="text-sm text-slate-500">{entry.petBreed || entry.petSpecies}</p></div>
+                      {showVoting && renderVoteButton(entry, true)}
                     </div>
                   ))}
                 </div>
