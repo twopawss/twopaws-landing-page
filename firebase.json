@@ -49,6 +49,15 @@
         ]
       },
       {
+        "source": "/200.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
         "source": "/assets/**",
         "headers": [
           {
@@ -118,131 +127,131 @@
       },
       {
         "source": "/shop",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/shop/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/delete-account",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/delete-account/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/forgot-password",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/forgot-password/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/reset-password",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/reset-password/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/login/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/login",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/account",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/account/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/cart",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/cart/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/checkout",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/checkout/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/orders",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/orders/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/payment",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/payment/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/events",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/events/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/organizer",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/organizer/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/download",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/download/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/shipping-and-returns",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/shipping-and-returns/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/terms",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/terms/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/privacy",
-        "destination": "/index.html"
+        "destination": "/200.html"
       },
       {
         "source": "/privacy/**",
-        "destination": "/index.html"
+        "destination": "/200.html"
       }
     ]
   }

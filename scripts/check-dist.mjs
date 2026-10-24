@@ -33,6 +33,9 @@ const requireCanonical = (relativePath, canonicalUrl) => {
 };
 
 requireFile("index.html");
+// The SPA shell every app route is rewritten to (firebase.json). react-snap writes it; without it
+// the prerendered homepage would be served for /events, /account, etc. and flash before the route loads.
+requireFile("200.html");
 requireCanonical("shop/index.html", "https://twopaws.pet/shop/");
 requireCanonical("shop/suppliers/index.html", "https://twopaws.pet/shop/suppliers/");
 requireCanonical("download/index.html", "https://twopaws.pet/download/");
