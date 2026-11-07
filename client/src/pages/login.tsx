@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  FALLBACK_POLICY_HINT,
+  PasswordRequirementList,
+  usePasswordPolicy,
+} from "@/components/account/PasswordRequirements";
 import ShopShell from "@/components/shop/ShopShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +17,37 @@ import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import Seo from "@/lib/seo/Seo";
 import { createMetaEventId, trackMetaEvent } from "@/lib/metaPixel";
+
+// Firebase's own messages read like system errors ("Firebase: ... (auth/...)"), so map the common ones.
+function emailAuthErrorMessage(cause: unknown, mode: "signin" | "signup", hasPolicyList: boolean) {
+  const code = (cause as { code?: string }).code;
+  switch (code) {
+    case "auth/password-does-not-meet-requirements":
+    case "auth/weak-password":
+      return hasPolicyList
+        ? "Your password doesn’t meet all the requirements. Check the list under the password field."
+        : `Your password isn’t strong enough. ${FALLBACK_POLICY_HINT}`;
+    case "auth/email-already-in-use":
+      return "An account already exists with this email. Sign in instead, or reset your password if you’ve forgotten it.";
+    case "auth/invalid-email":
+      return "Enter a valid email address.";
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found":
+      return "Incorrect email or password.";
+    case "auth/user-disabled":
+      return "This account has been disabled. Please contact TwoPaws support.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please wait a few minutes and try again.";
+    case "auth/network-request-failed":
+      return "We couldn’t reach the server. Check your internet connection and try again.";
+    default:
+      console.error("Email authentication failed", cause);
+      return mode === "signup"
+        ? "We couldn’t create your account. Please try again."
+        : "We couldn’t sign you in. Please try again.";
+  }
+}
 
 export default function LoginPage() {
   const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
@@ -31,6 +67,8 @@ export default function LoginPage() {
   const [lastName, setLastName] = useState("");
   const [phoneInput, setPhoneInput] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+  // Only new passwords need the policy; signing in with an older, weaker password is still allowed.
+  const { requirements, isValid: meetsPolicy } = usePasswordPolicy(password, mode === "signup");
 
   useEffect(() => {
     setMode(initialMode);
@@ -75,6 +113,14 @@ export default function LoginPage() {
         });
         return;
       }
+      if (meetsPolicy === false) {
+        toast({
+          title: "Choose a stronger password",
+          description: "Your password doesn’t meet all the requirements yet. Check the list under the password field.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -107,8 +153,8 @@ export default function LoginPage() {
       navigate(redirectTo);
     } catch (err) {
       toast({
-        title: "Authentication failed",
-        description: (err as Error).message,
+        title: mode === "signup" ? "Couldn’t create your account" : "Couldn’t sign you in",
+        description: emailAuthErrorMessage(err, mode, requirements.length > 0),
         variant: "destructive",
       });
     } finally {
@@ -206,12 +252,18 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Password</Label>
+              <Label htmlFor="login-password">Password</Label>
               <Input
+                id="login-password"
                 type="password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                aria-describedby={mode === "signup" && requirements.length > 0 ? "signup-password-requirements" : undefined}
               />
+              {mode === "signup" && (
+                <PasswordRequirementList id="signup-password-requirements" requirements={requirements} />
+              )}
             </div>
             {mode === "signin" && (
               <div className="flex justify-end">

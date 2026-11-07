@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
 import { Link, useLocation } from "react-router-dom";
+import {
+  FALLBACK_POLICY_HINT,
+  PasswordRequirementList,
+  usePasswordPolicy,
+} from "@/components/account/PasswordRequirements";
 import ShopShell from "@/components/shop/ShopShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,6 +89,8 @@ export function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
+  // Without the policy (fetch failed) the form still works; the server rejects a weak password with a clear message.
+  const { requirements, isValid: meetsPolicy, minLength } = usePasswordPolicy(password);
 
   useEffect(() => {
     // Reset action codes are bearer credentials: keep them in memory, not history or analytics.
@@ -111,6 +118,10 @@ export function ResetPasswordPage() {
       setState("invalid");
       return;
     }
+    if (meetsPolicy === false) {
+      setError("Your new password doesn’t meet all the requirements yet. Check the list above.");
+      return;
+    }
     setError("");
     setState("saving");
     try {
@@ -118,13 +129,26 @@ export function ResetPasswordPage() {
       setState("success");
     } catch (cause) {
       const code = (cause as { code?: string }).code;
-      if (code === "auth/weak-password") {
-        setError("Choose a stronger password and try again.");
+      if (code === "auth/password-does-not-meet-requirements" || code === "auth/weak-password") {
+        setError(
+          requirements.length > 0
+            ? "Your new password doesn’t meet all the requirements. Check the list above."
+            : `Your new password isn’t strong enough. ${FALLBACK_POLICY_HINT}`
+        );
         setState("ready");
       } else if (code === "auth/expired-action-code" || code === "auth/invalid-action-code") {
         setState("invalid");
+      } else if (code === "auth/user-disabled") {
+        setError("This account has been disabled. Please contact TwoPaws support.");
+        setState("ready");
+      } else if (code === "auth/too-many-requests") {
+        setError("Too many attempts. Please wait a few minutes and try again.");
+        setState("ready");
+      } else if (code === "auth/network-request-failed") {
+        setError("We couldn’t reach the server. Check your internet connection and try again.");
+        setState("ready");
       } else {
-        setError("We couldn’t update your password. Check your connection and try again.");
+        setError("Something went wrong while updating your password. Please try again.");
         setState("ready");
       }
     }
@@ -150,8 +174,12 @@ export function ResetPasswordPage() {
             )}
             {(state === "ready" || state === "saving") && (
               <form className="space-y-4" onSubmit={submit}>
-                <div className="space-y-2"><Label htmlFor="new-password">New password</Label><Input id="new-password" type="password" autoComplete="new-password" required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 6 characters" /></div>
-                <div className="space-y-2"><Label htmlFor="confirm-password">Confirm new password</Label><Input id="confirm-password" type="password" autoComplete="new-password" required minLength={6} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Enter it again" /></div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New password</Label>
+                  <Input id="new-password" type="password" autoComplete="new-password" required minLength={minLength} value={password} onChange={(event) => { setPassword(event.target.value); setError(""); }} placeholder={`At least ${minLength} characters`} aria-describedby={requirements.length > 0 ? "new-password-requirements" : undefined} />
+                  <PasswordRequirementList id="new-password-requirements" requirements={requirements} />
+                </div>
+                <div className="space-y-2"><Label htmlFor="confirm-password">Confirm new password</Label><Input id="confirm-password" type="password" autoComplete="new-password" required minLength={minLength} value={confirmation} onChange={(event) => { setConfirmation(event.target.value); setError(""); }} placeholder="Enter it again" /></div>
                 {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
                 <Button type="submit" className="w-full bg-brand-green-dark text-white" disabled={state === "saving"}>{state === "saving" ? "Updating…" : "Update password"}</Button>
               </form>
