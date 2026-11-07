@@ -74,12 +74,29 @@ export function ForgotPasswordPage() {
   );
 }
 
+// Firebase adds the continue URL of whoever sent the email (the supplier dashboard sends
+// https://supplier.twopaws.pet/login). Anyone can edit the link, so only follow it to our own HTTPS sites;
+// anything else gets the shop login.
+function trustedContinueUrl(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    const ours = host === "twopaws.pet" || host.endsWith(".twopaws.pet");
+    return url.protocol === "https:" && ours && !url.username && !url.password ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export function ResetPasswordPage() {
   const location = useLocation();
   const { mode, actionCode } = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return { mode: params.get("mode"), actionCode: params.get("oobCode") };
   }, [location.search]);
+  // Read once on mount: the query string is wiped from history below, so capture it before anything re-reads it.
+  const [continueUrl] = useState(() => trustedContinueUrl(new URLSearchParams(location.search).get("continueUrl")));
   const [state, setState] = useState<ResetState>("checking");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -156,7 +173,11 @@ export function ResetPasswordPage() {
                 <Button type="submit" className="w-full bg-brand-green-dark text-white" disabled={state === "saving"}>{state === "saving" ? "Updating…" : "Update password"}</Button>
               </form>
             )}
-            {state === "success" && <Button asChild className="w-full bg-brand-green-dark text-white"><Link to="/login">Continue to sign in</Link></Button>}
+            {state === "success" && (
+              <Button asChild className="w-full bg-brand-green-dark text-white">
+                {continueUrl ? <a href={continueUrl}>Continue to sign in</a> : <Link to="/login">Continue to sign in</Link>}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
