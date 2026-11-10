@@ -92,27 +92,8 @@ export const brandPages = (facets, minimum = 3) =>
 
 export { brandSlugPath, productSlugPath, slugify };
 
-/** The product title pattern from the SEO audit: "{Product} ({size}) | {Brand} | TwoPaws". The size is the single variant's label when it adds information. */
-export const productTitle = (product) => {
-  const name = String(product.name ?? "").trim();
-  const single = product.variants?.length === 1 ? String(product.variants[0].label ?? "").trim() : "";
-  const size = single && single.toLowerCase() !== name.toLowerCase() && !name.toLowerCase().includes(single.toLowerCase()) ? ` (${single})` : "";
-  const brand = String(product.brand ?? "").trim();
-  const brandPart = brand && !name.toLowerCase().includes(brand.toLowerCase()) ? ` | ${brand}` : "";
-  return `${name}${size}${brandPart} | TwoPaws`;
-};
-
-/** A description of at most 155 characters that ends on a word, never with an ellipsis. */
-export const productDescription = (product) => {
-  const own = String(product.description ?? "").replace(/\s+/g, " ").trim();
-  const brand = String(product.brand ?? "").trim();
-  const base = own.length >= 40
-    ? own
-    : `Buy ${product.name}${brand ? ` by ${brand}` : ""} online in Egypt from TwoPaws. Compare supplier prices and get fast delivery in Cairo and Giza.`;
-  if (base.length <= 155) return base;
-  const cut = base.slice(0, 155);
-  return cut.slice(0, Math.max(cut.lastIndexOf(" "), 80)).replace(/[\s,;:.-]+$/g, "");
-};
+/** Product page title, meta description and Offer schema live in shared/catalogueSeo.js, which the hydrated page uses too. */
+export { productOffersSchema, productSchemaDescription, productSeoDescription as productDescription, productSeoTitle as productTitle } from "../shared/catalogueSeo.js";
 
 export const escapeHtml = (value = "") =>
   String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");

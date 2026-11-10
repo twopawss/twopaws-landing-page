@@ -1,6 +1,7 @@
 import {
-  CURRENCY, applyCoreSeo, brandSlugPath, categoryForProduct, categoryPath, cheapestOffer, escapeHtml, fetchCatalogueProducts,
-  formatEgp, gridHtml, offersForVariant, productDescription, productSlugPath, productTitle, readTemplate, resolveBaseUrl, resolveEnv,
+  applyCoreSeo, brandSlugPath, categoryForProduct, categoryPath, cheapestOffer, escapeHtml, fetchCatalogueProducts,
+  formatEgp, gridHtml, offersForVariant, productDescription, productOffersSchema, productSchemaDescription, productSlugPath, productTitle, readTemplate,
+  resolveBaseUrl, resolveEnv,
   setRootContent, shellHtml, upsertMetaByName, upsertStructuredData, writePage,
 } from "./catalogue-export.mjs";
 
@@ -14,12 +15,6 @@ import {
 /** Replaces the site-wide iOS Smart App Banner so "Open" lands on this product in the app. */
 const kIosAppId = "6745481497";
 
-const buildPriceValidUntil = (daysAhead = 30) => {
-  const date = new Date();
-  date.setUTCDate(date.getUTCDate() + daysAhead);
-  return date.toISOString().slice(0, 10);
-};
-
 const buildProductHtml = (template, baseUrl, product, related) => {
   const canonicalPath = productSlugPath(product.id, product.name);
   const canonicalUrl = `${baseUrl}${canonicalPath}`;
@@ -31,33 +26,13 @@ const buildProductHtml = (template, baseUrl, product, related) => {
   const supplierNames = [...new Set(product.offers.map((o) => o.supplierName).filter(Boolean))];
   const images = (product.images ?? []).filter((url) => String(url).startsWith("http"));
 
-  const offers = prices.length > 1
-    ? {
-        "@type": "AggregateOffer",
-        priceCurrency: CURRENCY,
-        lowPrice: (Math.min(...prices) / 100).toFixed(2),
-        highPrice: (Math.max(...prices) / 100).toFixed(2),
-        offerCount: prices.length,
-        availability: "https://schema.org/InStock",
-        url: canonicalUrl,
-      }
-    : {
-        "@type": "Offer",
-        "@id": `${canonicalUrl}#offer`,
-        priceCurrency: CURRENCY,
-        price: (product.minimumPriceMinor / 100).toFixed(2),
-        availability: "https://schema.org/InStock",
-        itemCondition: "https://schema.org/NewCondition",
-        url: canonicalUrl,
-        priceValidUntil: buildPriceValidUntil(),
-        seller: supplierNames[0] ? { "@type": "Organization", name: supplierNames[0] } : undefined,
-      };
+  const offers = productOffersSchema({ product, baseUrl, canonicalUrl });
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Product",
     "@id": `${canonicalUrl}#product`,
     name: product.name,
-    description,
+    description: productSchemaDescription(product),
     url: canonicalUrl,
     image: images.length ? images : undefined,
     sku: product.id,

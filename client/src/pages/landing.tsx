@@ -178,7 +178,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white">
       <Seo
-        title="TwoPaws | Pet care app in Egypt"
+        title="TwoPaws | Pet supplies, vets and pet care app in Egypt"
         description="TwoPaws connects pet families in Egypt with vets, clinics, a supplies marketplace, community features, and delivery."
         canonicalUrl="/"
         structuredData={[organizationSchema, mobileApplicationSchema, faqSchema]}

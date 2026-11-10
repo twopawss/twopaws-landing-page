@@ -18,6 +18,7 @@ import { toPrerenderSafeImageSrc } from "@/lib/prerenderImage";
 import { isCatalogueShop } from "@/lib/shopBackend";
 import { brandSlugPath, categoryForProduct, categoryPath, productSlugPath } from "@/lib/catalogueTaxonomy";
 import { productIdFromSegment } from "@shared/catalogueSlug";
+import { productOffersSchema, productSchemaDescription, productSeoDescription, productSeoTitle } from "@shared/catalogueSeo";
 import {
   callableMessage, cheapestOffer, formatMinor, getLegacyProduct, getProduct, getRecommendations, isCatalogueProductId, offersForVariant,
   type PublicOffer, type PublicProduct,
@@ -29,13 +30,6 @@ const RECOMMENDED_VISIBLE_LIMIT = 8;
 const MAX_QTY = 10;
 
 type ShippingZoneDoc = { id: string; label?: string; rateEGP?: number; shippingEtaLabel?: string };
-
-const toSeoDescription = (value: string, maxLength = 155) => {
-  const cleaned = value.replace(/\s+/g, " ").trim();
-  if (cleaned.length <= maxLength) return cleaned;
-  const cut = cleaned.slice(0, maxLength);
-  return cut.slice(0, Math.max(cut.lastIndexOf(" "), 80)).trim();
-};
 
 function useCatalogueCartOptional() {
   // The cart provider is only mounted on the catalogue backend; in legacy mode this page is view-only.
@@ -132,45 +126,23 @@ export default function CatalogueProductPage() {
   const productName = product?.name ?? "Product";
   const canonicalPath = product ? productSlugPath(canonicalId, product.name) : `/shop/product/${canonicalId}/`;
   const taxonomyCategory = product ? categoryForProduct(product) : null;
-  const primarySupplierName = selectedOffer?.supplierName ?? product?.suppliers?.[0]?.name;
+  // Title, description and offers come from shared/catalogueSeo.js so they match the prerendered page.
   const seoTitle = product
-    ? `${productName}${variantId && product.variants.length > 1 ? ` (${product.variants.find((v) => v.id === variantId)?.label ?? ""})` : ""}${product.brand ? ` | ${product.brand}` : ""} | TwoPaws`
+    ? productSeoTitle(product, variantId && product.variants.length > 1 ? product.variants.find((v) => v.id === variantId)?.label : undefined)
     : "Product | TwoPaws Shop";
-  const seoDescription = toSeoDescription(
-    product
-      ? (product.description.trim().length >= 40 ? product.description : `Buy ${productName}${product.brand ? ` by ${product.brand}` : ""} online in Egypt from TwoPaws. Compare supplier prices, check availability and get fast delivery in Cairo and Giza.`)
-      : "Browse pet products and supplier offers on TwoPaws."
-  );
-  const prices = product ? product.offers.map((o) => o.sellingPriceMinor) : [];
+  const seoDescription = product ? productSeoDescription(product) : "Browse pet products and supplier offers on TwoPaws.";
   const structuredData = product ? {
     "@context": "https://schema.org",
     "@type": "Product",
     "@id": `${BASE_URL}${canonicalPath}#product`,
     name: productName,
-    description: seoDescription,
+    description: productSchemaDescription(product),
     url: `${BASE_URL}${canonicalPath}`,
     image: images.length ? images : undefined,
     sku: product.id,
     category: product.categoryNames[0],
     brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
-    offers: prices.length > 1 ? {
-      "@type": "AggregateOffer",
-      priceCurrency: META_PIXEL_CURRENCY,
-      lowPrice: Math.min(...prices) / 100,
-      highPrice: Math.max(...prices) / 100,
-      offerCount: prices.length,
-      availability: "https://schema.org/InStock",
-      url: `${BASE_URL}${canonicalPath}`,
-    } : {
-      "@type": "Offer",
-      priceCurrency: META_PIXEL_CURRENCY,
-      price: product.minimumPriceMinor / 100,
-      availability: "https://schema.org/InStock",
-      itemCondition: "https://schema.org/NewCondition",
-      url: `${BASE_URL}${canonicalPath}`,
-      seller: primarySupplierName ? { "@type": "Organization", name: primarySupplierName } : undefined,
-      ...(cheapestZone && typeof cheapestZone.rateEGP === "number" ? { shippingDetails: { "@type": "OfferShippingDetails", shippingRate: { "@type": "MonetaryAmount", value: cheapestZone.rateEGP, currency: META_PIXEL_CURRENCY }, shippingDestination: { "@type": "DefinedRegion", addressCountry: "EG" } } } : {}),
-    },
+    offers: productOffersSchema({ product, baseUrl: BASE_URL, canonicalUrl: `${BASE_URL}${canonicalPath}`, shippingRateEgp: cheapestZone?.rateEGP }),
   } : undefined;
   const breadcrumb = product ? {
     "@context": "https://schema.org",
