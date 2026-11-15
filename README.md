@@ -154,8 +154,9 @@ environment. `REACT_SNAP_SKIP=true` skips only the react-snap step.
 
 ### Build secrets
 
-`.github/workflows/ci.yml` builds and runs the dist check on pull requests and
-pushes to `main`. It takes the `VITE_*` values from repository secrets
+`.github/workflows/ci.yml` builds and runs the dist check on pull requests;
+`.github/workflows/deploy.yml` does the same on every push to `main` and then
+deploys. Both take the `VITE_*` values from repository secrets
 (Settings > Secrets and variables > Actions). Required for the build to pass:
 
 - `VITE_FIREBASE_API_KEY` (the public web API key) and `VITE_FIREBASE_PROJECT_ID`:
@@ -166,8 +167,17 @@ Set to match `client/.env` so the CI bundle equals the deployed one:
 `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_APP_ID`,
 `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`,
 `VITE_GOOGLE_MAPS_API_KEY`, `VITE_GOOGLE_MAPS_MAP_ID`, `VITE_META_PIXEL_ID`.
+`VITE_SHOP_BACKEND=catalogue` is a repository variable; without it the build is
+the legacy shop, and `deploy.yml` refuses to deploy.
 
-CI does not deploy. Deploy from a checkout whose `client/.env` is complete:
+**Pushing to `main` deploys to https://twopaws.pet.** `deploy.yml` typechecks,
+runs the full build and dist check through the `predeploy` hook, and deploys only
+if they pass (pushes that change only `*.md` are skipped). It uses the
+`FIREBASE_SERVICE_ACCOUNT` secret (service account `github-website-deploy`:
+Hosting admin, read-only on functions and Cloud Run). A new `VITE_*` value must
+be added to the repository secrets and to both workflows.
+
+To deploy by hand, use a checkout whose `client/.env` is complete:
 
 ```bash
 firebase hosting:channel:deploy preview --project pets-13gvj0   # preview URL

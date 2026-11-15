@@ -1,9 +1,8 @@
 name: CI
 
+# Pull requests only: pushes to main are built, checked and deployed by deploy.yml.
 on:
   pull_request:
-  push:
-    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -26,6 +25,8 @@ jobs:
       VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
       VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.VITE_GOOGLE_MAPS_MAP_ID }}
       VITE_META_PIXEL_ID: ${{ secrets.VITE_META_PIXEL_ID }}
+      # Same shop mode as the deployed build (see deploy.yml).
+      VITE_SHOP_BACKEND: ${{ vars.VITE_SHOP_BACKEND }}
       # The postbuild scripts read SSG_STRICT themselves; CI=true (set by
       # Actions) also switches them to strict mode.
       SSG_STRICT: "true"
