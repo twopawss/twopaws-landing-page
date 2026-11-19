@@ -82,18 +82,17 @@ export default function CatalogueCartPage() {
     <ShopShell>
       <Seo title="Cart | TwoPaws Shop" description="Review and update items in your TwoPaws shopping cart." canonicalUrl="/cart/" noIndex />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Cart</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Cart</p>
         <h1 className="text-3xl font-semibold text-slate-900">Your cart</h1>
         {supplierNames.length > 0 && <p className="text-sm text-slate-500">{supplierNames.length === 1 ? `Sold by ${supplierNames[0]}` : `From ${supplierNames.length} suppliers: ${supplierNames.join(", ")}`}</p>}
       </header>
 
       {!user && (
-        <Card className="border-slate-100">
-          <CardContent className="space-y-3 p-6">
-            <p className="text-slate-600">You are shopping as guest. Sign in to keep your cart across devices.</p>
-            <Button asChild variant="outline" className="border-slate-200"><Link to="/login?redirect=/cart">Sign in</Link></Button>
-          </CardContent>
-        </Card>
+        <p className="text-sm text-slate-600">
+          Shopping as a guest.{" "}
+          <Link to="/login?redirect=/cart" className="font-semibold text-brand-green-dark underline-offset-2 hover:underline">Sign in</Link>
+          {" "}to keep your cart across devices.
+        </p>
       )}
 
       {(message || error) && (
@@ -147,7 +146,7 @@ export default function CatalogueCartPage() {
           <Card className="border-slate-100">
             <CardContent className="space-y-4 p-4">
               <h3 className="text-lg font-semibold text-slate-900">Order summary</h3>
-              <div className="flex items-center justify-between text-sm text-slate-600"><span>Subtotal ({itemCount} items)</span><span>{formatMinor(subtotalMinor)}</span></div>
+              <div className="flex items-center justify-between text-sm text-slate-600"><span>Subtotal ({itemCount} {itemCount === 1 ? "item" : "items"})</span><span>{formatMinor(subtotalMinor)}</span></div>
               {storedPromo && <div className="flex items-center justify-between text-sm text-slate-600"><span>Promo</span><span className="font-semibold uppercase">{storedPromo}</span></div>}
               <p className="text-xs text-slate-500">Delivery and any promo discount are confirmed at checkout.</p>
             </CardContent>
@@ -164,7 +163,7 @@ export default function CatalogueCartPage() {
             </CardContent>
           </Card>
 
-          <Button asChild className="w-full bg-brand-olive text-brand-dark" disabled={cartEmpty || hasUnavailable}>
+          <Button asChild className="w-full bg-brand-green-dark text-white hover:bg-brand-green-dark/90" disabled={cartEmpty || hasUnavailable}>
             <Link to="/checkout" aria-disabled={cartEmpty || hasUnavailable} onClick={(event) => { if (cartEmpty || hasUnavailable) event.preventDefault(); }}>
               {hasUnavailable ? "Remove unavailable items first" : "Proceed to checkout"}
             </Link>

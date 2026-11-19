@@ -1,6 +1,5 @@
 import { memo } from "react";
-import { Info } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { cardImage, cheapestOffer, formatMinor, type PublicProduct } from "@/lib/catalogueApi";
 import { productSlugPath } from "@/lib/catalogueTaxonomy";
@@ -15,7 +14,6 @@ type CatalogueProductCardProps = {
 };
 
 function CatalogueProductCard({ product, cartQuantity = 0, onAdd, onNavigate }: CatalogueProductCardProps) {
-  const navigate = useNavigate();
   const location = useLocation();
   const photoSrc = toPrerenderSafeImageSrc(cardImage(product));
   const offer = cheapestOffer(product);
@@ -32,88 +30,80 @@ function CatalogueProductCard({ product, cartQuantity = 0, onAdd, onNavigate }: 
   const productHref = productSlugPath(product.id, product.name);
   const isInCart = cartQuantity > 0;
 
+  // The name link is stretched over the whole card (after:inset-0), so the card is one big tap target
+  // while the add button stays a separate control instead of a button nested inside a link.
   return (
-    <Link
-      to={productHref}
-      className="block h-full"
+    <Card
       data-product-card-id={product.id}
-      onClick={(event) => {
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return;
-        onNavigate?.(product.id);
-      }}
+      className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
     >
-      <Card className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-        <div className="relative flex h-44 w-full items-center justify-center overflow-hidden bg-white sm:h-56">
-          {photoSrc ? (
-            <img
-              src={photoSrc}
-              alt={product.name}
-              width={512}
-              height={512}
-              className="h-full w-full object-contain p-4 transition"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-slate-50 text-sm text-slate-400">No image</div>
-          )}
-          <button
-            type="button"
+      <div className="relative flex h-44 w-full items-center justify-center overflow-hidden bg-white sm:h-56">
+        {photoSrc ? (
+          <img
+            src={photoSrc}
+            alt=""
+            width={512}
+            height={512}
+            className="h-full w-full object-contain p-4 transition"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-slate-50 text-sm text-slate-400">No image</div>
+        )}
+        {regular ? (
+          <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+            Save {Math.round((1 - offer.sellingPriceMinor / regular) * 100)}%
+          </span>
+        ) : null}
+        {isInCart && (
+          <span className={`absolute ${regular ? "left-2 top-9" : "left-2 top-2"} rounded-full bg-brand-olive px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-brand-dark`}>
+            In cart: {cartQuantity}
+          </span>
+        )}
+      </div>
+
+      <CardContent className="flex flex-1 flex-col gap-1 p-4">
+        {product.brand ? <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{product.brand}</p> : null}
+        <h3 className="text-base font-semibold leading-snug text-slate-900 line-clamp-2">
+          <Link
+            to={productHref}
+            state={{ from: { pathname: location.pathname, search: location.search } }}
+            className="rounded-sm after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-[#783F6A]"
             onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
+              if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return;
               onNavigate?.(product.id);
-              navigate(productHref, { state: { from: { pathname: location.pathname, search: location.search } } });
             }}
-            className="absolute bottom-2 right-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-700"
-            aria-label="View details"
           >
-            <Info className="h-4 w-4" />
-          </button>
-          {regular ? (
-            <span className="absolute left-2 top-2 rounded-full bg-red-500 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-              Save {Math.round((1 - offer.sellingPriceMinor / regular) * 100)}%
+            {product.name}
+          </Link>
+        </h3>
+        {supplierLabel ? <p className="text-xs text-slate-500 line-clamp-1">By {supplierLabel}</p> : null}
+        {variantLabel ? <p className="text-xs text-muted-foreground">{variantLabel}</p> : null}
+
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+            <span className="text-sm font-semibold text-brand-green-dark">
+              {product.variants.length > 1 || supplierCount > 1 ? "From " : ""}
+              {formatMinor(product.minimumPriceMinor)}
             </span>
-          ) : null}
-          {isInCart && (
-            <span className={`absolute ${regular ? "left-2 top-9" : "left-2 top-2"} rounded-full bg-brand-olive px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-brand-dark`}>
-              In cart: {cartQuantity}
-            </span>
+            {regular ? <span className="text-xs text-slate-400 line-through">{formatMinor(regular)}</span> : null}
+          </div>
+          {onAdd ? (
+            <button
+              type="button"
+              onClick={() => onAdd(product)}
+              aria-label={product.variants.length > 1 ? `Choose a size of ${product.name}` : `Add ${product.name} to cart`}
+              className="relative z-10 inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#783F6A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6a365d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#783F6A] focus-visible:ring-offset-2"
+            >
+              {product.variants.length > 1 ? "Choose" : "Add +"}
+            </button>
+          ) : (
+            <span className="text-xs font-semibold uppercase text-slate-400">View</span>
           )}
         </div>
-
-        <CardContent className="flex flex-1 flex-col gap-1 p-4">
-          {product.brand ? <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{product.brand}</p> : null}
-          <h3 className="text-base font-semibold leading-snug text-slate-900 line-clamp-2">{product.name}</h3>
-          {supplierLabel ? <p className="text-xs text-slate-500 line-clamp-1">By {supplierLabel}</p> : null}
-          {variantLabel ? <p className="text-xs text-muted-foreground">{variantLabel}</p> : null}
-
-          <div className="mt-auto flex items-end justify-between pt-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-brand-green-dark">
-                {product.variants.length > 1 || supplierCount > 1 ? "From " : ""}
-                {formatMinor(product.minimumPriceMinor)}
-              </span>
-              {regular ? <span className="text-xs text-slate-400 line-through">{formatMinor(regular)}</span> : null}
-            </div>
-            {onAdd ? (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.preventDefault();
-                  onAdd(product);
-                }}
-                className="text-xs font-semibold uppercase text-red-500 hover:text-red-600"
-              >
-                {product.variants.length > 1 ? "Choose" : "Add +"}
-              </button>
-            ) : (
-              <span className="text-xs font-semibold uppercase text-slate-400">View</span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+      </CardContent>
+    </Card>
   );
 }
 

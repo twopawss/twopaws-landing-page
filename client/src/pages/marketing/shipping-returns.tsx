@@ -19,10 +19,10 @@ const FAQ = [
   { q: "Where do you deliver?", a: "Website orders deliver to Cairo and Giza. The TwoPaws app also delivers to the North Coast in season. Delivery fees and times depend on the supplier that fulfils your order and are shown at checkout before you pay." },
   { q: "How much does delivery cost?", a: "EGP 50 to EGP 80 per supplier in Cairo and Giza, and EGP 200 to the North Coast. If your order contains products from two suppliers, each supplier's delivery fee applies and the total is shown at checkout." },
   { q: "When will my order arrive?", a: "Most Cairo orders arrive the same day; Giza orders arrive within 1 to 2 days. Orders placed after 20:00 are dispatched the next morning. The estimate for your address is shown at checkout and in your order confirmation." },
-  { q: "How can I pay?", a: "Cash on delivery, or by card and mobile wallet through Paymob, a licensed Egyptian payment provider. Card details are entered on Paymob's secure page and never stored by TwoPaws." },
+  { q: "How can I pay?", a: "Cash on delivery, or using cards. Card details are entered on a secure payment page and never stored by TwoPaws." },
   { q: "Can I return a product?", a: "Yes. You can return an unopened, unused product in its original packaging within 7 days of delivery. Pet food, treats, litter and medicines cannot be returned once opened, for hygiene and safety reasons, unless they are damaged or faulty." },
   { q: "What if my order arrives damaged, wrong or missing items?", a: "Tell us within 48 hours of delivery with a photo and your order number. We arrange a replacement or a full refund, including the delivery fee, at no cost to you." },
-  { q: "How are refunds paid?", a: "Card and wallet payments are refunded to the original payment method within 5 to 14 business days depending on your bank. Cash-on-delivery orders are refunded by bank transfer or mobile wallet within 5 business days of the return being received." },
+  { q: "How are refunds paid?", a: "Card payments are refunded to the original payment method within 5 to 14 business days depending on your bank. Cash-on-delivery orders are refunded by bank transfer or mobile wallet within 5 business days of the return being received." },
   { q: "Can I cancel an order?", a: "You can cancel from the Orders page or by contacting us any time before the supplier dispatches it. Card payments for cancelled orders are refunded in full." },
 ];
 
@@ -104,7 +104,7 @@ export default function ShippingReturnsPage() {
         <h2 className="text-2xl font-semibold text-slate-900">Payment</h2>
         <ul className="list-disc space-y-2 pl-6">
           <li>Cash on delivery, paid to the courier in Egyptian pounds.</li>
-          <li>Visa, Mastercard, Meeza and mobile wallets through Paymob. Payment is taken on Paymob's secure page; TwoPaws never sees or stores card numbers.</li>
+          <li>Using cards (Visa and Mastercard), paid on a secure payment page; TwoPaws never sees or stores card numbers.</li>
           <li>All prices are in Egyptian pounds and include VAT. The total you see at checkout is the total you pay.</li>
         </ul>
       </section>
@@ -123,7 +123,7 @@ export default function ShippingReturnsPage() {
         <h2 className="text-2xl font-semibold text-slate-900">Refunds and cancellations</h2>
         <ul className="list-disc space-y-2 pl-6">
           <li>Refunds are issued once the returned item is received and checked, normally within 2 business days of pickup.</li>
-          <li>Card and wallet payments are refunded to the original payment method. Banks take 5 to 14 business days to show the credit.</li>
+          <li>Card payments are refunded to the original payment method. Banks take 5 to 14 business days to show the credit.</li>
           <li>Cash-on-delivery orders are refunded by bank transfer or mobile wallet within 5 business days.</li>
           <li>Orders can be cancelled free of charge until the supplier dispatches them, from the Orders page or by contacting us. Prepaid cancelled orders are refunded in full.</li>
         </ul>

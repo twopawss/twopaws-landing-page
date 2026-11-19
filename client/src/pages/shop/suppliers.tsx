@@ -98,7 +98,7 @@ export default function SuppliersPage() {
         structuredData={structuredData}
       />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Suppliers</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Suppliers</p>
         <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Shop by supplier</h1>
         <p className="text-slate-600">Browse verified suppliers and their catalogs.</p>
         <p className="text-sm text-slate-500">

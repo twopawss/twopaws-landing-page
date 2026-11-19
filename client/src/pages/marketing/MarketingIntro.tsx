@@ -11,9 +11,9 @@ export default function MarketingIntro() {
         TwoPaws - Pet care app in Egypt (Cairo)
       </h2>
       <p className="mt-3 text-slate-700">
-        TwoPaws helps pet families across Egypt, starting in Cairo, with trusted
-        vets and clinics, a marketplace for supplies, community features, and
-        delivery for everyday essentials.
+        TwoPaws helps pet families across Egypt, starting in Cairo, with vet
+        booking and an AI vet, a health tracker for every pet, a supplies shop
+        with delivery, pet hotels, adoption, and lost &amp; found.
       </p>
       <p className="mt-4 text-slate-700">
         Download TwoPaws on the{" "}

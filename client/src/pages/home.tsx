@@ -116,7 +116,7 @@ const chapters: Chapter[] = [
     dark: true,
     label: "Pet care in Egypt",
     title: ["Everything", "your pet", "needs"],
-    body: "Vets, fresh food, hotels and a caring community, gathered in one easy app.",
+    body: "Vets, supplies, pet hotels, adoption and lost & found, gathered in one easy app.",
     link: { label: "Get the app", href: "/download" },
     screenshot: "/clay/screens/home.webp",
     screenAlt: "TwoPaws home screen with your pets, today's tasks and shop offers",
@@ -135,8 +135,8 @@ const chapters: Chapter[] = [
     variant: "shop",
     dark: true,
     label: "02 — Shop",
-    title: ["Fresh food,", "to your", "door"],
-    body: "Browse PawShop for supplies from local suppliers, and order fresh food made for your pet.",
+    title: ["Food and supplies,", "to your", "door"],
+    body: "Browse PawShop for food, litter, toys and care from trusted Egyptian suppliers, delivered to your door.",
     link: { label: "Visit the shop", href: "/shop" },
     screenshot: "/clay/screens/shop.webp",
     screenAlt: "TwoPaws shop screen with search, categories and offers",
@@ -146,8 +146,8 @@ const chapters: Chapter[] = [
     dark: true,
     label: "03 — Stay & community",
     title: ["A place to stay,", "friends to", "meet"],
-    body: "Book a pet hotel when you travel, browse adoption offers, and find a match for your pet.",
-    link: { label: "Explore the community", href: "/features" },
+    body: "Book a pet hotel or daycare when you travel, adopt a pet, find a match on PawSwiper, and help lost pets get home.",
+    link: { label: "See every feature", href: "/features" },
     screenshot: "/clay/screens/stay.webp",
     screenAlt: "TwoPaws PawSwiper screen showing a dog profile with Pass and Like buttons",
   },
@@ -358,7 +358,7 @@ function Story() {
           </div>
         </div>
 
-        <div className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-3 sm:right-8">
+        <div className="absolute right-2 top-1/2 z-20 flex -translate-y-1/2 flex-col sm:right-6">
           {chapters.map((c, i) => (
             <button
               key={c.variant}
@@ -366,8 +366,12 @@ function Story() {
               aria-label={`Go to ${c.title.join(" ")}`}
               aria-current={i === active}
               onClick={() => goTo(i)}
-              className={`h-2 w-2 rounded-full transition-all ${dark ? "bg-[#3d1f3a]" : "bg-white"} ${i === active ? "scale-150 opacity-100" : "opacity-40 hover:opacity-80"}`}
-            />
+              className="group flex h-8 w-8 items-center justify-center rounded-full"
+            >
+              <span
+                className={`h-2 w-2 rounded-full transition-all ${dark ? "bg-[#3d1f3a]" : "bg-white"} ${i === active ? "scale-150 opacity-100" : "opacity-40 group-hover:opacity-80"}`}
+              />
+            </button>
           ))}
         </div>
       </div>
@@ -418,46 +422,56 @@ function ArrowLink({ href, children, className = "" }: { href: string; children:
 
 const featureIndex = [
   ["AI Vet", "Quick answers to everyday pet health questions."],
-  ["Vet booking", "Find a clinic and book a visit."],
-  ["Health tracker", "Vaccines, records and reminders in one place."],
-  ["Period tracker", "Follow your pet's cycle."],
-  ["PawShop", "Supplies from local suppliers."],
-  ["Fresh food", "Fresh meals, ordered in the app."],
-  ["Hotel booking", "A place to stay while you travel."],
-  ["Adoption offers", "Pets looking for a home."],
-  ["Marriage offers", "Find a match for your pet."],
+  ["Vet booking", "Find a clinic near you and book a visit."],
+  ["Health tracker", "Vaccines, medications, records and reminders in one place."],
+  ["Period tracker", "Predict heat and fertile days for your dog or cat."],
+  ["PawShop", "Food and supplies from trusted Egyptian suppliers."],
+  ["Hotel booking", "Boarding and daycare while you travel."],
+  ["Adoption", "Pets looking for a new home."],
+  ["PawSwiper", "Swipe to find a match for your pet."],
+  ["Lost & Found", "Report a lost pet and help others find theirs."],
 ];
 
 const faqs = [
   {
     question: "Is TwoPaws free to use?",
     answer:
-      "Yes. The TwoPaws app is free to download and use on iOS and Android. You only pay for what you order from the shop or book with a vet or pet hotel.",
+      "Yes. The app is free on iOS and Android. You only pay for shop orders, and for vet visits and hotel stays, which you pay at the clinic or hotel.",
   },
   {
-    question: "Which cities in Egypt do you cover?",
+    question: "Is the AI Vet a real vet?",
     answer:
-      "The shop delivers across Cairo and Giza, most orders the same day, with the North Coast served in season through the app. Vet booking and pet hotels cover Greater Cairo, and we are adding governorates as partners join.",
-  },
-  {
-    question: "What can I buy in the TwoPaws shop?",
-    answer:
-      "Over 2,000 products from verified Egyptian suppliers: dry and wet food for cats and dogs, litter, treats, toys, collars and leashes, beds, flea and tick care, vitamins and grooming, all at supplier prices with delivery fees shown before you pay.",
+      "No. The AI Vet gives quick guidance on everyday health questions, based on your pet's profile, and you can attach a photo. It can be wrong and does not replace a vet, so for anything urgent or worrying, book a clinic visit in the app.",
   },
   {
     question: "How do I book a vet?",
     answer:
-      "Open the Vets tab in the app, pick a clinic or a home-visit vet near you, choose a time and confirm. You get reminders, and the visit notes land in your pet's health record.",
+      "Open the menu, tap Vet Booking, and choose a clinic near you, your pet and a time. You pay at the clinic, get reminders before the visit, and any vaccines or medication the vet records go into your pet's health tracker.",
   },
   {
-    question: "Can I track multiple pets?",
+    question: "Where do you deliver?",
     answer:
-      "Yes. Add as many pets as you like. Each one gets its own profile with health records, vaccination schedule, heat cycle tracking and vet history.",
+      "The shop delivers across Cairo and Giza, and most Cairo orders arrive the same day. The delivery fee and estimated time for your address are shown at checkout before you pay.",
   },
   {
-    question: "How do I pay and can I return items?",
+    question: "What can I buy in the shop?",
     answer:
-      "Pay cash on delivery or by card and mobile wallet through Paymob. Unopened items can be returned within 7 days, and damaged or wrong items are replaced or refunded in full.",
+      "Food, treats, litter, toys, collars and leashes, beds, flea and tick care, vitamins and grooming for cats and dogs, from verified Egyptian suppliers such as PetYard, Zima Pets, Dogzone, Wags and 7 Pets. You can compare sellers to find the best price.",
+  },
+  {
+    question: "How can I pay?",
+    answer:
+      "Shop orders are paid cash on delivery or using cards. Card details are entered on a secure payment page and never stored by TwoPaws.",
+  },
+  {
+    question: "Can I return an item?",
+    answer:
+      "Yes. Unopened items can be returned within 7 days of delivery. If something arrives damaged or wrong, tell us within 48 hours and we replace it or refund it in full.",
+  },
+  {
+    question: "Is the app available in Arabic?",
+    answer:
+      "Yes. TwoPaws works in English and Arabic, and the AI Vet can answer in either.",
   },
 ];
 
@@ -515,11 +529,12 @@ export default function Home() {
     <div className="clay-bg text-[#3d1f3a]">
       <Seo
         title="TwoPaws | Pet supplies, vets and pet care app in Egypt"
-        description="TwoPaws connects pet families in Egypt with vets, clinics, a supplies marketplace, community features, and delivery."
+        description="TwoPaws connects pet families in Egypt with vet booking, an AI vet, a health tracker, a pet supplies shop with delivery, pet hotels, adoption and lost & found."
         canonicalUrl="/"
         structuredData={[organizationSchema, mobileApplicationSchema, faqSchema]}
       />
 
+      <main id="main">
       {/* PINNED PHONE STORY */}
       <Story />
 
@@ -633,13 +648,14 @@ export default function Home() {
               <br />
               home to TwoPaws
             </h2>
-            <div className="mt-10 flex flex-wrap gap-x-10 gap-y-4 text-[#783F6A]">
-              <ArrowLink href={IOS_STORE_URL}>Download on the App Store</ArrowLink>
-              <ArrowLink href={ANDROID_STORE_URL}>Get it on Google Play</ArrowLink>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <StoreButton href={IOS_STORE_URL} label="App Store" icon={<FaApple className="h-6 w-6" />} />
+              <StoreButton href={ANDROID_STORE_URL} label="Google Play" icon={<GooglePlayMark className="h-6 w-6" />} />
             </div>
           </Reveal>
         </div>
       </section>
+      </main>
 
       <SiteFooter />
     </div>

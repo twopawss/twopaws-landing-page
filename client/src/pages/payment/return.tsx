@@ -137,7 +137,7 @@ export default function PaymentReturnPage() {
         noIndex
       />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Payment</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Payment</p>
         <h1 className="text-3xl font-semibold text-slate-900">Payment result</h1>
       </header>
 

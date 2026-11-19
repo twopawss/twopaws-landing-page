@@ -84,7 +84,7 @@ export default function CataloguePaymentReturnPage() {
     <ShopShell>
       <Seo title="Payment Status | TwoPaws Shop" description="View your TwoPaws payment result." canonicalUrl="/payment/return/" noIndex />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Payment</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Payment</p>
         <h1 className="text-3xl font-semibold text-slate-900">{copy.title}</h1>
       </header>
       <Card className="border-slate-100">

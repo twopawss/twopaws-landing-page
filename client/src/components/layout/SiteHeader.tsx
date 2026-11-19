@@ -22,7 +22,6 @@ export const LOGO_SRC = "/clay/logo-purple.webp";
 export const siteNavLinks = [
   { href: "/", label: "Home" },
   { href: "/shop/", label: "Shop" },
-  { href: "/events", label: "Events" },
   { href: "/about/", label: "About" },
   { href: "/contact/", label: "Contact" },
 ];
@@ -38,7 +37,7 @@ export function SignedOutActions() {
       <Button asChild variant="outline" className="border-[#783F6A]/30 bg-white/80 text-[#783F6A]">
         <Link to={`/login${redirect ? `?${redirect}` : ""}`}>Sign in</Link>
       </Button>
-      <Button asChild className="hidden bg-[#783F6A] text-white hover:bg-[#6a365d] sm:inline-flex">
+      <Button asChild className="hidden bg-[#783F6A] text-white hover:bg-[#6a365d] xl:inline-flex">
         <Link to={`/login?mode=signup${joiner}${redirect}`}>Sign up</Link>
       </Button>
     </div>
@@ -55,6 +54,13 @@ type SiteHeaderProps = {
 };
 
 export default function SiteHeader({ actions, children, variant = "solid" }: SiteHeaderProps) {
+  const { pathname } = useLocation();
+  // Nav hrefs end in "/" (the canonical URLs) while the router path may not, so compare without trailing slashes.
+  const current = pathname.replace(/\/+$/, "") || "/";
+  const isActivePath = (href: string) => {
+    const target = href.replace(/\/+$/, "") || "/";
+    return target === "/" ? current === "/" : current === target || current.startsWith(`${target}/`);
+  };
   const bar =
     variant === "overlay"
       ? "absolute inset-x-0 top-0 z-30"
@@ -68,7 +74,7 @@ export default function SiteHeader({ actions, children, variant = "solid" }: Sit
             <SheetTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#783F6A]/25 bg-white/70 md:hidden"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#783F6A]/25 bg-white/70 md:hidden"
                 aria-label="Open menu"
               >
                 <Menu className="h-5 w-5" />
@@ -81,11 +87,19 @@ export default function SiteHeader({ actions, children, variant = "solid" }: Sit
                 </SheetTitle>
               </SheetHeader>
               <nav className="font-display mt-8 flex flex-col gap-5 text-lg text-[#5E2A5A]">
-                {siteNavLinks.map((link) => (
-                  <Link key={link.href} to={link.href}>
-                    {link.label}
-                  </Link>
-                ))}
+                {siteNavLinks.map((link) => {
+                  const active = isActivePath(link.href);
+                  return (
+                    <Link
+                      key={link.href}
+                      to={link.href}
+                      aria-current={active ? "page" : undefined}
+                      className={active ? "font-semibold text-[#783F6A]" : ""}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
                 <Button asChild className="mt-2 w-full bg-[#783F6A] text-white hover:bg-[#6a365d]">
                   <a href="/download/">Download the app</a>
                 </Button>
@@ -97,11 +111,19 @@ export default function SiteHeader({ actions, children, variant = "solid" }: Sit
           </Link>
         </div>
         <nav className="hidden items-center justify-start gap-8 pl-6 text-[15px] md:flex">
-          {siteNavLinks.map((link) => (
-            <Link key={link.href} to={link.href} className="transition-opacity hover:opacity-70">
-              {link.label}
-            </Link>
-          ))}
+          {siteNavLinks.map((link) => {
+            const active = isActivePath(link.href);
+            return (
+              <Link
+                key={link.href}
+                to={link.href}
+                aria-current={active ? "page" : undefined}
+                className={`border-b-2 py-1 transition-opacity hover:opacity-70 ${active ? "border-[#FEC329] font-semibold" : "border-transparent"}`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="col-start-3 flex items-center gap-2 sm:gap-3">
           <Button

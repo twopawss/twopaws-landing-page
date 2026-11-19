@@ -246,7 +246,7 @@ export default function SupplierShopPage() {
         noIndex={!loading && !supplier}
       />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Supplier shop</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Supplier shop</p>
         <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
           {supplierName}
         </h1>

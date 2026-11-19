@@ -7,7 +7,7 @@ export default function EgyptPage() {
     <MarketingShell>
       <Seo
         title="TwoPaws in Egypt | Cairo pet care"
-        description="TwoPaws supports pet families in Cairo and Egypt with trusted vets, clinics, community features, and fast delivery."
+        description="TwoPaws supports pet families in Cairo and Egypt with vet booking, pet hotels, adoption, and fast supplies delivery in Cairo and Giza."
         canonicalUrl="/egypt/"
       />
       <header className="space-y-3">

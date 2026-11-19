@@ -242,7 +242,7 @@ export default function CartPage() {
         noIndex
       />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Cart</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Cart</p>
         <h1 className="text-3xl font-semibold text-slate-900">Your cart</h1>
         {supplierName && (
           <p className="text-sm text-slate-500">Cart supplier: {supplierName}</p>
@@ -414,7 +414,7 @@ export default function CartPage() {
 
             <Button
               asChild
-              className="w-full bg-brand-olive text-brand-dark"
+              className="w-full bg-brand-green-dark text-white hover:bg-brand-green-dark/90"
               disabled={cartEmpty}
             >
               <Link to="/checkout">Proceed to checkout</Link>

@@ -18,7 +18,6 @@ const columns = [
     title: "Explore",
     links: [
       { href: "/shop/", label: "Shop" },
-      { href: "/events", label: "Events" },
       { href: "/features/", label: "Features" },
       { href: "/about/", label: "About us" },
     ],
@@ -56,8 +55,8 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-[#783F6A]/10 bg-[#fdf6fa] text-[#3d1f3a]">
       <div className="mx-auto w-full max-w-[1500px] px-6 py-14 sm:px-12 lg:px-20">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
-          <div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+          <div className="col-span-2 md:col-span-1">
             <img src={LOGO_SRC} alt="TwoPaws" width={900} height={172} loading="lazy" className="h-9 w-auto" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#3d1f3a]/70">
               Your pet&rsquo;s best friend in Egypt. Connecting pet families with the care and community they deserve.
@@ -66,12 +65,12 @@ export default function SiteFooter() {
           {columns.map((col) => (
             <div key={col.title}>
               <p className="font-display text-sm font-medium uppercase tracking-[0.14em] text-[#783F6A]">{col.title}</p>
-              <ul className="mt-4 space-y-2.5 text-sm text-[#3d1f3a]/75">
+              <ul className="mt-3 text-sm text-[#3d1f3a]/75">
                 {col.links.map((l) => (
                   <li key={l.href}>
                     <a
                       href={l.href}
-                      className="transition-colors hover:text-[#783F6A]"
+                      className="inline-block py-2 [overflow-wrap:anywhere] transition-colors hover:text-[#783F6A] md:py-1"
                       {...("external" in l ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     >
                       {l.label}

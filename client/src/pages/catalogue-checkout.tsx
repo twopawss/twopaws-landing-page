@@ -283,7 +283,7 @@ export default function CatalogueCheckoutPage() {
     <ShopShell>
       {seo}
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Checkout</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Checkout</p>
         <h1 className="text-3xl font-semibold text-slate-900">Complete your order</h1>
       </header>
 
@@ -361,7 +361,7 @@ export default function CatalogueCheckoutPage() {
                 </label>
                 <label className="flex items-start gap-3 rounded-xl border border-slate-100 p-3">
                   <RadioGroupItem value="card" />
-                  <div><p className="text-sm font-semibold text-slate-900">Paymob (Card/Wallet)</p><p className="text-xs text-slate-500">Secure Paymob checkout.</p></div>
+                  <div><p className="text-sm font-semibold text-slate-900">Card</p><p className="text-xs text-slate-500">Pay using your debit or credit card on a secure payment page.</p></div>
                 </label>
               </RadioGroup>
             </CardContent>
@@ -402,7 +402,7 @@ export default function CatalogueCheckoutPage() {
             </CardContent>
           </Card>
 
-          <Button className="w-full bg-brand-olive text-brand-dark" onClick={handleCheckout} disabled={submitting || quoteLoading || cartEmpty || !quote}>
+          <Button className="w-full bg-brand-green-dark text-white hover:bg-brand-green-dark/90" onClick={handleCheckout} disabled={submitting || quoteLoading || cartEmpty || !quote}>
             {submitting ? "Placing order..." : paymentMethod === "card" ? "Continue to payment" : "Place order"}
           </Button>
           <p className="text-center text-xs text-slate-500">

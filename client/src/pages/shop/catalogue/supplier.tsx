@@ -102,7 +102,7 @@ export default function CatalogueSupplierPage() {
     <ShopShell headerContent={headerSearch}>
       <Seo title={`${supplierName} | TwoPaws Supplier Shop`} description={seoDescription} canonicalUrl={canonicalPath} structuredData={structuredData} noIndex={!suppliersLoading && !supplier} />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Supplier shop</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Supplier shop</p>
         <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">{supplierName}</h1>
         <p className="text-slate-600">Explore products sold by this supplier.</p>
         <p className="text-sm text-slate-500">{submittedSearch ? `Results for "${submittedSearch}" (${total ?? "…"})` : `${total ?? "…"} products`}</p>

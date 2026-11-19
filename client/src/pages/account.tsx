@@ -213,7 +213,7 @@ export default function AccountPage() {
         noIndex
       />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Account</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Account</p>
         <h1 className="text-3xl font-semibold text-slate-900">Your account</h1>
       </header>
 

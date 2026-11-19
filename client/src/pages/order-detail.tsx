@@ -173,7 +173,7 @@ export default function OrderDetailPage() {
       {order && (
         <div className="space-y-6">
           <header className="space-y-2">
-            <p className="text-sm font-semibold text-brand-olive">Order</p>
+            <p className="text-sm font-semibold text-brand-green-dark">Order</p>
             <h1 className="text-3xl font-semibold text-slate-900">
               Order #{order.orderNumber ?? order.id.slice(0, 6)}
             </h1>

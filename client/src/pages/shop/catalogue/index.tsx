@@ -172,6 +172,9 @@ export default function CatalogueShopPage() {
   const [categoryOpen, setCategoryOpen] = useState(() => searchParams.get("category") !== "closed");
   const [priceOpen, setPriceOpen] = useState(() => searchParams.get("price") !== "closed");
   const [filtersOpen, setFiltersOpen] = useState(() => searchParams.get("filters") === "open");
+  /** Bumped by "Try again" so the product fetch re-runs with unchanged filters. */
+  const [reloadToken, setReloadToken] = useState(0);
+  const filtersPanelRef = useRef<HTMLElement>(null);
 
   const [facets, setFacets] = useState<Facets | null>(null);
   const [items, setItems] = useState<PublicProduct[]>([]);
@@ -250,7 +253,7 @@ export default function CatalogueShopPage() {
       setLoading(false);
     };
     void run(false);
-  }, [browseParams, filterKey, page]);
+  }, [browseParams, filterKey, page, reloadToken]);
 
   useEffect(() => {
     const query = submittedSearch.trim();
@@ -373,7 +376,18 @@ export default function CatalogueShopPage() {
         onChange={setSearch}
         onSubmit={(value) => { setSubmittedSearch(value.trim()); resetPaging(); }}
       />
-      <Button variant="outline" className="border-slate-200 lg:hidden" onClick={() => setFiltersOpen((prev) => !prev)} aria-label="Toggle filters">
+      <Button
+        variant="outline"
+        className="border-slate-200 lg:hidden"
+        aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+        aria-expanded={filtersOpen}
+        onClick={() => {
+          const opening = !filtersOpen;
+          setFiltersOpen(opening);
+          // The panel sits above the product grid; bring it into view so the tap visibly does something.
+          if (opening) window.setTimeout(() => filtersPanelRef.current?.scrollIntoView({ behavior: "auto", block: "start" }), 0);
+        }}
+      >
         <SlidersHorizontal className="h-4 w-4" />
       </Button>
       {search.trim() && search.trim() !== submittedSearch && (
@@ -412,8 +426,9 @@ export default function CatalogueShopPage() {
           ) : null}
         </header>
       ) : null}
+      {!landing && !landingMissing ? <h1 className="sr-only">Shop pet food and supplies in Egypt</h1> : null}
       <div className={`grid min-w-0 gap-6 lg:grid-cols-[280px_1fr] ${landingMissing ? "hidden" : ""}`}>
-        <aside className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+        <aside ref={filtersPanelRef} className="min-w-0 scroll-mt-40 rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
           <div className="flex items-center justify-between lg:hidden">
             <p className="text-sm font-semibold text-slate-800">Filters</p>
             <Button variant="outline" className="border-slate-200" onClick={() => setFiltersOpen((prev) => !prev)}>{filtersOpen ? "Hide" : "Show"}</Button>
@@ -485,8 +500,8 @@ export default function CatalogueShopPage() {
                 {priceOpen && (
                   <div className="mt-3 space-y-3 text-sm">
                     <div className="grid grid-cols-2 gap-2">
-                      <Input type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-9" />
-                      <Input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-9" />
+                      <Input type="number" inputMode="numeric" placeholder="Min" aria-label="Minimum price (EGP)" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-9" />
+                      <Input type="number" inputMode="numeric" placeholder="Max" aria-label="Maximum price (EGP)" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-9" />
                     </div>
                     <button type="button" onClick={() => { setAppliedPrice({ min: minPrice.trim(), max: maxPrice.trim() }); resetPaging(); }} className="w-full rounded-md bg-brand-green-dark px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90">FILTER</button>
                   </div>
@@ -546,7 +561,7 @@ export default function CatalogueShopPage() {
             {!loading && loadError && (
               <div className="col-span-full rounded-2xl border border-dashed border-red-300 bg-red-50 p-6 text-center">
                 <p className="text-sm font-semibold text-red-700">{loadError}</p>
-                <Button variant="outline" className="mt-4 border-slate-200" onClick={() => setPage((p) => p)}>Try again</Button>
+                <Button variant="outline" className="mt-4 border-slate-200" onClick={() => setReloadToken((n) => n + 1)}>Try again</Button>
               </div>
             )}
             {!loading && !loadError && items.length === 0 && (
@@ -587,13 +602,13 @@ export default function CatalogueShopPage() {
           ) : null}
           <footer className="flex flex-wrap items-center justify-center gap-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
             <div className="flex items-center justify-center gap-2">
-              <button type="button" className="rounded-md border border-slate-200 px-3 py-1 disabled:opacity-50" disabled={loading || currentPage === 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft className="h-4 w-4" /></button>
+              <button type="button" className="rounded-md border border-slate-200 px-3 py-1 disabled:opacity-50" aria-label="Previous page" disabled={loading || currentPage === 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft className="h-4 w-4" /></button>
               <div className="flex items-center gap-1">
                 {paginationItems.map((item, index) => item === ELLIPSIS
                   ? <span key={`ellipsis-${index}`} className="flex h-8 w-8 items-center justify-center text-sm text-slate-400">...</span>
                   : <button key={item} type="button" onClick={() => setPage(item)} aria-current={currentPage === item ? "page" : undefined} className={`h-8 w-8 rounded-md border text-sm ${currentPage === item ? "border-brand-dark text-brand-dark" : "border-slate-200 text-slate-700"}`}>{item}</button>)}
               </div>
-              <button type="button" className="rounded-md border border-slate-200 px-3 py-1 disabled:opacity-50" disabled={loading || currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}><ChevronRight className="h-4 w-4" /></button>
+              <button type="button" className="rounded-md border border-slate-200 px-3 py-1 disabled:opacity-50" aria-label="Next page" disabled={loading || currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}><ChevronRight className="h-4 w-4" /></button>
             </div>
             <div className="text-xs text-slate-500">{total !== null ? `Showing ${showingFrom}-${showingTo} of ${total}` : "Loading..."}</div>
           </footer>

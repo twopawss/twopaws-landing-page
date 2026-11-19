@@ -851,7 +851,7 @@ export default function CheckoutPage() {
         noIndex
       />
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-brand-olive">Checkout</p>
+        <p className="text-sm font-semibold text-brand-green-dark">Checkout</p>
         <h1 className="text-3xl font-semibold text-slate-900">Complete your order</h1>
         {supplierName && (
           <p className="text-sm text-slate-500">Supplier: {supplierName}</p>
@@ -1290,8 +1290,8 @@ export default function CheckoutPage() {
                 <label className="flex items-start gap-3 rounded-xl border border-slate-100 p-3">
                   <RadioGroupItem value="paymob" />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Paymob (Card/Wallet)</p>
-                    <p className="text-xs text-slate-500">Secure Paymob checkout.</p>
+                    <p className="text-sm font-semibold text-slate-900">Card</p>
+                    <p className="text-xs text-slate-500">Pay using your debit or credit card on a secure payment page.</p>
                   </div>
                 </label>
               </RadioGroup>
@@ -1332,7 +1332,7 @@ export default function CheckoutPage() {
           </Card>
 
           <Button
-            className="w-full bg-brand-olive text-brand-dark"
+            className="w-full bg-brand-green-dark text-white hover:bg-brand-green-dark/90"
             onClick={handleCheckout}
             disabled={submitting || summaryLoading || cartEmpty || !checkoutSummary}
           >

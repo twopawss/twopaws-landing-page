@@ -7,14 +7,14 @@ export default function AboutPage() {
     <MarketingShell>
       <Seo
         title="About TwoPaws | Pet care app in Egypt"
-        description="Learn how TwoPaws supports pet families in Egypt with trusted vets, clinics, community features, and supplies delivery."
+        description="Learn how TwoPaws supports pet families in Egypt with vet booking, health tracking, supplies delivery, pet hotels and adoption."
         canonicalUrl="/about/"
       />
       <header className="space-y-3">
         <h1 className="text-4xl font-semibold text-slate-900">About TwoPaws</h1>
         <p className="text-lg text-slate-700">
           TwoPaws is built in Egypt for pet parents who want reliable care,
-          helpful community connections, and fast access to supplies.
+          a caring community, and fast access to supplies.
         </p>
       </header>
       <MarketingIntro />
@@ -26,9 +26,10 @@ export default function AboutPage() {
           groups, pet families can manage everything in one place.
         </p>
         <p>
-          TwoPaws focuses on trusted vet and clinic discovery, a growing
-          marketplace for pet supplies, and community tools that help owners find
-          answers fast.
+          TwoPaws brings together vet booking and an AI vet for quick answers,
+          health and care tracking for every pet, a growing marketplace for pet
+          supplies, pet hotels, and community tools for adoption, finding a match
+          and reuniting lost pets with their families.
         </p>
       </section>
     </MarketingShell>

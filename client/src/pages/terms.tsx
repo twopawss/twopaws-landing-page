@@ -13,7 +13,7 @@ export default function Terms() {
     <div className="clay-bg min-h-screen flex flex-col">
       <Seo
         title="Terms & Conditions | TwoPaws"
-        description="Terms and conditions for TwoPaws, the pet care app for Egypt with vets, clinics, community features, and delivery."
+        description="Terms and conditions for TwoPaws, the pet care app for Egypt with vet booking, health tracking, a supplies shop, pet hotels and adoption."
         canonicalUrl="/terms/"
       />
       <SiteHeader />
@@ -126,7 +126,7 @@ export default function Terms() {
               <p>We may suspend or terminate access for policy breaches or for security/legal reasons. You may delete your account at any time in the App or by emailing <a href="mailto:info@twopaws.pet">info@twopaws.pet</a>. If there are pending transactions or amounts due, account deletion may be delayed until resolution.</p>
 
               <h2 className="text-2xl font-bold mt-6">18) Changes to these Terms</h2>
-              <p>We may update these Terms; well update the Last updated date above and, where required, provide in-app or email notice. Continued use after changes means you accept the updated Terms.</p>
+              <p>We may update these Terms; we&apos;ll update the Last updated date above and, where required, provide in-app or email notice. Continued use after changes means you accept the updated Terms.</p>
 
               <h2 className="text-2xl font-bold mt-6">19) Contact</h2>
               <p>TwoPaws Digital Solutions LLC - Legal<br />Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>

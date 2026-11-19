@@ -46,6 +46,14 @@ const isSupplierAvailable = (supplier: SupplierDoc) => {
   return true;
 };
 
+
+/** "Delivers in about 2 hrs" reads better than a bare "120 mins". */
+function formatEta(mins: number) {
+  if (mins < 60) return `Delivers in about ${mins} mins`;
+  const hours = Math.round(mins / 60);
+  return `Delivers in about ${hours} ${hours === 1 ? "hr" : "hrs"}`;
+}
+
 function SupplierLogo({ name, logoUrl }: { name?: string; logoUrl?: string }) {
   const [failed, setFailed] = useState(false);
   const safeLogoUrl = toPrerenderSafeImageSrc(logoUrl);
@@ -124,7 +132,7 @@ function SupplierPickerCard({
             {label}
           </p>
           <p className="text-xs text-slate-500">
-            {etaLabel ?? `${etaMins ?? 120} mins`}
+            {etaLabel ?? formatEta(etaMins ?? 120)}
           </p>
         </div>
       </div>
