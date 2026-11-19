@@ -1,73 +1,62 @@
-import type { ReactNode } from "react";
-import {
-  ANDROID_STORE_URL,
-  CONTACT_EMAIL,
-  INSTAGRAM_URL,
-  IOS_STORE_URL,
-} from "@/lib/seo/constants";
-
-const navLinks = [
-  { href: "/shop", label: "Shop" },
-  { href: "/about", label: "About" },
-  { href: "/features", label: "Features" },
-  { href: "/egypt", label: "Egypt" },
-  { href: "/contact", label: "Contact" },
-  { href: "/privacy", label: "Privacy" },
-  { href: "/terms", label: "Terms" },
-];
+import ClayProp from "@/components/motion/ClayProp";
+import { Children, isValidElement, type ReactNode } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import Reveal from "@/components/motion/Reveal";
+import Seo from "@/lib/seo/Seo";
+import SiteFooter from "@/components/layout/SiteFooter";
+import SiteHeader from "@/components/layout/SiteHeader";
 
 type MarketingShellProps = {
   children: ReactNode;
 };
 
+/** Shell for the text pages: shared header, a strip of the park under a blue sky, then the page content. */
 export default function MarketingShell({ children }: MarketingShellProps) {
+  const reducedMotion = useReducedMotion() ?? false;
+  const { scrollY } = useScroll();
+  const bgX = useTransform(scrollY, [0, 900], [0, -70]);
+  const fgX = useTransform(scrollY, [0, 900], [0, -190]);
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <header className="fixed left-0 right-0 top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <a className="text-lg font-semibold text-slate-900" href="/">
-            TwoPaws
-          </a>
-          <nav className="hidden items-center gap-6 text-sm text-slate-600 md:flex">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="hover:text-slate-900"
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-      </header>
+    <div className="clay-bg min-h-screen text-slate-900">
+      <SiteHeader />
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 pb-16 pt-24">
-        {children}
+      <div
+        aria-hidden
+        className="relative mt-16 h-40 overflow-hidden sm:h-52"
+        style={{ background: "linear-gradient(#7CC4F2, #BDE2FA)" }}
+      >
+        <motion.img
+          src="/clay/park-bg.webp"
+          alt=""
+          className="absolute bottom-0 left-0 h-[150%] w-auto max-w-none select-none"
+          draggable={false}
+          style={reducedMotion ? undefined : { x: bgX }}
+        />
+        <motion.img
+          src="/clay/park-fg.webp"
+          alt=""
+          className="absolute bottom-0 left-0 h-[150%] w-auto max-w-none select-none"
+          draggable={false}
+          style={reducedMotion ? undefined : { x: fgX }}
+        />
+        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#fdf6fa] to-transparent" />
+      </div>
+
+      <main className="relative mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 pb-20 pt-10 [&_h1]:text-[clamp(2.4rem,5vw,3.6rem)] [&_h1]:font-bold [&_h1]:leading-[1.05]">
+        <ClayProp name="paw" className="-top-10 right-4 hidden w-24 md:block lg:-right-6 lg:w-28" tilt={10} />
+        {Children.toArray(children).map((child, i) =>
+          // the SEO tags render nothing, so wrapping them would only add an empty gap
+          isValidElement(child) && child.type !== Seo ? (
+            <Reveal key={i} delay={Math.min(i, 3) * 0.08}>
+              {child}
+            </Reveal>
+          ) : (
+            child
+          ),
+        )}
       </main>
 
-      <footer className="border-t border-slate-100 bg-white py-10">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="font-semibold text-slate-900">TwoPaws</p>
-            <p>Pet care app for Egypt.</p>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <a className="hover:text-slate-900" href={`mailto:${CONTACT_EMAIL}`}>
-              {CONTACT_EMAIL}
-            </a>
-            <a className="hover:text-slate-900" href={INSTAGRAM_URL}>
-              Instagram
-            </a>
-            <a className="hover:text-slate-900" href={IOS_STORE_URL}>
-              App Store
-            </a>
-            <a className="hover:text-slate-900" href={ANDROID_STORE_URL}>
-              Google Play
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

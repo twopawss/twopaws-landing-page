@@ -12,25 +12,25 @@
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 20 14.3% 4.1%;
-  --muted: 60 4.8% 95.9%;
-  --muted-foreground: 25 5.3% 44.7%;
+  --foreground: 306 33% 18%; /* #3D1F3A */
+  --muted: 322 48% 96%;
+  --muted-foreground: 307 14% 42%;
   --popover: 0 0% 100%;
-  --popover-foreground: 20 14.3% 4.1%;
+  --popover-foreground: 306 33% 18%;
   --card: 0 0% 100%;
-  --card-foreground: 20 14.3% 4.1%;
-  --border: 20 5.9% 90%;
-  --input: 20 5.9% 90%;
-  --primary: 324 54% 73%; /* #df93c0 */
-  --primary-foreground: 321 37% 20%;
-  --secondary: 60 4.8% 95.9%;
-  --secondary-foreground: 24 9.8% 10%;
-  --accent: 60 4.8% 95.9%;
-  --accent-foreground: 24 9.8% 10%;
+  --card-foreground: 306 33% 18%;
+  --border: 322 37% 90%;
+  --input: 322 30% 84%;
+  --primary: 315 31% 36%; /* #783F6A */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 322 48% 96%;
+  --secondary-foreground: 306 33% 18%;
+  --accent: 322 48% 94%;
+  --accent-foreground: 306 33% 18%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 20 14.3% 4.1%;
-  --radius: 0.5rem;
+  --ring: 315 31% 36%;
+  --radius: 0.9rem;
 
   /* Brand colors */
   --brand-purple: 315 31% 36%; /* #783F6A */
@@ -69,23 +69,29 @@
 }
 
 @layer base {
+  html {
+    position: relative;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground overflow-x-hidden;
+    @apply relative font-sans antialiased bg-background text-foreground overflow-x-clip;
   }
 
   #root {
-    @apply min-h-screen w-full overflow-x-hidden;
+    @apply min-h-screen w-full overflow-x-clip;
   }
 
   h1, h2, h3 {
-    @apply tracking-tight text-brand-dark;
+    font-family: "Outfit", "Inter", system-ui, sans-serif;
+    letter-spacing: -0.015em;
+    color: #5E2A5A;
   }
 
-  h1 { @apply font-extrabold; }
+  h1 { @apply font-bold; }
   h2 { @apply font-bold; }
   h3 { @apply font-semibold; }
 
@@ -93,6 +99,65 @@
 }
 
 @layer utilities {
+  /* Clay theme for the light parts of the site: a soft tinted backdrop, puffy cards, and floating props. */
+  .clay-bg {
+    background-color: #fdf6fa;
+    background-image:
+      radial-gradient(42rem 28rem at 6% 0%, rgba(223, 147, 192, 0.24), transparent 62%),
+      radial-gradient(36rem 26rem at 100% 22%, rgba(254, 195, 41, 0.16), transparent 62%),
+      radial-gradient(44rem 30rem at 55% 100%, rgba(124, 196, 242, 0.18), transparent 62%);
+  }
+
+  .clay-card {
+    border: 0;
+    border-radius: 1.75rem;
+    background-color: #ffffff;
+    box-shadow:
+      0 22px 34px -20px rgba(120, 63, 106, 0.38),
+      0 2px 6px rgba(120, 63, 106, 0.06),
+      inset 0 3px 4px rgba(255, 255, 255, 0.95),
+      inset 0 -9px 14px rgba(223, 147, 192, 0.17);
+  }
+
+  .clay-prop {
+    position: absolute;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .clay-prop img {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 18px 14px rgba(120, 63, 106, 0.22));
+    animation: clay-float 7s ease-in-out infinite;
+  }
+
+  @keyframes clay-float {
+    0%, 100% { transform: translateY(0) rotate(var(--clay-tilt, 0deg)); }
+    50% { transform: translateY(-12px) rotate(calc(var(--clay-tilt, 0deg) + 3deg)); }
+  }
+
+  @keyframes clay-rise {
+    from { opacity: 0; transform: translateY(34px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .clay-prop img { animation: none; transform: rotate(var(--clay-tilt, 0deg)); }
+  }
+
+  /* Every clay card rises into place as it scrolls into view. Browsers without scroll-driven animations just show it. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .clay-card {
+        animation: clay-rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 55%;
+      }
+    }
+  }
+
   .font-marvin {
     font-family: "Marvin", "Poppins", system-ui, sans-serif;
   }
@@ -160,6 +225,109 @@
 
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  .nav-link-interactive {
+    position: relative;
+  }
+
+  .nav-link-interactive::after {
+    position: absolute;
+    right: 0;
+    bottom: -0.45rem;
+    left: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: hsl(var(--brand-purple));
+    content: "";
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .nav-link-interactive:hover::after,
+  .nav-link-interactive:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  .interactive-button {
+    transition:
+      transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 240ms ease,
+      color 240ms ease,
+      background-color 240ms ease;
+  }
+
+  .interactive-button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 24px rgb(84 54 120 / 18%);
+  }
+
+  .interactive-button:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .feature-rails {
+    --feature-gap: 1rem;
+    margin-inline: calc(50% - 50vw);
+    mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
+  }
+
+  .feature-track {
+    will-change: transform;
+  }
+
+  .feature-track-forward {
+    animation: feature-marquee 28s linear infinite;
+  }
+
+  .feature-track-reverse {
+    animation: feature-marquee-reverse 32s linear infinite;
+  }
+
+  .feature-rails:hover .feature-track,
+  .feature-rails:focus-within .feature-track {
+    animation-play-state: paused;
+  }
+
+  @keyframes feature-marquee {
+    to {
+      transform: translateX(calc(-50% - var(--feature-gap) / 2));
+    }
+  }
+
+  @keyframes feature-marquee-reverse {
+    from {
+      transform: translateX(calc(-33.333% - var(--feature-gap) / 3));
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @media (min-width: 640px) {
+    .feature-rails {
+      --feature-gap: 1.75rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feature-track {
+      animation: none;
+      flex-wrap: wrap;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .feature-track > :nth-child(n + 6) {
+      display: none;
+    }
+
+    .interactive-button,
+    .nav-link-interactive::after {
+      transition-duration: 0.01ms;
+    }
   }
 
   .auth-phone-input {

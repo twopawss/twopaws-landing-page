@@ -9,7 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import { initMetaPixel, trackPageView } from "@/lib/metaPixel";
 import { isReactSnapPrerender } from "@/lib/isPrerender";
-import Landing from "@/pages/landing";
+import Home from "@/pages/home";
 import AboutPage from "@/pages/marketing/about";
 import ContactPage from "@/pages/marketing/contact";
 import EgyptPage from "@/pages/marketing/egypt";
@@ -60,7 +60,7 @@ function App() {
                 <Toaster />
                 <MetaPixelTracker />
                 <Routes>
-                  <Route path="/" element={<Landing />} />
+                  <Route path="/" element={<Home />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/features" element={<FeaturesPage />} />
                   <Route path="/egypt" element={<EgyptPage />} />

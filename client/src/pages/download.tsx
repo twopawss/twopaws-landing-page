@@ -36,7 +36,7 @@ export default function DownloadRedirect() {
   }, [targetUrl]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-6 py-12 text-center">
+    <div className="clay-bg min-h-screen flex items-center justify-center px-6 py-12 text-center">
       <Helmet>
         <title>Download TwoPaws</title>
         <meta

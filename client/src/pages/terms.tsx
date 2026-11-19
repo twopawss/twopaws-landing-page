@@ -1,68 +1,22 @@
-import { useState } from "react";
+import SiteFooter from "@/components/layout/SiteFooter";
+import SiteHeader from "@/components/layout/SiteHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import twoPawsLogo from "../../../attached_assets/logotrans-brand-800.webp";
-import insta from "../../../attached_assets/instagram.svg";
 import facebook from "../../../attached_assets/facebook.svg";
 import tiktok from "../../../attached_assets/tiktok.svg";
 
-import { Menu, X, Linkedin } from "lucide-react";
 import Seo from "@/lib/seo/Seo";
 import MarketingIntro from "@/pages/marketing/MarketingIntro";
 
 export default function Terms() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="clay-bg min-h-screen flex flex-col">
       <Seo
         title="Terms & Conditions | TwoPaws"
         description="Terms and conditions for TwoPaws, the pet care app for Egypt with vets, clinics, community features, and delivery."
         canonicalUrl="/terms"
       />
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <a href="/">
-                <img src={twoPawsLogo} alt="TwoPaws Digital Solutions" className="h-16 w-auto" />
-              </a>
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-gray-600 hover:text-brand-green-dark transition-colors">
-                Home
-              </a>
-              <a href="/terms" className="text-gray-600 hover:text-brand-green-dark transition-colors">
-                Terms & Conditions
-              </a>
-              <a href="/privacy" className="text-gray-600 hover:text-brand-green-dark transition-colors">
-                Privacy Policy
-              </a>
-            </div>
-            <div className="md:hidden">
-              <Button variant="ghost" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
-          </div>
-        </div>
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100">
-            <div className="px-4 py-4 space-y-3">
-              <a href="/" className="block w-full text-left text-gray-600">
-                Home
-              </a>
-              <a href="/terms" className="block w-full text-left text-gray-600">
-                Terms
-              </a>
-              <a href="/privacy" className="block w-full text-left text-gray-600">
-                Privacy
-              </a>
-            </div>
-          </div>
-        )}
-      </nav>
+            <SiteHeader />
 
       <main className="flex-grow bg-gray-50 pb-16 pt-24 px-4">
         <div className="w-full max-w-4xl mx-auto space-y-8">
@@ -180,133 +134,7 @@ export default function Terms() {
           </Card>
         </div>
       </main>
-      <footer className="bg-white text-black py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* --- Top Grid -------------------------------------------------- */}
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            {/* Brand + Socials */}
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <img src={twoPawsLogo} alt="TwoPaws Digital Solutions" className="h-20 w-auto" />
-              </div>
-              <p className="text-gray-400 mb-4">
-                Your pet's best friend in Egypt. Connecting pet families with the
-                care and community they deserve.
-              </p>
-              <div className="flex space-x-4">
-                <a
-                  href="https://www.instagram.com/twopaws.app/"
-                  className="text-gray-400 hover:text-brand-blue transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={insta} alt="Instagram" className="h-6 w-6" />
-                </a>
-                <a
-                  href="https://www.facebook.com/twopawsapp/"
-                  className="text-gray-400 hover:text-brand-blue transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={facebook} alt="Facebook" className="h-6 w-6" />
-                </a>
-                <a
-                  href="https://www.tiktok.com/@twopaws.app"
-                  className="text-gray-400 hover:text-brand-blue transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={tiktok} alt="TikTok" className="h-6 w-6" />
-                </a>
-                <a
-                  href="https://www.linkedin.com/company/twopaws/"
-                  className="text-gray-400 hover:text-brand-blue transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LinkedIn"
-                >
-                  <Linkedin className="h-6 w-6" />
-                </a>
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h3 className="font-semibold mb-4">Quick Links</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a
-                    href="/" className="hover:text-black transition-colors"
-                  >
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/" className="hover:text-black transition-colors"
-                  >
-                    About&nbsp;Us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/"
-                    className="hover:text-black transition-colors"
-                  >
-                    Reviews
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/"
-                    className="hover:text-black transition-colors"
-                  >
-                    FAQ
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a
-                    href="mailto:info@twopaws.pet"
-                    className="hover:text-black transition-colors"
-                  >
-                    Contact&nbsp;Us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/privacy"
-                    className="hover:text-black transition-colors"
-                  >
-                    Privacy&nbsp;Policy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/terms"
-                    className="hover:text-black transition-colors"
-                  >
-                    Terms&nbsp;&amp;&nbsp;Conditions
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* --- Bottom Bar ---------------------------------------------- */}
-          <div className="border-t border-gray-200 pt-8 flex flex-col sm:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              (c) {new Date().getFullYear()} TwoPaws Digital Solutions. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
     </div>
   );

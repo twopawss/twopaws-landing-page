@@ -1,8 +1,8 @@
 ﻿import type { ReactNode } from "react";
 import { Menu, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
-import twoPawsLogo from "../../../../attached_assets/logotrans-brand-800.webp";
 import SiteFooter from "@/components/layout/SiteFooter";
+import { LOGO_SRC } from "@/components/layout/SiteHeader";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -44,15 +44,15 @@ export default function ShopShell({ children, headerContent }: ShopShellProps) {
   const compactUserLabel = userLabel.split(" ")[0] || userLabel;
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <header className="border-b border-slate-100 bg-white">
-        <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 sm:gap-4">
+    <div className="clay-bg min-h-screen text-slate-900">
+      <header className="border-b border-[#783F6A]/10 bg-white text-[#783F6A]">
+        <div className="mx-auto flex h-16 w-full max-w-[1500px] items-center justify-between px-4 sm:px-8 lg:px-12">
+          <div className="flex items-center gap-3 sm:gap-10">
             <Sheet>
               <SheetTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-700 hover:border-brand-green-dark hover:text-brand-green-dark md:hidden"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#783F6A]/25 text-[#783F6A] md:hidden"
                   aria-label="Open menu"
                 >
                   <Menu className="h-5 w-5" />
@@ -72,14 +72,14 @@ export default function ShopShell({ children, headerContent }: ShopShellProps) {
               </SheetContent>
             </Sheet>
             <Link to="/shop/" className="flex items-center gap-2">
-              <img src={twoPawsLogo} alt="TwoPaws" className="h-8 w-auto sm:h-10" />
+              <img src={LOGO_SRC} alt="TwoPaws" width={900} height={172} className="h-8 w-auto sm:h-9" />
             </Link>
-            <nav className="hidden items-center gap-6 text-sm text-slate-600 md:flex">
+            <nav className="hidden items-center gap-8 text-[15px] md:flex">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="hover:text-brand-green-dark"
+                  className="transition-opacity hover:opacity-70"
                 >
                   {link.label}
                 </Link>
@@ -143,20 +143,20 @@ export default function ShopShell({ children, headerContent }: ShopShellProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild className="bg-brand-green-dark text-white">
+              <Button asChild className="font-display bg-[#783F6A] text-[15px] text-white hover:bg-[#6a365d]">
                 <Link to="/login">Sign in</Link>
               </Button>
             )}
           </div>
         </div>
         {headerContent ? (
-          <div className="border-t border-slate-100 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1500px] border-t border-[#783F6A]/10 px-4 py-3 sm:px-8 lg:px-12">
             {headerContent}
           </div>
         ) : null}
       </header>
 
-      <main className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+      <main className="mx-auto flex w-full max-w-[1500px] flex-col gap-8 px-4 pb-20 pt-8 sm:px-8 lg:px-12">
         {children}
       </main>
 

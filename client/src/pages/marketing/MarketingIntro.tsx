@@ -6,7 +6,7 @@ import {
 
 export default function MarketingIntro() {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="clay-card p-7 sm:p-9">
       <h2 className="text-2xl font-semibold text-slate-900">
         TwoPaws - Pet care app in Egypt (Cairo)
       </h2>
