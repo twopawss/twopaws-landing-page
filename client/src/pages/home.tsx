@@ -326,7 +326,7 @@ function Story() {
                   </Heading>
                   <p
                     style={display}
-                    className="mt-4 max-w-[30rem] text-[clamp(1.05rem,1.75vw,1.6rem)] font-normal leading-[1.4] text-[#6B3566] [text-shadow:0_0_14px_rgba(255,255,255,0.95),0_0_4px_rgba(255,255,255,0.9)] md:mt-6"
+                    className="mt-4 max-w-[30rem] text-[clamp(1.05rem,1.75vw,1.6rem)] font-normal leading-[1.4] text-[#6B3566] md:mt-6"
                   >
                     {c.body}
                   </p>
