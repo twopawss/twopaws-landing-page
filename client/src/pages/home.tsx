@@ -14,6 +14,7 @@ import { ArrowRight } from "lucide-react";
 import { FaApple } from "react-icons/fa";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Seo from "@/lib/seo/Seo";
+import { Helmet } from "react-helmet-async";
 import Reveal from "@/components/motion/Reveal";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
@@ -303,7 +304,11 @@ function Story() {
                   >
                     {c.title[0]}
                     <br />
-                    {c.title[1]} <span className="text-[#FEC329]">{c.title[2]}</span>
+                    {c.title[1]}{" "}
+                    {/* Yellow as a highlighter stroke behind purple text: yellow text on the pale sky was unreadable. */}
+                    <span className="bg-[linear-gradient(transparent_58%,#FEC329_58%,#FEC329_92%,transparent_92%)] px-[0.06em] text-[#783F6A] [box-decoration-break:clone]">
+                      {c.title[2]}
+                    </span>
                     {/* hand-drawn sparkle */}
                     <svg
                       aria-hidden
@@ -321,7 +326,7 @@ function Story() {
                   </Heading>
                   <p
                     style={display}
-                    className="mt-4 max-w-[30rem] text-[clamp(1.05rem,1.75vw,1.6rem)] font-normal leading-[1.4] text-[#6B3566] md:mt-6"
+                    className="mt-4 max-w-[30rem] text-[clamp(1.05rem,1.75vw,1.6rem)] font-normal leading-[1.4] text-[#6B3566] [text-shadow:0_0_14px_rgba(255,255,255,0.95),0_0_4px_rgba(255,255,255,0.9)] md:mt-6"
                   >
                     {c.body}
                   </p>
@@ -533,6 +538,11 @@ export default function Home() {
         canonicalUrl="/"
         structuredData={[organizationSchema, mobileApplicationSchema, faqSchema]}
       />
+      {/* Only the home page shows the full park panorama, so only it preloads the strips. */}
+      <Helmet>
+        <link rel="preload" as="image" href="/clay/park-bg.webp" />
+        <link rel="preload" as="image" href="/clay/park-fg.webp" {...{ fetchpriority: "high" }} />
+      </Helmet>
 
       <main id="main">
       {/* PINNED PHONE STORY */}
@@ -587,7 +597,7 @@ export default function Home() {
           </Reveal>
           <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-6">
             {featureIndex.map(([name, text], i) => (
-              <li key={name} className="clay-card flex gap-5 p-6">
+              <li key={name} className="clay-card clay-rise flex gap-5 p-6">
                 <span className="w-6 pt-1 text-xs tabular-nums text-[#783F6A]/60">{String(i + 1).padStart(2, "0")}</span>
                 <div>
                   <p style={display} className="text-xl text-[#3d1f3a]">

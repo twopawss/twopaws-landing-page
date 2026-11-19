@@ -86,6 +86,34 @@ export default function GoogleMapPicker({
   const onChangeRef = useRef(onChange);
   const [error, setError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
+
+  /** Drops the pin on the device's position; the shopper can still tap the map to adjust it. */
+  const locateMe = () => {
+    if (!("geolocation" in navigator)) {
+      setLocateError("Your browser can't share its location. Tap the map instead.");
+      return;
+    }
+    setLocating(true);
+    setLocateError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false);
+        onChangeRef.current({ lat: position.coords.latitude, lng: position.coords.longitude });
+        mapInstance.current?.setZoom?.(17);
+      },
+      (geoError) => {
+        setLocating(false);
+        setLocateError(
+          geoError.code === geoError.PERMISSION_DENIED
+            ? "Location access is off. Allow it in your browser, or tap the map instead."
+            : "We couldn't find your location. Tap the map instead.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  };
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -203,5 +231,25 @@ export default function GoogleMapPicker({
     );
   }
 
-  return <div ref={mapRef} className={`w-full rounded-lg border border-slate-200 ${heightClassName}`} />;
+  return (
+    <div className="space-y-2">
+      <div ref={mapRef} className={`w-full rounded-lg border border-slate-200 ${heightClassName}`} />
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={locateMe}
+          disabled={locating}
+          className="inline-flex h-10 items-center gap-2 rounded-full border border-[#783F6A]/30 bg-white px-4 text-sm font-semibold text-[#783F6A] transition-colors hover:bg-[#783F6A]/5 disabled:opacity-60"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+            <circle cx="12" cy="12" r="7" />
+          </svg>
+          {locating ? "Finding you…" : "Use my current location"}
+        </button>
+        {locateError ? <p className="text-xs text-red-700" role="alert">{locateError}</p> : null}
+      </div>
+    </div>
+  );
 }

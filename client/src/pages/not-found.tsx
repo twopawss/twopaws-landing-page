@@ -17,7 +17,7 @@ export default function NotFound() {
         <ClayProp name="bone" className="right-6 top-10 w-28 sm:w-36" tilt={-8} />
         <p className="font-display text-sm font-medium uppercase tracking-[0.14em] text-[#783F6A]">Error 404</p>
         <h1 className="mt-3 text-[clamp(2.4rem,6vw,4.2rem)] leading-[1.05]">
-          This page wandered <span className="text-[#FEC329]">off</span>
+          This page wandered <span className="bg-[linear-gradient(transparent_58%,#FEC329_58%,#FEC329_92%,transparent_92%)] px-[0.06em]">off</span>
         </h1>
         <p className="font-display mt-4 max-w-md text-lg text-[#6B3566]">
           The page may have moved, or the URL might be incorrect. Head back home and try again from there.

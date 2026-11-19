@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { GeoPoint } from "firebase/firestore";
+import { GeoPoint, collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import ShopShell from "@/components/shop/ShopShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,6 +77,10 @@ export default function CatalogueCheckoutPage() {
   const [customerForm, setCustomerForm] = useState<CustomerFormState>({ firstName: "", lastName: "", phone: "", email: "" });
   const [addressForm, setAddressForm] = useState<AddressFormState>(() => emptyAddress());
   const [guestAddressForm, setGuestAddressForm] = useState<AddressFormState>(() => emptyAddress("Delivery address"));
+  /** Set on the first Place order tap; from then on missing or invalid fields show their message inline. */
+  const [attempted, setAttempted] = useState(false);
+  /** Delivery in EGP for the chosen city, from the suppliers' shipping zones, until the server quote arrives. */
+  const [deliveryEstimate, setDeliveryEstimate] = useState<number | null>(null);
 
   const isGuestCheckout = !user;
   useEffect(() => { setPromoCode(readStoredPromo()); }, []);
@@ -101,6 +106,33 @@ export default function CatalogueCheckoutPage() {
     location: guestAddressForm.location ? { lat: guestAddressForm.location.lat, lng: guestAddressForm.location.lng } : null,
   }), [guestAddressForm, customerForm.firstName, customerForm.lastName, customerForm.email, guestPhone]);
   const guestItemsKey = JSON.stringify(guestItems);
+
+  const guestProblems: Record<string, string | null> | null = isGuestCheckout ? {
+    firstName: customerForm.firstName.trim() ? null : "Enter your first name.",
+    lastName: customerForm.lastName.trim() ? null : "Enter your last name.",
+    phone: guestPhone && isValidPhoneNumber(guestPhone) ? null : "Enter a valid mobile number.",
+    email: isValidOptionalEmail(customerForm.email) ? null : "Enter a valid email, or leave it empty.",
+    street: guestAddressForm.street.trim() ? null : "Enter your street.",
+    location: guestAddressForm.location ? null : "Set your delivery location on the map.",
+  } : null;
+  const problem = (key: string) => (attempted && guestProblems ? guestProblems[key] : null);
+
+  // Each supplier charges per city, so the city alone is enough for a delivery estimate.
+  const supplierIdsKey = [...new Set(lines.map((line) => line.supplierId).filter(Boolean))].sort().join(",");
+  const estimateCity = isGuestCheckout ? guestAddressForm.city : (selectedAddress?.city ?? "");
+  useEffect(() => {
+    if (!supplierIdsKey || !estimateCity) { setDeliveryEstimate(null); return; }
+    let cancelled = false;
+    Promise.all(supplierIdsKey.split(",").map((supplierId) =>
+      getDocs(collection(db, "suppliers", supplierId, "shippingZones")).then((snap) => {
+        const zone = snap.docs.map((doc) => doc.data()).find((data) => data.label === estimateCity);
+        return typeof zone?.rateEGP === "number" ? zone.rateEGP : null;
+      }),
+    ))
+      .then((rates) => { if (!cancelled) setDeliveryEstimate(rates.every((rate) => rate !== null) ? rates.reduce<number>((sum, rate) => sum + (rate ?? 0), 0) : null); })
+      .catch(() => { if (!cancelled) setDeliveryEstimate(null); });
+    return () => { cancelled = true; };
+  }, [supplierIdsKey, estimateCity]);
 
   if (!checkoutTrackingIdRef.current) checkoutTrackingIdRef.current = createMetaEventId("checkout");
 
@@ -187,12 +219,16 @@ export default function CatalogueCheckoutPage() {
   const handleCheckout = async () => {
     if (cartEmpty) { toast({ title: "Cart empty", description: "Add items before checkout." }); return; }
     const firstName = customerForm.firstName.trim(), lastName = customerForm.lastName.trim(), email = customerForm.email.trim();
-    if (isGuestCheckout) {
-      if (!firstName || !lastName) { toast({ title: "Name required", description: "Enter first and last name.", variant: "destructive" }); return; }
-      if (!guestPhone || !isValidPhoneNumber(guestPhone)) { toast({ title: "Invalid phone number", description: "Enter a valid phone number with country code.", variant: "destructive" }); return; }
-      if (!guestAddressForm.street.trim()) { toast({ title: "Street required", description: "Enter a street for delivery.", variant: "destructive" }); return; }
-      if (!guestAddressForm.location) { toast({ title: "Location required", description: "Select your delivery location on the map.", variant: "destructive" }); return; }
-      if (!isValidOptionalEmail(email)) { toast({ title: "Invalid email", description: "Enter a valid email address or leave it empty.", variant: "destructive" }); return; }
+    if (isGuestCheckout && guestProblems) {
+      setAttempted(true);
+      const firstProblem = Object.keys(guestProblems).find((key) => guestProblems[key]);
+      if (firstProblem) {
+        // Show the shopper the first thing to fix instead of a toast that disappears.
+        const field = document.getElementById(`guest-${firstProblem}`);
+        field?.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (field instanceof HTMLInputElement) field.focus({ preventScroll: true });
+        return;
+      }
     } else if (!selectedAddress) {
       toast({ title: "Select an address", description: "Choose or add a shipping address to continue.", variant: "destructive" }); return;
     }
@@ -246,41 +282,71 @@ export default function CatalogueCheckoutPage() {
   const seo = <Seo title="Checkout | TwoPaws Shop" description="Complete your TwoPaws order securely." canonicalUrl="/checkout/" noIndex />;
   if (authLoading) return <ShopShell>{seo}<p className="text-sm text-slate-500">Loading...</p></ShopShell>;
 
-  const addressFields = (form: AddressFormState, setForm: React.Dispatch<React.SetStateAction<AddressFormState>>, withContact: boolean) => (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        {withContact && (
-          <>
-            <div><Label>Label</Label><Input value={form.label} onChange={(event) => setForm((prev) => ({ ...prev, label: event.target.value }))} /></div>
-            <div><Label>Recipient name</Label><Input value={form.recipientName} onChange={(event) => setForm((prev) => ({ ...prev, recipientName: event.target.value }))} /></div>
-            <div><Label>Phone</Label><PhoneInput className="auth-phone-input" defaultCountry="EG" international countryCallingCodeEditable={false} value={form.phone || undefined} onChange={(value) => setForm((prev) => ({ ...prev, phone: value ?? "" }))} placeholder="Enter phone number" /></div>
-            <div><Label>Country</Label><Input value={ADDRESS_COUNTRY} disabled className="bg-slate-50" /></div>
-          </>
-        )}
-        <div>
-          <Label>City</Label>
-          <Select value={form.city} onValueChange={(value) => setForm((prev) => ({ ...prev, city: value }))}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="Select city" /></SelectTrigger>
-            <SelectContent>{ADDRESS_CITIES.map((city) => <SelectItem key={city} value={city}>{city}</SelectItem>)}</SelectContent>
-          </Select>
+  const fieldError = (id: string, message: string | null) =>
+    message ? <p id={`${id}-error`} className="mt-1 text-xs text-red-700">{message}</p> : null;
+
+  /** `prefix` keeps ids unique between the guest form ("guest") and the saved-address dialog ("addr"). */
+  const addressFields = (form: AddressFormState, setForm: React.Dispatch<React.SetStateAction<AddressFormState>>, withContact: boolean, prefix: string) => {
+    const err = (key: string) => (prefix === "guest" ? problem(key) : null);
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          {withContact && (
+            <>
+              <div><Label htmlFor={`${prefix}-label`}>Label</Label><Input id={`${prefix}-label`} placeholder="Home, Work…" value={form.label} onChange={(event) => setForm((prev) => ({ ...prev, label: event.target.value }))} /></div>
+              <div><Label htmlFor={`${prefix}-recipient`}>Recipient name</Label><Input id={`${prefix}-recipient`} autoComplete="name" value={form.recipientName} onChange={(event) => setForm((prev) => ({ ...prev, recipientName: event.target.value }))} /></div>
+              <div><Label htmlFor={`${prefix}-phone`}>Phone</Label><PhoneInput id={`${prefix}-phone`} autoComplete="tel" className="auth-phone-input" defaultCountry="EG" international countryCallingCodeEditable={false} value={form.phone || undefined} onChange={(value) => setForm((prev) => ({ ...prev, phone: value ?? "" }))} placeholder="Enter phone number" /></div>
+              <div><Label htmlFor={`${prefix}-country`}>Country</Label><Input id={`${prefix}-country`} value={ADDRESS_COUNTRY} disabled className="bg-slate-50" /></div>
+            </>
+          )}
+          <div>
+            <Label htmlFor={`${prefix}-city`}>City</Label>
+            <Select value={form.city} onValueChange={(value) => setForm((prev) => ({ ...prev, city: value }))}>
+              <SelectTrigger id={`${prefix}-city`} className="h-10"><SelectValue placeholder="Select city" /></SelectTrigger>
+              <SelectContent>{ADDRESS_CITIES.map((city) => <SelectItem key={city} value={city}>{city}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div><Label htmlFor={`${prefix}-area`}>Area</Label><Input id={`${prefix}-area`} autoComplete="address-level3" placeholder="e.g. Maadi" value={form.area} onChange={(event) => setForm((prev) => ({ ...prev, area: event.target.value }))} /></div>
+          <div>
+            <Label htmlFor={`${prefix}-street`}>Street</Label>
+            <Input id={`${prefix}-street`} autoComplete="address-line1" aria-invalid={Boolean(err("street"))} aria-describedby={err("street") ? `${prefix}-street-error` : undefined} value={form.street} onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))} />
+            {fieldError(`${prefix}-street`, err("street"))}
+          </div>
+          <div><Label htmlFor={`${prefix}-building`}>Building</Label><Input id={`${prefix}-building`} autoComplete="address-line2" value={form.building} onChange={(event) => setForm((prev) => ({ ...prev, building: event.target.value }))} /></div>
+          <div><Label htmlFor={`${prefix}-floor`}>Floor</Label><Input id={`${prefix}-floor`} inputMode="numeric" value={form.floor} onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))} /></div>
+          <div><Label htmlFor={`${prefix}-apartment`}>Apartment</Label><Input id={`${prefix}-apartment`} value={form.apartment} onChange={(event) => setForm((prev) => ({ ...prev, apartment: event.target.value }))} /></div>
         </div>
-        <div><Label>Area</Label><Input value={form.area} onChange={(event) => setForm((prev) => ({ ...prev, area: event.target.value }))} /></div>
-        <div><Label>Street</Label><Input value={form.street} onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))} /></div>
-        <div><Label>Building</Label><Input value={form.building} onChange={(event) => setForm((prev) => ({ ...prev, building: event.target.value }))} /></div>
-        <div><Label>Floor</Label><Input value={form.floor} onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))} /></div>
-        <div><Label>Apartment</Label><Input value={form.apartment} onChange={(event) => setForm((prev) => ({ ...prev, apartment: event.target.value }))} /></div>
+        <div><Label htmlFor={`${prefix}-notes`}>Notes for the courier</Label><Textarea id={`${prefix}-notes`} value={form.notes} onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))} /></div>
+        <div id={`${prefix}-location`} className="scroll-mt-40 space-y-2">
+          <p className="text-sm font-medium leading-none">Location on the map</p>
+          <GoogleMapPicker value={form.location} onChange={(loc) => setForm((prev) => ({ ...prev, location: loc }))} heightClassName="h-52 sm:h-64" />
+          {err("location") ? fieldError(`${prefix}-location`, err("location")) : <p className="text-xs text-slate-500">Tap the map, or use your current location, to set the exact delivery point.</p>}
+        </div>
       </div>
-      <div><Label>Notes</Label><Textarea value={form.notes} onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))} /></div>
-      <div className="space-y-2">
-        <Label>Location</Label>
-        <GoogleMapPicker value={form.location} onChange={(loc) => setForm((prev) => ({ ...prev, location: loc }))} heightClassName="h-52 sm:h-64" />
-        <p className="text-xs text-slate-500">Tap on the map to set the exact delivery location.</p>
+    );
+  };
+
+  const subtotalMinor = quote?.subtotalMinor ?? lines.reduce((sum, line) => sum + line.lineTotalMinor, 0);
+  const deliveryText = quote ? formatMinor(quote.shippingMinor) : deliveryEstimate !== null ? formatMinor(deliveryEstimate * 100) : "—";
+  const totalText = quote ? formatMinor(quote.totalMinor) : deliveryEstimate !== null && !cartEmpty ? `≈ ${formatMinor(subtotalMinor + deliveryEstimate * 100)}` : "—";
+  // Guests can tap before the quote exists: the tap points out what is missing instead of doing nothing.
+  const placeOrderButton = (className: string) => (
+    <Button className={`${className} bg-brand-green-dark text-white hover:bg-brand-green-dark/90`} onClick={handleCheckout} disabled={submitting || quoteLoading || cartEmpty || (!quote && !isGuestCheckout)}>
+      {submitting ? "Placing order..." : paymentMethod === "card" ? "Continue to payment" : "Place order"}
+    </Button>
+  );
+  const mobileBar = cartEmpty ? undefined : (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-xs text-slate-500">Total{!quote && deliveryEstimate !== null ? " (estimate)" : ""}</p>
+        <p className="text-lg font-semibold text-slate-900">{totalText}</p>
       </div>
+      {placeOrderButton("h-11 shrink-0 rounded-full px-6")}
     </div>
   );
 
   return (
-    <ShopShell>
+    <ShopShell mobileBar={mobileBar}>
       {seo}
       <header className="space-y-2">
         <p className="text-sm font-semibold text-brand-green-dark">Checkout</p>
@@ -291,27 +357,42 @@ export default function CatalogueCheckoutPage() {
         <div className="space-y-6">
           {isGuestCheckout && (
             <>
-              <Card className="border-slate-100">
-                <CardContent className="space-y-3 p-6">
-                  <p className="text-sm text-slate-600">You are checking out as guest.</p>
-                  <Button asChild variant="outline" className="border-slate-200"><Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`}>Sign in for faster checkout</Link></Button>
-                </CardContent>
-              </Card>
+              <p className="text-sm text-slate-600">
+                Checking out as a guest.{" "}
+                <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} className="font-semibold text-brand-green-dark underline-offset-2 hover:underline">Sign in</Link>
+                {" "}for faster checkout.
+              </p>
               <Card className="border-slate-100">
                 <CardContent className="space-y-4 p-6">
                   <h3 className="text-lg font-semibold text-slate-900">Customer details</h3>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div><Label>First name</Label><Input value={customerForm.firstName} onChange={(event) => setCustomerForm((prev) => ({ ...prev, firstName: event.target.value }))} /></div>
-                    <div><Label>Last name</Label><Input value={customerForm.lastName} onChange={(event) => setCustomerForm((prev) => ({ ...prev, lastName: event.target.value }))} /></div>
-                    <div><Label>Phone</Label><PhoneInput className="auth-phone-input" defaultCountry="EG" international countryCallingCodeEditable={false} value={customerForm.phone || undefined} onChange={(value) => setCustomerForm((prev) => ({ ...prev, phone: value ?? "" }))} placeholder="Enter phone number" /></div>
-                    <div><Label>Email (optional)</Label><Input type="email" value={customerForm.email} onChange={(event) => setCustomerForm((prev) => ({ ...prev, email: event.target.value }))} /></div>
+                    <div>
+                      <Label htmlFor="guest-firstName">First name</Label>
+                      <Input id="guest-firstName" autoComplete="given-name" aria-invalid={Boolean(problem("firstName"))} aria-describedby={problem("firstName") ? "guest-firstName-error" : undefined} value={customerForm.firstName} onChange={(event) => setCustomerForm((prev) => ({ ...prev, firstName: event.target.value }))} />
+                      {fieldError("guest-firstName", problem("firstName"))}
+                    </div>
+                    <div>
+                      <Label htmlFor="guest-lastName">Last name</Label>
+                      <Input id="guest-lastName" autoComplete="family-name" aria-invalid={Boolean(problem("lastName"))} aria-describedby={problem("lastName") ? "guest-lastName-error" : undefined} value={customerForm.lastName} onChange={(event) => setCustomerForm((prev) => ({ ...prev, lastName: event.target.value }))} />
+                      {fieldError("guest-lastName", problem("lastName"))}
+                    </div>
+                    <div>
+                      <Label htmlFor="guest-phone">Mobile number</Label>
+                      <PhoneInput id="guest-phone" autoComplete="tel" className="auth-phone-input" defaultCountry="EG" international countryCallingCodeEditable={false} value={customerForm.phone || undefined} onChange={(value) => setCustomerForm((prev) => ({ ...prev, phone: value ?? "" }))} placeholder="Enter phone number" />
+                      {fieldError("guest-phone", problem("phone"))}
+                    </div>
+                    <div>
+                      <Label htmlFor="guest-email">Email (optional)</Label>
+                      <Input id="guest-email" type="email" autoComplete="email" aria-invalid={Boolean(problem("email"))} aria-describedby={problem("email") ? "guest-email-error" : undefined} value={customerForm.email} onChange={(event) => setCustomerForm((prev) => ({ ...prev, email: event.target.value }))} />
+                      {fieldError("guest-email", problem("email"))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
               <Card className="border-slate-100">
                 <CardContent className="space-y-4 p-6">
                   <h3 className="text-lg font-semibold text-slate-900">Shipping address</h3>
-                  {addressFields(guestAddressForm, setGuestAddressForm, false)}
+                  {addressFields(guestAddressForm, setGuestAddressForm, false, "guest")}
                 </CardContent>
               </Card>
             </>
@@ -341,7 +422,7 @@ export default function CatalogueCheckoutPage() {
               <Dialog open={isAddressDialogOpen} onOpenChange={(open) => { setIsAddressDialogOpen(open); if (!open) resetAddressForm(); }}>
                 <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
                   <DialogHeader><DialogTitle>{editingAddressId ? "Edit address" : "Add new address"}</DialogTitle></DialogHeader>
-                  {addressFields(addressForm, setAddressForm, true)}
+                  {addressFields(addressForm, setAddressForm, true, "addr")}
                   <div className="flex flex-wrap items-center gap-3">
                     <Button className="bg-brand-green-dark text-white" onClick={handleSaveAddress}>{editingAddressId ? "Update address" : "Save address"}</Button>
                     <Button variant="outline" className="border-slate-200" onClick={() => { resetAddressForm(); setIsAddressDialogOpen(false); }}>Cancel</Button>
@@ -381,13 +462,13 @@ export default function CatalogueCheckoutPage() {
               <div className="border-t border-slate-100 pt-3">
                 <div className="flex items-center justify-between text-sm text-slate-600"><span>Subtotal</span><span>{formatMinor(quote?.subtotalMinor ?? lines.reduce((sum, line) => sum + line.lineTotalMinor, 0))}</span></div>
                 {quote && quote.discountMinor > 0 && <div className="flex items-center justify-between text-sm text-slate-600"><span>Promo {quote.promoCode ? `(${quote.promoCode.toUpperCase()})` : ""}</span><span>-{formatMinor(quote.discountMinor)}</span></div>}
-                <div className="flex items-center justify-between text-sm text-slate-600"><span>Delivery</span><span>{quote ? formatMinor(quote.shippingMinor) : "—"}</span></div>
-                <div className="flex items-center justify-between text-base font-semibold text-slate-900"><span>Total</span><span>{quote ? formatMinor(quote.totalMinor) : "—"}</span></div>
+                <div className="flex items-center justify-between text-sm text-slate-600"><span>Delivery{!quote && deliveryEstimate !== null ? " (estimate)" : ""}</span><span>{deliveryText}</span></div>
+                <div className="flex items-center justify-between text-base font-semibold text-slate-900"><span>Total</span><span>{totalText}</span></div>
               </div>
               {quoteLoading ? <p className="text-xs text-slate-500">Confirming prices and delivery...</p>
                 : quoteError ? <p className="text-xs text-red-600">{quoteError}</p>
                 : quote?.eta ? <p className="text-xs text-slate-500">Estimated delivery: {quote.eta}</p>
-                : !quote && isGuestCheckout ? <p className="text-xs text-slate-500">Enter your phone, street and map location to see delivery and total.</p>
+                : !quote && isGuestCheckout ? <p className="text-xs text-slate-500">{deliveryEstimate !== null ? `Delivery to ${estimateCity} estimated. Add your street and map pin to confirm the total.` : "Enter your phone, street and map location to see delivery and total."}</p>
                 : null}
             </CardContent>
           </Card>
@@ -402,9 +483,7 @@ export default function CatalogueCheckoutPage() {
             </CardContent>
           </Card>
 
-          <Button className="w-full bg-brand-green-dark text-white hover:bg-brand-green-dark/90" onClick={handleCheckout} disabled={submitting || quoteLoading || cartEmpty || !quote}>
-            {submitting ? "Placing order..." : paymentMethod === "card" ? "Continue to payment" : "Place order"}
-          </Button>
+          {placeOrderButton("w-full")}
           <p className="text-center text-xs text-slate-500">
             By placing an order you accept our <Link to="/terms/" className="underline">terms</Link> and{" "}
             <Link to="/shipping-and-returns/" className="underline">shipping and returns policy</Link>.

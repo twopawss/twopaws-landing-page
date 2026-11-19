@@ -13,6 +13,8 @@ type SupplierPickerProps = {
   loading?: boolean;
   onSelectAll: () => void;
   onSelectSupplier: (supplierId: string) => void;
+  /** Name chips in one scrolling row instead of logo cards. */
+  compact?: boolean;
 };
 
 const getLogoUrl = (supplier: SupplierDoc) =>
@@ -161,6 +163,7 @@ export function SupplierPicker({
   loading,
   onSelectAll,
   onSelectSupplier,
+  compact = false,
 }: SupplierPickerProps) {
   const availableSuppliers = useMemo(
     () => suppliers.filter(isSupplierAvailable),
@@ -168,6 +171,37 @@ export function SupplierPicker({
   );
 
   const isAllSelected = supplierMode === "all" || selectedSupplierId === "all";
+
+  // One scrolling row of name chips, for phones where the logo cards would push products off the first screen.
+  if (compact) {
+    const chip = (selected: boolean) =>
+      `h-9 shrink-0 snap-start rounded-full border px-4 text-sm font-medium transition-colors ${
+        selected ? "border-[#783F6A] bg-[#783F6A] text-white" : "border-[#783F6A]/20 bg-white text-[#3d1f3a]"
+      }`;
+    return (
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar snap-x" role="group" aria-label="Filter by supplier">
+        <button type="button" className={chip(isAllSelected)} aria-pressed={isAllSelected} onClick={onSelectAll}>
+          All suppliers
+        </button>
+        {loading
+          ? Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-9 w-24 shrink-0 rounded-full" />)
+          : availableSuppliers.map((supplier) => {
+              const selected = selectedSupplierId === supplier.id;
+              return (
+                <button
+                  key={supplier.id}
+                  type="button"
+                  className={chip(selected)}
+                  aria-pressed={selected}
+                  onClick={() => onSelectSupplier(supplier.id)}
+                >
+                  {supplier.name ?? "Supplier"}
+                </button>
+              );
+            })}
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-w-0 flex-col gap-3">

@@ -10,7 +10,11 @@ type MarketingShellProps = {
   children: ReactNode;
 };
 
-/** Shell for the text pages: shared header, a strip of the park under a blue sky, then the page content. */
+/**
+ * Shell for the text pages: shared header, a strip of the park under a blue sky, then the page content.
+ * The strip uses 600px-tall copies of the home panorama (`*-strip.webp`); the full 1200px strips are only
+ * needed by the home page, which preloads them itself.
+ */
 export default function MarketingShell({ children }: MarketingShellProps) {
   const reducedMotion = useReducedMotion() ?? false;
   const { scrollY } = useScroll();
@@ -26,14 +30,14 @@ export default function MarketingShell({ children }: MarketingShellProps) {
         style={{ background: "linear-gradient(#7CC4F2, #BDE2FA)" }}
       >
         <motion.img
-          src="/clay/park-bg.webp"
+          src="/clay/park-bg-strip.webp"
           alt=""
           className="absolute bottom-0 left-0 h-[150%] w-auto max-w-none select-none"
           draggable={false}
           style={reducedMotion ? undefined : { x: bgX }}
         />
         <motion.img
-          src="/clay/park-fg.webp"
+          src="/clay/park-fg-strip.webp"
           alt=""
           className="absolute bottom-0 left-0 h-[150%] w-auto max-w-none select-none"
           draggable={false}
@@ -47,7 +51,7 @@ export default function MarketingShell({ children }: MarketingShellProps) {
         {Children.toArray(children).map((child, i) =>
           // the SEO tags render nothing, so wrapping them would only add an empty gap
           isValidElement(child) && child.type !== Seo ? (
-            <Reveal key={i} delay={Math.min(i, 3) * 0.08}>
+            <Reveal key={i} delay={Math.min(i, 3) * 0.08} fade={false}>
               {child}
             </Reveal>
           ) : (

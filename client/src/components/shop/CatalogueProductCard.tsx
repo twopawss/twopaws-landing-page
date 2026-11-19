@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { Plus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { cardImage, cheapestOffer, formatMinor, type PublicProduct } from "@/lib/catalogueApi";
@@ -94,9 +95,11 @@ function CatalogueProductCard({ product, cartQuantity = 0, onAdd, onNavigate }: 
               type="button"
               onClick={() => onAdd(product)}
               aria-label={product.variants.length > 1 ? `Choose a size of ${product.name}` : `Add ${product.name} to cart`}
-              className="relative z-10 inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#783F6A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6a365d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#783F6A] focus-visible:ring-offset-2"
+              className="relative z-10 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#783F6A] text-sm font-semibold text-white sm:w-auto sm:px-4 transition-colors hover:bg-[#6a365d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#783F6A] focus-visible:ring-offset-2"
             >
-              {product.variants.length > 1 ? "Choose" : "Add +"}
+              {/* Narrow phone cards only have room for the price and a round + button. */}
+              <Plus className="h-5 w-5 sm:hidden" aria-hidden />
+              <span className="hidden sm:inline">{product.variants.length > 1 ? "Choose" : "Add +"}</span>
             </button>
           ) : (
             <span className="text-xs font-semibold uppercase text-slate-400">View</span>

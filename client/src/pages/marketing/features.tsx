@@ -73,7 +73,7 @@ export default function FeaturesPage() {
       <MarketingIntro />
       <section className="space-y-5">
         {features.map((feature) => (
-          <article key={feature.title} className="clay-card p-6 sm:p-7">
+          <article key={feature.title} className="clay-card clay-rise p-6 sm:p-7">
             <h2 className="text-xl font-semibold text-slate-900">
               {feature.title}
             </h2>

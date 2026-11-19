@@ -17,18 +17,21 @@ type RevealProps = {
   variant?: keyof typeof from;
   delay?: number;
   className?: string;
+  /** false slides without fading, so the content is readable even if the animation never runs. */
+  fade?: boolean;
 };
 
 /**
  * Fades and slides its content in the first time it scrolls into view.
  * Stays still for reduced motion, and while the page is being prerendered so the saved HTML is fully visible.
  */
-export default function Reveal({ children, variant = "up", delay = 0, className }: RevealProps) {
+export default function Reveal({ children, variant = "up", delay = 0, className, fade = true }: RevealProps) {
   const still = (useReducedMotion() ?? false) || isReactSnapPrerender();
+  const start = fade ? from[variant] : { ...from[variant], opacity: 1 };
   return (
     <motion.div
       className={className}
-      initial={still ? false : from[variant]}
+      initial={still ? false : start}
       whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
       // "some" rather than a fraction, so content taller than the screen still appears
       viewport={{ once: true, amount: "some", margin: "0px 0px -12% 0px" }}

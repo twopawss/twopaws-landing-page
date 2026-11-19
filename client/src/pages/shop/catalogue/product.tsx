@@ -7,6 +7,7 @@ import CatalogueProductCard from "@/components/shop/CatalogueProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ToastAction } from "@/components/ui/toast";
 import { useCatalogueCart } from "@/hooks/useCatalogueCart";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/format";
@@ -30,6 +31,19 @@ const RECOMMENDED_VISIBLE_LIMIT = 8;
 const MAX_QTY = 10;
 
 type ShippingZoneDoc = { id: string; label?: string; rateEGP?: number; shippingEtaLabel?: string };
+
+/**
+ * Supplier descriptions arrive as one long run of text. Keep their own line breaks when they have any;
+ * otherwise break every few sentences so the copy reads as paragraphs.
+ */
+function descriptionParagraphs(text: string) {
+  const trimmed = text.trim();
+  if (/\n/.test(trimmed)) return trimmed.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  const sentences = trimmed.split(/(?<=[.!?])\s+(?=[A-Z0-9؀-ۿ])/);
+  const paragraphs: string[] = [];
+  for (let i = 0; i < sentences.length; i += 3) paragraphs.push(sentences.slice(i, i + 3).join(" "));
+  return paragraphs;
+}
 
 function useCatalogueCartOptional() {
   // The cart provider is only mounted on the catalogue backend; in legacy mode this page is view-only.
@@ -82,11 +96,14 @@ export default function CatalogueProductPage() {
     return () => { cancelled = true; };
   }, [productId, reload]);
 
-  // Default to the first variant that has offers, then its cheapest offer.
+  // Open on the cheapest offer's size, so the price matches the "From" price on the product card.
   useEffect(() => {
-    if (!product) return;
-    const firstVariant = product.variants.find((v) => offersForVariant(product, v.id).length) ?? product.variants[0];
-    if (firstVariant && !variantId) setVariantId(firstVariant.id);
+    if (!product || variantId) return;
+    const cheapestVariantId = cheapestOffer(product)?.variantId;
+    const startVariant = (cheapestVariantId && product.variants.find((v) => v.id === cheapestVariantId))
+      ?? product.variants.find((v) => offersForVariant(product, v.id).length)
+      ?? product.variants[0];
+    if (startVariant) setVariantId(startVariant.id);
   }, [product, variantId]);
   const variantOffers = useMemo(() => (product && variantId ? offersForVariant(product, variantId) : []), [product, variantId]);
   useEffect(() => {
@@ -170,8 +187,12 @@ export default function CatalogueProductPage() {
         value: (selectedOffer.sellingPriceMinor * quantity) / 100, currency: META_PIXEL_CURRENCY,
         contents: [{ id: product.id, quantity, item_price: selectedOffer.sellingPriceMinor / 100 }],
       });
-      toast({ title: "Added to cart", description: product.name });
-      navigate("/cart");
+      // Stay on the page so shoppers can keep browsing; the toast offers the way to the cart.
+      toast({
+        title: "Added to cart",
+        description: quantity > 1 ? `${quantity} × ${product.name}` : product.name,
+        action: <ToastAction altText="View cart" onClick={() => navigate("/cart")}>View cart</ToastAction>,
+      });
     } catch (err) {
       toast({ title: "Unable to add", description: callableMessage(err), variant: "destructive" });
     } finally {
@@ -197,8 +218,22 @@ export default function CatalogueProductPage() {
 
   const regular = selectedOffer?.regularPriceMinor && selectedOffer.regularPriceMinor > selectedOffer.sellingPriceMinor ? selectedOffer.regularPriceMinor : null;
 
+  const mobileBar = product && cart ? (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="truncate text-xs text-slate-500">{product.name}</p>
+        <p className="text-lg font-semibold text-brand-green-dark">
+          {selectedOffer ? formatMinor(selectedOffer.sellingPriceMinor * quantity) : `From ${formatMinor(product.minimumPriceMinor)}`}
+        </p>
+      </div>
+      <Button className="h-11 shrink-0 rounded-full bg-brand-green-dark px-6 text-white hover:bg-brand-green-dark/90" disabled={!selectedOffer || adding} onClick={handleAddToCart}>
+        {adding ? "Adding..." : "Add to cart"}
+      </Button>
+    </div>
+  ) : undefined;
+
   return (
-    <ShopShell>
+    <ShopShell mobileBar={mobileBar}>
       <Seo
         title={seoTitle}
         description={seoDescription}
@@ -231,7 +266,39 @@ export default function CatalogueProductPage() {
           </nav>
           <div className="grid gap-8 lg:grid-cols-2">
             <div className="space-y-4">
-              <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-slate-50" onMouseEnter={() => setZoomActive(Boolean(selectedImageUrl))} onMouseLeave={() => setZoomActive(false)} onMouseMove={handleImageMouseMove}>
+              {/* Phones: swipe between photos, with dots. Larger screens: main photo with hover zoom and thumbnails. */}
+              {images.length ? (
+                <div className="md:hidden">
+                  <div
+                    className="flex snap-x snap-mandatory overflow-x-auto rounded-2xl border border-slate-100 bg-white no-scrollbar"
+                    onScroll={(event) => {
+                      const el = event.currentTarget;
+                      const index = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+                      if (index !== selectedImage) setSelectedImage(index);
+                    }}
+                    aria-label="Product photos"
+                  >
+                    {safeImages.map((image, index) => (
+                      <img
+                        key={`${image}-${index}-m`}
+                        src={image}
+                        alt={index === 0 ? product.name : `${product.name}, photo ${index + 1}`}
+                        className="h-72 w-full shrink-0 snap-center object-contain p-4"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        decoding="async"
+                      />
+                    ))}
+                  </div>
+                  {images.length > 1 ? (
+                    <div className="mt-2 flex justify-center gap-1.5" aria-hidden>
+                      {images.map((_, index) => (
+                        <span key={index} className={`h-1.5 rounded-full transition-all ${index === selectedImage ? "w-4 bg-[#783F6A]" : "w-1.5 bg-[#783F6A]/25"}`} />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+              <div className={`relative overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 ${images.length ? "hidden md:block" : ""}`} onMouseEnter={() => setZoomActive(Boolean(selectedImageUrl))} onMouseLeave={() => setZoomActive(false)} onMouseMove={handleImageMouseMove}>
                 {images.length ? (
                   <img src={safeImages[selectedImage]} alt={product.name} className="mx-auto max-h-[420px] w-auto max-w-full cursor-zoom-in object-contain p-4" loading="eager" decoding="async" />
                 ) : (
@@ -242,10 +309,10 @@ export default function CatalogueProductPage() {
                 ) : null}
               </div>
               {images.length > 1 && (
-                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                <div className="hidden grid-cols-4 gap-3 md:grid">
                   {safeImages.map((image, index) => (
                     <button key={`${image}-${index}`} type="button" onClick={() => setSelectedImage(index)} className={`overflow-hidden rounded-xl border ${index === selectedImage ? "border-brand-green-dark" : "border-slate-100"}`}>
-                      <img src={image} alt="Thumbnail" width={320} height={80} className="h-20 w-full bg-white object-contain p-1" loading="lazy" decoding="async" />
+                      <img src={image} alt={`Show photo ${index + 1}`} width={320} height={80} className="h-20 w-full bg-white object-contain p-1" loading="lazy" decoding="async" />
                     </button>
                   ))}
                 </div>
@@ -341,7 +408,9 @@ export default function CatalogueProductPage() {
           {product.description ? (
             <section className="space-y-2">
               <h2 className="text-xl font-semibold text-slate-900">About this product</h2>
-              <p className="whitespace-pre-line text-slate-600">{product.description}</p>
+              <div className="max-w-3xl space-y-3 leading-relaxed text-slate-600">
+                {descriptionParagraphs(product.description).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+              </div>
             </section>
           ) : null}
 

@@ -107,7 +107,7 @@ export default function SiteHeader({ actions, children, variant = "solid" }: Sit
             </SheetContent>
           </Sheet>
           <Link to="/" className="flex shrink-0 items-center" aria-label="TwoPaws home">
-            <img src={LOGO_SRC} alt="TwoPaws" width={900} height={172} className="h-8 w-auto sm:h-9" />
+            <img src={LOGO_SRC} alt="TwoPaws" width={900} height={172} className={`${actions ? "h-6" : "h-8"} w-auto sm:h-9`} />
           </Link>
         </div>
         <nav className="hidden items-center justify-start gap-8 pl-6 text-[15px] md:flex">

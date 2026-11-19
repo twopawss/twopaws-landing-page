@@ -428,12 +428,13 @@ export default function CatalogueShopPage() {
       ) : null}
       {!landing && !landingMissing ? <h1 className="sr-only">Shop pet food and supplies in Egypt</h1> : null}
       <div className={`grid min-w-0 gap-6 lg:grid-cols-[280px_1fr] ${landingMissing ? "hidden" : ""}`}>
-        <aside ref={filtersPanelRef} className="min-w-0 scroll-mt-40 rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-          <div className="flex items-center justify-between lg:hidden">
+        {/* On phones the filters stay out of the way until opened from the toolbar or the search bar. */}
+        <aside ref={filtersPanelRef} className={`${filtersOpen ? "block" : "hidden"} min-w-0 scroll-mt-40 rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto`}>
+          <div className="mb-3 flex items-center justify-between lg:hidden">
             <p className="text-sm font-semibold text-slate-800">Filters</p>
-            <Button variant="outline" className="border-slate-200" onClick={() => setFiltersOpen((prev) => !prev)}>{filtersOpen ? "Hide" : "Show"}</Button>
+            <Button variant="outline" className="h-9 border-slate-200" onClick={() => setFiltersOpen(false)}>Done</Button>
           </div>
-          <div className={`${filtersOpen ? "block" : "hidden"} lg:block`}>
+          <div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-500">{activeFilterCount > 0 ? `${activeFilterCount} active filters` : "No active filters"}</span>
               {activeFilterCount > 0 && <button type="button" onClick={clearFilters} className="font-semibold text-brand-green-dark hover:underline">Clear all</button>}
@@ -512,30 +513,55 @@ export default function CatalogueShopPage() {
         </aside>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <header className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 text-slate-800">
+          <header className="flex flex-col gap-2 text-slate-800 lg:rounded-lg lg:border lg:border-slate-200 lg:bg-white lg:p-3">
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="font-semibold">
-                {isSearching ? `Results for "${submittedSearch}" (${total ?? "…"})` : `Total items: ${total ?? "…"}`}
+              <Button
+                variant="outline"
+                className="h-9 border-slate-200 lg:hidden"
+                aria-expanded={filtersOpen}
+                onClick={() => {
+                  const opening = !filtersOpen;
+                  setFiltersOpen(opening);
+                  if (opening) window.setTimeout(() => filtersPanelRef.current?.scrollIntoView({ behavior: "auto", block: "start" }), 0);
+                }}
+              >
+                <SlidersHorizontal className="mr-1.5 h-4 w-4" />
+                Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+              </Button>
+              <span className="text-xs font-semibold sm:text-sm">
+                {isSearching ? `Results for "${submittedSearch}" (${total ?? "…"})` : `${total ?? "…"} products`}
               </span>
-              {loading && <span className="text-xs text-slate-500">Loading products...</span>}
-              <div className="flex items-center gap-2">
+              {loading && <span className="hidden text-xs text-slate-500 sm:inline">Loading products...</span>}
+              <div className="hidden items-center gap-2 lg:flex">
                 <span>Show</span>
                 <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); resetPaging(); }}>
                   <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
                   <SelectContent>{PER_PAGE_OPTIONS.map((option) => <SelectItem key={option} value={String(option)}>{option}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
-                <span>Sort by</span>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="hidden lg:inline">Sort by</span>
                 <Select value={sort} onValueChange={(value) => { setSort(value); resetPaging(); }}>
-                  <SelectTrigger className="h-8 w-full sm:w-40"><SelectValue placeholder="Sort" /></SelectTrigger>
+                  <SelectTrigger className="h-9 w-32 lg:h-8 lg:w-40" aria-label="Sort products"><SelectValue placeholder="Sort" /></SelectTrigger>
                   <SelectContent>{SORT_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
           </header>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="lg:hidden">
+            <SupplierPicker
+              compact
+              suppliers={pickerSuppliers}
+              selectedSupplierId={selectedSupplier}
+              supplierMode={selectedSupplier === "all" ? "all" : "single"}
+              loading={suppliersLoading || !facets}
+              onSelectAll={() => { setSelectedSupplier("all"); resetPaging(); }}
+              onSelectSupplier={(supplierId) => { setSelectedSupplier(supplierId); resetPaging(); }}
+            />
+          </div>
+
+          <section className="hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:block">
             <div>
               <p className="text-sm font-semibold text-slate-800">Available Shops</p>
               <p className="text-xs text-slate-500">Shop across all shops or lock to one shop.</p>
