@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from "react";
-import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
+import { trackMetaCustomEvent } from "@/lib/metaPixel";
+import Seo from "@/lib/seo/Seo";
+import { ANDROID_STORE_URL, IOS_STORE_URL } from "@/lib/seo/constants";
 
-const IOS_STORE_URL =  "https://apps.apple.com/app/twopaws/id6745481497";
-const ANDROID_STORE_URL = "https://play.google.com/store/apps/details?id=com.twopaws.app";
 const WEB_FALLBACK_URL = "https://twopaws.pet/";
 
 function detectPlatform(userAgent: string) {
@@ -20,32 +20,40 @@ function detectPlatform(userAgent: string) {
 }
 
 export default function DownloadRedirect() {
-  const targetUrl = useMemo(() => {
-    if (typeof window === "undefined") return WEB_FALLBACK_URL;
+  const platform = useMemo(() => {
+    if (typeof window === "undefined") return "web";
     const platform = detectPlatform(
       navigator.userAgent || navigator.vendor || (window as any).opera || ""
     );
 
+    return platform;
+  }, []);
+
+  const targetUrl = useMemo(() => {
     if (platform === "ios") return IOS_STORE_URL;
     if (platform === "android") return ANDROID_STORE_URL;
     return WEB_FALLBACK_URL;
-  }, []);
+  }, [platform]);
 
   useEffect(() => {
+    trackMetaCustomEvent("AppDownloadRedirect", {
+      lead_type: "app_download_redirect",
+      platform,
+      destination: targetUrl,
+      source_path: "/download",
+    });
+
     window.location.replace(targetUrl);
-  }, [targetUrl]);
+  }, [platform, targetUrl]);
 
   return (
     <div className="clay-bg min-h-screen flex items-center justify-center px-6 py-12 text-center">
-      <Helmet>
-        <title>Download TwoPaws</title>
-        <meta
-          name="description"
-          content="Get the TwoPaws app on the App Store or Google Play."
-        />
-        <link rel="canonical" href="https://twopaws.pet/download" />
-        <meta name="robots" content="noindex,follow" />
-      </Helmet>
+      <Seo
+        title="Download TwoPaws"
+        description="Get the TwoPaws app on the App Store or Google Play."
+        canonicalUrl="/download/"
+        noIndex
+      />
 
       <div className="max-w-md space-y-6">
         <div className="space-y-2">

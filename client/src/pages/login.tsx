@@ -1,5 +1,10 @@
-﻿import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  FALLBACK_POLICY_HINT,
+  PasswordRequirementList,
+  usePasswordPolicy,
+} from "@/components/account/PasswordRequirements";
 import ShopShell from "@/components/shop/ShopShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +16,38 @@ import { FaApple, FaGoogle } from "react-icons/fa";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import Seo from "@/lib/seo/Seo";
+import { createMetaEventId, trackMetaEvent } from "@/lib/metaPixel";
+
+// Firebase's own messages read like system errors ("Firebase: ... (auth/...)"), so map the common ones.
+function emailAuthErrorMessage(cause: unknown, mode: "signin" | "signup", hasPolicyList: boolean) {
+  const code = (cause as { code?: string }).code;
+  switch (code) {
+    case "auth/password-does-not-meet-requirements":
+    case "auth/weak-password":
+      return hasPolicyList
+        ? "Your password doesn’t meet all the requirements. Check the list under the password field."
+        : `Your password isn’t strong enough. ${FALLBACK_POLICY_HINT}`;
+    case "auth/email-already-in-use":
+      return "An account already exists with this email. Sign in instead, or reset your password if you’ve forgotten it.";
+    case "auth/invalid-email":
+      return "Enter a valid email address.";
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found":
+      return "Incorrect email or password.";
+    case "auth/user-disabled":
+      return "This account has been disabled. Please contact TwoPaws support.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please wait a few minutes and try again.";
+    case "auth/network-request-failed":
+      return "We couldn’t reach the server. Check your internet connection and try again.";
+    default:
+      console.error("Email authentication failed", cause);
+      return mode === "signup"
+        ? "We couldn’t create your account. Please try again."
+        : "We couldn’t sign you in. Please try again.";
+  }
+}
 
 export default function LoginPage() {
   const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
@@ -18,23 +55,40 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const redirectTo = params.get("redirect") || "/shop";
+  const redirectTo = params.get("redirect") || "/shop/";
+  const requestedMode = params.get("mode");
+  const initialMode: "signin" | "signup" =
+    requestedMode === "signup" ? "signup" : "signin";
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneInput, setPhoneInput] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+  // Only new passwords need the policy; signing in with an older, weaker password is still allowed.
+  const { requirements, isValid: meetsPolicy } = usePasswordPolicy(password, mode === "signup");
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
 
   const handleSocialSignIn = async (provider: "google" | "apple") => {
     setLoading(true);
     try {
-      if (provider === "google") {
-        await signInWithGoogle();
-      } else {
-        await signInWithApple();
+      const result = provider === "google"
+        ? await signInWithGoogle()
+        : await signInWithApple();
+      if (result.isNewUser) {
+        trackMetaEvent(
+          "CompleteRegistration",
+          {
+            method: provider,
+            source_path: "/login",
+          },
+          { eventId: createMetaEventId("CompleteRegistration", result.user.uid) }
+        );
       }
       navigate(redirectTo);
     } catch (err) {
@@ -59,6 +113,14 @@ export default function LoginPage() {
         });
         return;
       }
+      if (meetsPolicy === false) {
+        toast({
+          title: "Choose a stronger password",
+          description: "Your password doesn’t meet all the requirements yet. Check the list under the password field.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -75,16 +137,24 @@ export default function LoginPage() {
           return;
         }
         const displayName = `${firstName.trim()} ${lastName.trim()}`.trim();
-        await signUp(email, password, {
+        const newUser = await signUp(email, password, {
           displayName,
           phone: phoneInput,
         });
+        trackMetaEvent(
+          "CompleteRegistration",
+          {
+            method: "email",
+            source_path: "/login",
+          },
+          { eventId: createMetaEventId("CompleteRegistration", newUser.uid) }
+        );
       }
       navigate(redirectTo);
     } catch (err) {
       toast({
-        title: "Authentication failed",
-        description: (err as Error).message,
+        title: mode === "signup" ? "Couldn’t create your account" : "Couldn’t sign you in",
+        description: emailAuthErrorMessage(err, mode, requirements.length > 0),
         variant: "destructive",
       });
     } finally {
@@ -97,7 +167,7 @@ export default function LoginPage() {
       <Seo
         title="Sign In | TwoPaws Shop"
         description="Sign in to access your TwoPaws cart, orders, and saved addresses."
-        canonicalUrl="/login"
+        canonicalUrl="/login/"
         noIndex
       />
       <div className="flex justify-center">
@@ -182,13 +252,26 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Password</Label>
+              <Label htmlFor="login-password">Password</Label>
               <Input
+                id="login-password"
                 type="password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                aria-describedby={mode === "signup" && requirements.length > 0 ? "signup-password-requirements" : undefined}
               />
+              {mode === "signup" && (
+                <PasswordRequirementList id="signup-password-requirements" requirements={requirements} />
+              )}
             </div>
+            {mode === "signin" && (
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-sm font-medium text-brand-green-dark underline-offset-4 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
             <Button
               className="w-full bg-brand-green-dark text-white"
               onClick={handleSubmit}

@@ -1,5 +1,5 @@
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   ChevronDown,
   ChevronLeft,
@@ -8,6 +8,7 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
+import { collection, getCountFromServer } from "firebase/firestore";
 import ShopShell from "@/components/shop/ShopShell";
 import ProductCard from "@/components/shop/ProductCard";
 import { SupplierPicker } from "@/components/shop/SupplierPicker";
@@ -27,7 +28,8 @@ import { useProducts } from "@/hooks/useProducts";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
-import { META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
+import { db } from "@/lib/firebase";
+import { META_PIXEL_CURRENCY, trackMetaCustomEvent, trackMetaEvent } from "@/lib/metaPixel";
 import Seo from "@/lib/seo/Seo";
 import { BASE_URL } from "@/lib/seo/constants";
 import { toPrerenderSafeImageSrc } from "@/lib/prerenderImage";
@@ -55,6 +57,36 @@ const PER_PAGE_OPTIONS = [12, 24, 48];
 const ELLIPSIS = "ellipsis" as const;
 type PageItem = number | typeof ELLIPSIS;
 const PRODUCT_SKELETON_COUNT = 12;
+const SHOP_SCROLL_KEY_PREFIX = "twopaws:shop:scroll:";
+type ShopScrollState = {
+  top: number;
+  anchorProductId?: string;
+  anchorOffset?: number;
+};
+
+const parseShopScrollState = (raw: string | null): ShopScrollState | null => {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as ShopScrollState;
+    if (typeof parsed?.top === "number" && Number.isFinite(parsed.top) && parsed.top >= 0) {
+      return parsed;
+    }
+  } catch {
+    const top = Number(raw);
+    if (Number.isFinite(top) && top >= 0) return { top };
+  }
+  return null;
+};
+
+const getProductCardElement = (productId?: string) => {
+  if (!productId) return null;
+  const nodes = document.querySelectorAll<HTMLElement>("[data-product-card-id]");
+  for (let index = 0; index < nodes.length; index += 1) {
+    const node = nodes[index];
+    if (node.dataset.productCardId === productId) return node;
+  }
+  return null;
+};
 
 const getPageItems = (totalPages: number, currentPage: number): PageItem[] => {
   if (totalPages <= 7) {
@@ -95,6 +127,50 @@ const getPageItems = (totalPages: number, currentPage: number): PageItem[] => {
   return items;
 };
 
+type NavigatorWithConnection = Navigator & {
+  connection?: {
+    effectiveType?: string;
+    saveData?: boolean;
+  };
+  mozConnection?: {
+    effectiveType?: string;
+    saveData?: boolean;
+  };
+  webkitConnection?: {
+    effectiveType?: string;
+    saveData?: boolean;
+  };
+  deviceMemory?: number;
+};
+
+const resolveProductsFetchPageSize = () => {
+  if (typeof window === "undefined") return 80;
+
+  const nav = navigator as NavigatorWithConnection;
+  const connection = nav.connection ?? nav.mozConnection ?? nav.webkitConnection;
+  const effectiveType = String(connection?.effectiveType ?? "").toLowerCase();
+  const saveData = Boolean(connection?.saveData);
+  const deviceMemory =
+    typeof nav.deviceMemory === "number" ? nav.deviceMemory : undefined;
+  const cpuCores =
+    typeof nav.hardwareConcurrency === "number"
+      ? nav.hardwareConcurrency
+      : undefined;
+  const isPhoneViewport = window.innerWidth < 768;
+
+  if (saveData || effectiveType === "slow-2g" || effectiveType === "2g") return 24;
+  if (effectiveType === "3g") return 36;
+  if (
+    isPhoneViewport ||
+    (typeof deviceMemory === "number" && deviceMemory <= 2) ||
+    (typeof cpuCores === "number" && cpuCores <= 4)
+  ) {
+    return 48;
+  }
+
+  return 96;
+};
+
 function ProductCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -113,28 +189,84 @@ function ProductCardSkeleton() {
 }
 
 export default function ShopPage() {
-  const { products, productMap, loading } = useProducts();
-  const { categories } = useProductCategories();
-  const { suppliers, supplierMap, loading: suppliersLoading } = useSuppliers();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [productsFetchPageSize] = useState(() => resolveProductsFetchPageSize());
+  const {
+    products,
+    productMap,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+  } = useProducts({
+    mode: "paginated",
+    pageSize: productsFetchPageSize,
+  });
+  const { categories } = useProductCategories({ realtime: false });
+  const { suppliers, supplierMap, loading: suppliersLoading } = useSuppliers({
+    realtime: false,
+  });
   const { addItem, cartItems } = useCart();
   const { toast } = useToast();
+  const hasRestoredScrollRef = useRef(false);
+  const lastTrackedSearchRef = useRef("");
+  const lastTrackedCategoryRef = useRef("");
+  const [totalProductCount, setTotalProductCount] = useState<number | null>(null);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const deferredSearch = useDeferredValue(search);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedSupplier, setSelectedSupplier] = useState<string>("all");
-  const [supplierMode, setSupplierMode] = useState<"all" | "single">("all");
-  const [sort, setSort] = useState("default");
-  const [showAllCategories, setShowAllCategories] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(true);
-  const [priceOpen, setPriceOpen] = useState(true);
-  const [minPrice, setMinPrice] = useState<string>("");
-  const [maxPrice, setMaxPrice] = useState<string>("");
-  const [perPage, setPerPage] = useState<number>(12);
-  const [page, setPage] = useState<number>(1);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    () => searchParams.get("cat") ?? "all"
+  );
+  const [selectedSupplier, setSelectedSupplier] = useState<string>(
+    () => searchParams.get("supplier") ?? "all"
+  );
+  const [supplierMode, setSupplierMode] = useState<"all" | "single">(() => {
+    const supplier = searchParams.get("supplier");
+    return supplier && supplier !== "all" ? "single" : "all";
+  });
+  const [sort, setSort] = useState(() => searchParams.get("sort") ?? "default");
+  const [showAllCategories, setShowAllCategories] = useState(
+    () => searchParams.get("cats") === "all"
+  );
+  const [categoryOpen, setCategoryOpen] = useState(
+    () => searchParams.get("category") !== "closed"
+  );
+  const [priceOpen, setPriceOpen] = useState(
+    () => searchParams.get("price") !== "closed"
+  );
+  const [minPrice, setMinPrice] = useState<string>(() => searchParams.get("min") ?? "");
+  const [maxPrice, setMaxPrice] = useState<string>(() => searchParams.get("max") ?? "");
+  const [perPage, setPerPage] = useState<number>(() => {
+    const parsed = Number.parseInt(searchParams.get("per") ?? "", 10);
+    return PER_PAGE_OPTIONS.includes(parsed) ? parsed : 12;
+  });
+  const [page, setPage] = useState<number>(() => {
+    const parsed = Number.parseInt(searchParams.get("page") ?? "", 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  });
+  const [filtersOpen, setFiltersOpen] = useState(
+    () => searchParams.get("filters") === "open"
+  );
   const trimmedSearch = search.trim();
   const isSearching = trimmedSearch.length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    getCountFromServer(collection(db, "products"))
+      .then((snapshot) => {
+        if (cancelled) return;
+        setTotalProductCount(snapshot.data().count);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setTotalProductCount(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const sortOptions = useMemo(() => {
     const hasNewest = products.some((product) => product.created_at || product.createdAt);
@@ -225,19 +357,98 @@ export default function ShopPage() {
     deferredSearch,
     selectedCategory,
     selectedSupplier,
+    supplierMode,
     minPrice,
     maxPrice,
     sort,
   ]);
 
+  useEffect(() => {
+    const query = deferredSearch.trim();
+    if (query.length < 2 || loading) {
+      if (!query) lastTrackedSearchRef.current = "";
+      return;
+    }
+
+    const normalizedQuery = query.toLowerCase();
+    const timer = window.setTimeout(() => {
+      if (lastTrackedSearchRef.current === normalizedQuery) return;
+      trackMetaEvent("Search", {
+        search_string: query,
+        content_category: "products",
+        result_count: filteredProducts.length,
+      });
+      lastTrackedSearchRef.current = normalizedQuery;
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, [deferredSearch, filteredProducts.length, loading]);
+
+  useEffect(() => {
+    if (selectedCategory === "all") {
+      lastTrackedCategoryRef.current = "";
+      return;
+    }
+    if (lastTrackedCategoryRef.current === selectedCategory) return;
+
+    const category = categories.find((item) => item.id === selectedCategory);
+    if (!category) return;
+    trackMetaCustomEvent("ViewCategory", {
+      category_id: category.id,
+      content_category: category.name ?? category.id,
+    });
+    lastTrackedCategoryRef.current = selectedCategory;
+  }, [categories, selectedCategory]);
+
+  const hasPriceFilter = minPrice.trim() !== "" || maxPrice.trim() !== "";
+  const hasNarrowingQuery =
+    isSearching ||
+    selectedCategory !== "all" ||
+    (supplierMode === "single" && selectedSupplier !== "all") ||
+    hasPriceFilter;
+
   const totalItems = filteredProducts.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
-  const currentPage = Math.min(page, totalPages);
+  const knownTotalItems = hasNarrowingQuery
+    ? hasMore
+      ? null
+      : totalItems
+    : totalProductCount ?? (hasMore ? null : totalItems);
+  const totalPagesFromLoaded = Math.max(1, Math.ceil(totalItems / perPage));
+  const totalPages =
+    knownTotalItems !== null
+      ? Math.max(1, Math.ceil(knownTotalItems / perPage))
+      : totalPagesFromLoaded;
+  const currentPage = loading
+    ? Math.max(1, page)
+    : knownTotalItems !== null
+      ? Math.min(Math.max(1, page), totalPages)
+      : hasMore
+        ? Math.max(1, page)
+        : Math.min(Math.max(1, page), totalPagesFromLoaded);
   const pageStart = (currentPage - 1) * perPage;
   const pageEnd = pageStart + perPage;
   const visibleProducts = filteredProducts.slice(pageStart, pageEnd);
-  const showingFrom = totalItems === 0 ? 0 : pageStart + 1;
-  const showingTo = Math.min(pageEnd, totalItems);
+  const awaitingPageData =
+    !loading &&
+    visibleProducts.length === 0 &&
+    hasMore &&
+    filteredProducts.length < pageEnd;
+  const showingFrom = visibleProducts.length === 0 ? 0 : pageStart + 1;
+  const showingTo = visibleProducts.length === 0 ? 0 : pageStart + visibleProducts.length;
+  const totalItemsLabel =
+    knownTotalItems !== null ? String(knownTotalItems) : String(totalItems);
+  const isTotalCountPending = knownTotalItems === null && hasMore;
+  const canGoNext =
+    knownTotalItems !== null ? currentPage < totalPages : hasMore || pageEnd < totalItems;
+  const paginationTotalPages =
+    knownTotalItems !== null
+      ? totalPages
+      : Math.max(totalPagesFromLoaded, currentPage + (hasMore ? 1 : 0));
+  const paginationItems = useMemo(
+    () => getPageItems(paginationTotalPages, currentPage),
+    [paginationTotalPages, currentPage]
+  );
+  const isLowBandwidthMode = productsFetchPageSize <= 36;
 
   const visibleCategories = useMemo(
     () => (showAllCategories ? categories : categories.slice(0, 8)),
@@ -256,7 +467,6 @@ export default function ShopPage() {
     }, {});
   }, [cartItems]);
 
-  const hasPriceFilter = minPrice.trim() !== "" || maxPrice.trim() !== "";
   const activeSuppliers = useMemo(
     () => suppliers.filter((supplier) => supplier.isActive !== false),
     [suppliers]
@@ -288,11 +498,11 @@ export default function ShopPage() {
         "@context": "https://schema.org",
         "@type": "ItemList",
         name: "TwoPaws Shop products",
-        numberOfItems: totalItems,
+        ...(knownTotalItems !== null ? { numberOfItems: knownTotalItems } : {}),
         itemListElement: listItems,
       },
     ];
-  }, [filteredProducts, totalItems]);
+  }, [filteredProducts, knownTotalItems]);
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (selectedCategory !== "all") count += 1;
@@ -337,6 +547,10 @@ export default function ShopPage() {
     setPage(1);
   }, []);
 
+  const handlePageChange = useCallback((targetPage: number) => {
+    setPage(Math.max(1, targetPage));
+  }, []);
+
   const headerSearch = (
     <div className="mx-auto flex w-full max-w-[980px] items-center gap-2">
       <div className="relative flex-1">
@@ -370,6 +584,158 @@ export default function ShopPage() {
       )}
     </div>
   );
+
+  useEffect(() => {
+    if (loading) return;
+    if (page === currentPage) return;
+    setPage(currentPage);
+  }, [loading, page, currentPage]);
+
+  useEffect(() => {
+    if (loading || loadingMore) return;
+    if (!hasMore) return;
+    if (filteredProducts.length >= pageEnd) return;
+    void loadMore();
+  }, [loading, loadingMore, hasMore, filteredProducts.length, pageEnd, loadMore]);
+
+  useEffect(() => {
+    const hasSortOption = sortOptions.some((option) => option.value === sort);
+    if (hasSortOption) return;
+    setSort("default");
+  }, [sort, sortOptions]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    const q = search.trim();
+    const min = minPrice.trim();
+    const max = maxPrice.trim();
+    if (q) params.set("q", q);
+    if (selectedCategory !== "all") params.set("cat", selectedCategory);
+    if (supplierMode === "single" && selectedSupplier !== "all") {
+      params.set("supplier", selectedSupplier);
+      params.set("mode", "single");
+    }
+    if (sort !== "default") params.set("sort", sort);
+    if (min) params.set("min", min);
+    if (max) params.set("max", max);
+    if (perPage !== 12) params.set("per", String(perPage));
+    if (currentPage > 1) params.set("page", String(currentPage));
+    if (showAllCategories) params.set("cats", "all");
+    if (!categoryOpen) params.set("category", "closed");
+    if (!priceOpen) params.set("price", "closed");
+    if (filtersOpen) params.set("filters", "open");
+
+    const nextQuery = params.toString();
+    const currentQuery = location.search.startsWith("?")
+      ? location.search.slice(1)
+      : location.search;
+    if (nextQuery === currentQuery) return;
+    setSearchParams(params, { replace: true });
+  }, [
+    search,
+    selectedCategory,
+    selectedSupplier,
+    supplierMode,
+    sort,
+    minPrice,
+    maxPrice,
+    perPage,
+    currentPage,
+    showAllCategories,
+    categoryOpen,
+    priceOpen,
+    filtersOpen,
+    location.search,
+    setSearchParams,
+  ]);
+
+  const scrollStateKey = `${SHOP_SCROLL_KEY_PREFIX}${location.key}`;
+  const saveScrollState = useCallback(
+    (top: number, anchorProductId?: string, anchorOffset?: number) => {
+      const existing = parseShopScrollState(window.sessionStorage.getItem(scrollStateKey));
+      const nextState: ShopScrollState = {
+        top: Number.isFinite(top) && top >= 0 ? top : 0,
+      };
+      if (anchorProductId) nextState.anchorProductId = anchorProductId;
+      else if (existing?.anchorProductId) nextState.anchorProductId = existing.anchorProductId;
+
+      if (typeof anchorOffset === "number" && Number.isFinite(anchorOffset)) {
+        nextState.anchorOffset = anchorOffset;
+      } else if (typeof existing?.anchorOffset === "number") {
+        nextState.anchorOffset = existing.anchorOffset;
+      }
+
+      window.sessionStorage.setItem(scrollStateKey, JSON.stringify(nextState));
+    },
+    [scrollStateKey]
+  );
+
+  const handleProductNavigate = useCallback(
+    (productId: string) => {
+      const anchorElement = getProductCardElement(productId);
+      let anchorOffset: number | undefined;
+      if (anchorElement) {
+        const anchorTop = anchorElement.getBoundingClientRect().top + window.scrollY;
+        anchorOffset = window.scrollY - anchorTop;
+      }
+      saveScrollState(window.scrollY, productId, anchorOffset);
+    },
+    [saveScrollState]
+  );
+
+  useEffect(() => {
+    hasRestoredScrollRef.current = false;
+  }, [scrollStateKey]);
+
+  useEffect(() => {
+    if (hasRestoredScrollRef.current || loading) return;
+    hasRestoredScrollRef.current = true;
+
+    const state = parseShopScrollState(window.sessionStorage.getItem(scrollStateKey));
+    if (!state) return;
+
+    let attempts = 0;
+    const maxAttempts = 24;
+    const restore = () => {
+      let targetTop = state.top;
+      const anchorElement = getProductCardElement(state.anchorProductId);
+      if (anchorElement) {
+        const anchorTop = anchorElement.getBoundingClientRect().top + window.scrollY;
+        targetTop = anchorTop + (state.anchorOffset ?? 0);
+      }
+
+      window.scrollTo({ top: targetTop, behavior: "auto" });
+      attempts += 1;
+      const isCloseEnough = Math.abs(window.scrollY - targetTop) <= 2;
+      if (isCloseEnough || attempts >= maxAttempts) return;
+      window.requestAnimationFrame(restore);
+    };
+
+    window.requestAnimationFrame(restore);
+  }, [loading, scrollStateKey]);
+
+  useEffect(() => {
+    let ticking = false;
+    const persistScroll = () => {
+      saveScrollState(window.scrollY);
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        persistScroll();
+        ticking = false;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pagehide", persistScroll);
+    return () => {
+      persistScroll();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pagehide", persistScroll);
+    };
+  }, [saveScrollState]);
 
   return (
     <ShopShell headerContent={headerSearch}>
@@ -537,11 +903,20 @@ export default function ShopPage() {
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="font-semibold">
                 {isSearching
-                  ? `Results for "${trimmedSearch}" (${totalItems})`
-                  : `Total items: ${totalItems}`}
+                  ? `Results for "${trimmedSearch}" (${totalItemsLabel})`
+                  : `Total items: ${totalItemsLabel}`}
               </span>
               {search !== deferredSearch && (
                 <span className="text-xs text-slate-500">Updating results...</span>
+              )}
+              {search === deferredSearch && loadingMore && (
+                <span className="text-xs text-slate-500">Loading more products...</span>
+              )}
+              {search === deferredSearch && isTotalCountPending && (
+                <span className="text-xs text-slate-500">Counting products...</span>
+              )}
+              {isLowBandwidthMode && (
+                <span className="text-xs text-slate-500">Data saver mode enabled.</span>
               )}
               <div className="flex items-center gap-2">
                 <span>Show</span>
@@ -622,11 +997,11 @@ export default function ShopPage() {
           </section>
 
           <section className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {loading &&
+            {(loading || awaitingPageData) &&
               Array.from({ length: PRODUCT_SKELETON_COUNT }).map((_, index) => (
                 <ProductCardSkeleton key={`product-skeleton-${index}`} />
               ))}
-            {!loading && visibleProducts.length === 0 && (
+            {!loading && !awaitingPageData && visibleProducts.length === 0 && (
               <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
                 <p className="text-sm font-semibold text-slate-700">
                   {isSearching ? "No products match your search." : "No products found."}
@@ -665,6 +1040,7 @@ export default function ShopPage() {
                     supplierName={product.supplierRef?.id ? supplierMap[product.supplierRef.id]?.name : undefined}
                     cartQuantity={cartQuantityByProductId[product.id] ?? 0}
                     onAdd={handleAdd}
+                    onNavigate={handleProductNavigate}
                   />
                 );
               })}
@@ -675,13 +1051,15 @@ export default function ShopPage() {
               <button
                 type="button"
                 className="rounded-md border border-slate-200 px-3 py-1 disabled:opacity-50"
-                disabled={loading || currentPage === 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={loading || awaitingPageData || currentPage === 1}
+                onClick={() => {
+                  void handlePageChange(currentPage - 1);
+                }}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <div className="flex items-center gap-1">
-                {getPageItems(totalPages, currentPage).map((item, index) => {
+                {paginationItems.map((item, index) => {
                   if (item === ELLIPSIS) {
                     return (
                       <span
@@ -696,7 +1074,9 @@ export default function ShopPage() {
                     <button
                       key={item}
                       type="button"
-                      onClick={() => setPage(item)}
+                      onClick={() => {
+                        void handlePageChange(item);
+                      }}
                       aria-current={currentPage === item ? "page" : undefined}
                       className={`h-8 w-8 rounded-md border text-sm ${
                         currentPage === item
@@ -712,14 +1092,18 @@ export default function ShopPage() {
               <button
                 type="button"
                 className="rounded-md border border-slate-200 px-3 py-1 disabled:opacity-50"
-                disabled={loading || currentPage >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={loading || loadingMore || !canGoNext}
+                onClick={() => {
+                  void handlePageChange(currentPage + 1);
+                }}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
             <div className="text-xs text-slate-500">
-              Showing {showingFrom}-{showingTo} of {totalItems}
+              {knownTotalItems !== null
+                ? `Showing ${showingFrom}-${showingTo} of ${knownTotalItems}`
+                : `Showing ${showingFrom}-${showingTo} (count updating...)`}
             </div>
           </footer>
         </div>

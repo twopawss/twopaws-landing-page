@@ -18,7 +18,19 @@ import Reveal from "@/components/motion/Reveal";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
 import { isReactSnapPrerender } from "@/lib/isPrerender";
-import { ANDROID_STORE_URL, BASE_URL, INSTAGRAM_URL, IOS_STORE_URL } from "@/lib/seo/constants";
+import {
+  ANDROID_STORE_URL,
+  BASE_URL,
+  COMPANY_ADDRESS,
+  COMPANY_LEGAL_NAME,
+  CONTACT_EMAIL,
+  CONTACT_PHONE,
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
+  IOS_STORE_URL,
+  LINKEDIN_URL,
+  TIKTOK_URL,
+} from "@/lib/seo/constants";
 
 const display = { fontFamily: '"Outfit", "Inter", system-ui, sans-serif' };
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -417,28 +429,74 @@ const featureIndex = [
 ];
 
 const faqs = [
-  { question: "Is TwoPaws free to use?", answer: "Yes! TwoPaws is completely free to download and use." },
+  {
+    question: "Is TwoPaws free to use?",
+    answer:
+      "Yes. The TwoPaws app is free to download and use on iOS and Android. You only pay for what you order from the shop or book with a vet or pet hotel.",
+  },
   {
     question: "Which cities in Egypt do you cover?",
-    answer: "We currently cover Cairo with plans to expand to more governorates soon.",
+    answer:
+      "The shop delivers across Cairo and Giza, most orders the same day, with the North Coast served in season through the app. Vet booking and pet hotels cover Greater Cairo, and we are adding governorates as partners join.",
+  },
+  {
+    question: "What can I buy in the TwoPaws shop?",
+    answer:
+      "Over 2,000 products from verified Egyptian suppliers: dry and wet food for cats and dogs, litter, treats, toys, collars and leashes, beds, flea and tick care, vitamins and grooming, all at supplier prices with delivery fees shown before you pay.",
+  },
+  {
+    question: "How do I book a vet?",
+    answer:
+      "Open the Vets tab in the app, pick a clinic or a home-visit vet near you, choose a time and confirm. You get reminders, and the visit notes land in your pet's health record.",
   },
   {
     question: "Can I track multiple pets?",
     answer:
-      "Absolutely! You can add unlimited pets to your account. Each pet gets their own profile with separate health records, vaccination schedules, and vet history. Perfect for multi-pet families!",
+      "Yes. Add as many pets as you like. Each one gets its own profile with health records, vaccination schedule, heat cycle tracking and vet history.",
+  },
+  {
+    question: "How do I pay and can I return items?",
+    answer:
+      "Pay cash on delivery or by card and mobile wallet through Paymob. Unopened items can be returned within 7 days, and damaged or wrong items are replaced or refunded in full.",
   },
 ];
 
 const shell = "mx-auto w-full max-w-[1500px] px-6 sm:px-12 lg:px-20";
 
 /** The TwoPaws home page. */
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: { "@type": "Answer", text: faq.answer },
+  })),
+};
+
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${BASE_URL}/#organization`,
   name: "TwoPaws",
+  legalName: COMPANY_LEGAL_NAME,
   url: BASE_URL,
+  logo: `${BASE_URL}/logotrans.png`,
+  email: CONTACT_EMAIL,
+  ...(CONTACT_PHONE ? { telephone: CONTACT_PHONE } : {}),
+  address: { "@type": "PostalAddress", ...COMPANY_ADDRESS },
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      email: CONTACT_EMAIL,
+      ...(CONTACT_PHONE ? { telephone: CONTACT_PHONE } : {}),
+      areaServed: "EG",
+      availableLanguage: ["en", "ar"],
+    },
+  ],
   areaServed: "Egypt",
-  sameAs: [INSTAGRAM_URL, IOS_STORE_URL, ANDROID_STORE_URL],
+  sameAs: [INSTAGRAM_URL, FACEBOOK_URL, TIKTOK_URL, LINKEDIN_URL, IOS_STORE_URL, ANDROID_STORE_URL],
 };
 
 const mobileApplicationSchema = {
@@ -447,18 +505,19 @@ const mobileApplicationSchema = {
   name: "TwoPaws",
   operatingSystem: ["iOS", "Android"],
   applicationCategory: "Lifestyle",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  offers: { "@type": "Offer", price: "0", priceCurrency: "EGP" },
   downloadUrl: [IOS_STORE_URL, ANDROID_STORE_URL],
+  publisher: { "@id": `${BASE_URL}/#organization` },
 };
 
 export default function Home() {
   return (
     <div className="clay-bg text-[#3d1f3a]">
       <Seo
-        title="TwoPaws | Pet care app in Egypt"
+        title="TwoPaws | Pet supplies, vets and pet care app in Egypt"
         description="TwoPaws connects pet families in Egypt with vets, clinics, a supplies marketplace, community features, and delivery."
         canonicalUrl="/"
-        structuredData={[organizationSchema, mobileApplicationSchema]}
+        structuredData={[organizationSchema, mobileApplicationSchema, faqSchema]}
       />
 
       {/* PINNED PHONE STORY */}

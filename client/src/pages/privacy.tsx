@@ -1,6 +1,6 @@
 import SiteFooter from "@/components/layout/SiteFooter";
-import SiteHeader from "@/components/layout/SiteHeader";
 import { Card, CardContent } from "@/components/ui/card";
+import SiteHeader from "@/components/layout/SiteHeader";
 import facebook from "../../../attached_assets/facebook.svg";
 import tiktok from "../../../attached_assets/tiktok.svg";
 import Seo from "@/lib/seo/Seo";
@@ -13,11 +13,11 @@ export default function Privacy() {
       <Seo
         title="Privacy Policy | TwoPaws"
         description="Privacy policy for TwoPaws, the pet care app for Egypt with vets, clinics, community features, and delivery."
-        canonicalUrl="/privacy"
+        canonicalUrl="/privacy/"
       />
-            <SiteHeader />
+      <SiteHeader />
 
-      <main className="flex-grow bg-gray-50 pb-16 pt-24 px-4">
+      <main className="flex-grow px-4 pb-16 pt-10">
         <div className="w-full max-w-4xl mx-auto space-y-8">
           <MarketingIntro />
           <Card className="w-full">
@@ -92,7 +92,7 @@ export default function Privacy() {
               <p>We may update this Policy; well change the Last updated date above and, where required, provide in-app or email notice. If changes materially affect your rights, we will seek consent where required.</p>
 
               <h2 className="text-2xl font-bold mt-6">13) Contact</h2>
-              <p>TwoPaws Digital Solutions LLC - Privacy<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>
+              <p>TwoPaws Digital Solutions LLC - Privacy<br />Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>
             </CardContent>
           </Card>
         </div>

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { httpsCallable } from "firebase/functions";
 import ShopShell from "@/components/shop/ShopShell";
@@ -238,7 +238,7 @@ export default function CartPage() {
       <Seo
         title="Cart | TwoPaws Shop"
         description="Review and update items in your TwoPaws shopping cart."
-        canonicalUrl="/cart"
+        canonicalUrl="/cart/"
         noIndex
       />
       <header className="space-y-2">
@@ -251,17 +251,18 @@ export default function CartPage() {
 
       {!user && (
         <Card className="border-slate-100">
-          <CardContent className="p-6">
-            <p className="text-slate-600">Sign in to view your cart.</p>
-            <Button asChild className="mt-4 bg-brand-green-dark text-white">
-              <Link to="/login">Sign in</Link>
+          <CardContent className="space-y-3 p-6">
+            <p className="text-slate-600">
+              You are shopping as guest. Sign in to sync your cart across devices.
+            </p>
+            <Button asChild variant="outline" className="border-slate-200">
+              <Link to="/login?redirect=/cart">Sign in</Link>
             </Button>
           </CardContent>
         </Card>
       )}
 
-      {user && (
-        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <div className="space-y-4">
             {cartEmpty && (
               <Card className="border-slate-100">
@@ -288,7 +289,7 @@ export default function CartPage() {
                 <Card key={item.id} className="border-slate-100">
                   <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
                     <Link
-                      to={`/shop/product/${product.id}`}
+                      to={`/shop/product/${product.id}/`}
                       className="flex h-20 w-20 items-center justify-center"
                     >
                       {photo ? (
@@ -301,7 +302,7 @@ export default function CartPage() {
                     </Link>
                     <div className="flex-1">
                       <Link
-                        to={`/shop/product/${product.id}`}
+                        to={`/shop/product/${product.id}/`}
                         className="text-lg font-semibold text-slate-900 hover:text-brand-green-dark"
                       >
                         {product.name}
@@ -420,7 +421,6 @@ export default function CartPage() {
             </Button>
           </div>
         </div>
-      )}
     </ShopShell>
   );
 }

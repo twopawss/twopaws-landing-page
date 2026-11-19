@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   collection,
@@ -59,6 +59,14 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     if (!order?.shippingAddress) {
+      const embeddedAddress =
+        (order as Record<string, unknown> | null)?.shippingAddressData as
+          | Record<string, unknown>
+          | undefined;
+      setAddress(embeddedAddress ?? null);
+      return;
+    }
+    if (typeof order.shippingAddress !== "object") {
       setAddress(null);
       return;
     }
@@ -140,7 +148,7 @@ export default function OrderDetailPage() {
         <Seo
           title="Order Details | TwoPaws Shop"
           description="Review your TwoPaws order details."
-          canonicalUrl={orderId ? `/orders/${orderId}` : "/orders"}
+          canonicalUrl={orderId ? `/orders/${orderId}/` : "/orders/"}
           noIndex
         />
         <Card className="border-slate-100">
@@ -155,7 +163,7 @@ export default function OrderDetailPage() {
       <Seo
         title="Order Details | TwoPaws Shop"
         description="Review your TwoPaws order details."
-        canonicalUrl={orderId ? `/orders/${orderId}` : "/orders"}
+        canonicalUrl={orderId ? `/orders/${orderId}/` : "/orders/"}
         noIndex
       />
       {loading && <p className="text-sm text-slate-500">Loading order...</p>}
@@ -183,7 +191,7 @@ export default function OrderDetailPage() {
                     <div>
                       {item.productId ? (
                         <Link
-                          to={`/shop/product/${item.productId}`}
+                          to={`/shop/product/${item.productId}/`}
                           className="text-sm font-semibold text-slate-900 hover:text-brand-green-dark hover:underline"
                         >
                           {item.product?.name ?? "View product"}

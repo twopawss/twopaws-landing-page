@@ -1,24 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Linkedin,
   Map as FoldedMap,
   MapPin,
-  Menu,
   Search,
-  X,
 } from "lucide-react";
 import insta from "../../../attached_assets/instagram.svg";
 import facebook from "../../../attached_assets/facebook.svg";
 import tiktok from "../../../attached_assets/tiktok.svg";
+import SiteHeader from "@/components/layout/SiteHeader";
 import twoPawsLogo from "../../../attached_assets/logotrans-brand-800.webp";
 import aiVetIcon from "@assets/aivet-320.webp";
 import vetsIcon from "@assets/vets-320.webp";
@@ -39,13 +29,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Seo from "@/lib/seo/Seo";
-import { isReactSnapPrerender } from "@/lib/isPrerender";
-import {
-  ANDROID_STORE_URL,
-  BASE_URL,
-  INSTAGRAM_URL,
-  IOS_STORE_URL,
-} from "@/lib/seo/constants";
+import { ANDROID_STORE_URL, BASE_URL, COMPANY_ADDRESS, COMPANY_LEGAL_NAME, CONTACT_EMAIL, CONTACT_PHONE, FACEBOOK_URL, INSTAGRAM_URL, IOS_STORE_URL, LINKEDIN_URL, TIKTOK_URL } from "@/lib/seo/constants";
 
 type OfferItem = {
   iconSrc?: string;
@@ -68,19 +52,9 @@ const offerRowTwo: OfferItem[] = [
   { iconSrc: periodTrackerIcon, label: "PERIOD TRACKER" },
 ];
 
-function OfferCell({
-  item,
-  reducedMotion = false,
-}: {
-  item: OfferItem;
-  reducedMotion?: boolean;
-}) {
+function OfferCell({ item }: { item: OfferItem }) {
   return (
-    <motion.div
-      className="group flex min-w-[148px] flex-col items-center justify-start gap-2 text-center sm:min-w-[196px] lg:min-w-[228px]"
-      whileHover={reducedMotion ? undefined : { y: -10, rotate: -1.5 }}
-      transition={{ type: "spring", stiffness: 320, damping: 20 }}
-    >
+    <div className="flex flex-col items-center justify-start gap-2 text-center">
       {item.iconSrc ? (
         <img
           src={item.iconSrc}
@@ -89,7 +63,7 @@ function OfferCell({
           height={320}
           loading="lazy"
           decoding="async"
-          className="h-20 w-20 object-contain transition-transform duration-500 group-hover:scale-110 sm:h-28 sm:w-28 lg:h-32 lg:w-32"
+          className="h-20 w-20 object-contain sm:h-28 sm:w-28 lg:h-32 lg:w-32"
         />
       ) : (
         <div className="flex h-20 w-20 items-center justify-center text-brand-purple sm:h-28 sm:w-28 lg:h-32 lg:w-32">
@@ -120,153 +94,63 @@ function OfferCell({
           {item.label}
         </p>
       ) : null}
-    </motion.div>
-  );
-}
-
-const reveal = {
-  hidden: { opacity: 0, y: 34 },
-  visible: { opacity: 1, y: 0 },
-};
-
-const revealTransition = {
-  duration: 0.75,
-  ease: [0.22, 1, 0.36, 1] as const,
-};
-
-function OpeningScreen({ reducedMotion }: { reducedMotion: boolean }) {
-  const [isVisible, setIsVisible] = useState(() => !isReactSnapPrerender());
-
-  useEffect(() => {
-    if (!isVisible) return;
-
-    const previousOverflow = document.body.style.overflow;
-    const finishIntro = () => setIsVisible(false);
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") finishIntro();
-    };
-    const timer = window.setTimeout(finishIntro, reducedMotion ? 350 : 2300);
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isVisible, reducedMotion]);
-
-  return (
-    <AnimatePresence>
-      {isVisible ? (
-        <motion.div
-          className="fixed inset-0 z-[100] flex min-h-[100dvh] items-center justify-center overflow-hidden bg-white"
-          initial={reducedMotion ? { opacity: 1 } : { y: 0 }}
-          exit={reducedMotion ? { opacity: 0 } : { y: "-100%" }}
-          transition={{
-            duration: reducedMotion ? 0.15 : 0.85,
-            ease: [0.76, 0, 0.24, 1],
-          }}
-          aria-label="TwoPaws introduction"
-          role="dialog"
-          aria-modal="true"
-        >
-          <motion.div
-            className="absolute inset-x-0 top-0 h-1 bg-brand-yellow"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{
-              duration: reducedMotion ? 0.2 : 2.05,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            style={{ transformOrigin: "left" }}
-          />
-
-          <div className="relative flex items-center justify-center">
-            <motion.div
-              className="absolute h-64 w-64 rounded-full border border-brand-yellow/50 sm:h-80 sm:w-80"
-              initial={reducedMotion ? false : { opacity: 0, scale: 0.65 }}
-              animate={{ opacity: [0, 0.65, 0], scale: [0.65, 1, 1.18] }}
-              transition={{
-                duration: reducedMotion ? 0.2 : 1.8,
-                times: [0, 0.45, 1],
-                ease: "easeOut",
-              }}
-            />
-            <motion.img
-              src={twoPawsLogo}
-              alt="TwoPaws"
-              width={800}
-              height={556}
-              decoding="async"
-              className="relative z-10 w-44 sm:w-56 lg:w-64"
-              initial={reducedMotion ? false : { opacity: 0, scale: 0.86, y: 14 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{
-                duration: reducedMotion ? 0.15 : 0.8,
-                delay: reducedMotion ? 0 : 0.18,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            />
-          </div>
-
-          <motion.div
-            className="absolute bottom-6 left-6 h-3 w-3 rounded-full bg-brand-yellow sm:bottom-8 sm:left-8"
-            animate={reducedMotion ? undefined : { scale: [1, 1.8, 1], opacity: [1, 0.45, 1] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-            aria-hidden="true"
-          />
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+    </div>
   );
 }
 
 export default function Landing() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const heroRef = useRef<HTMLElement>(null);
-  const reducedMotion = useReducedMotion() ?? false;
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-  const smoothPointerX = useSpring(pointerX, { stiffness: 90, damping: 22 });
-  const smoothPointerY = useSpring(pointerY, { stiffness: 90, damping: 22 });
-  const dogX = useTransform(smoothPointerX, [-0.5, 0.5], [-12, 12]);
-  const dogY = useTransform(smoothPointerY, [-0.5, 0.5], [-8, 8]);
-  const catX = useTransform(smoothPointerX, [-0.5, 0.5], [14, -14]);
-  const catY = useTransform(smoothPointerY, [-0.5, 0.5], [10, -10]);
-  const illustrationX = useTransform(smoothPointerX, [-0.5, 0.5], [-20, 20]);
-  const { scrollYProgress: heroScrollProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const headlineScrollY = useTransform(heroScrollProgress, [0, 1], [0, 68]);
-  const heroMediaScale = useTransform(heroScrollProgress, [0, 1], [1, 1.035]);
 
   const faqs = [
     {
       question: "Is TwoPaws free to use?",
-      answer: "Yes! TwoPaws is completely free to download and use.",
+      answer: "Yes. The TwoPaws app is free to download and use on iOS and Android. You only pay for what you order from the shop or book with a vet or pet hotel.",
     },
     {
       question: "Which cities in Egypt do you cover?",
-      answer:
-        "We currently cover Cairo with plans to expand to more governorates soon.",
+      answer: "The shop delivers across Cairo and Giza, most orders the same day, with the North Coast served in season through the app. Vet booking and pet hotels cover Greater Cairo, and we are adding governorates as partners join.",
+    },
+    {
+      question: "What can I buy in the TwoPaws shop?",
+      answer: "Over 2,000 products from verified Egyptian suppliers: dry and wet food for cats and dogs, litter, treats, toys, collars and leashes, beds, flea and tick care, vitamins and grooming, all at supplier prices with delivery fees shown before you pay.",
+    },
+    {
+      question: "How do I book a vet?",
+      answer: "Open the Vets tab in the app, pick a clinic or a home-visit vet near you, choose a time and confirm. You get reminders, and the visit notes land in your pet's health record.",
     },
     {
       question: "Can I track multiple pets?",
-      answer:
-        "Absolutely! You can add unlimited pets to your account. Each pet gets their own profile with separate health records, vaccination schedules, and vet history. Perfect for multi-pet families!",
+      answer: "Yes. Add as many pets as you like. Each one gets its own profile with health records, vaccination schedule, heat cycle tracking and vet history.",
+    },
+    {
+      question: "How do I pay and can I return items?",
+      answer: "Pay cash on delivery or by card and mobile wallet through Paymob. Unopened items can be returned within 7 days, and damaged or wrong items are replaced or refunded in full.",
     },
   ];
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
 
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${BASE_URL}/#organization`,
     name: "TwoPaws",
+    legalName: COMPANY_LEGAL_NAME,
     url: BASE_URL,
+    logo: `${BASE_URL}/logotrans.png`,
+    email: CONTACT_EMAIL,
+    ...(CONTACT_PHONE ? { telephone: CONTACT_PHONE } : {}),
+    address: { "@type": "PostalAddress", ...COMPANY_ADDRESS },
+    contactPoint: [{ "@type": "ContactPoint", contactType: "customer service", email: CONTACT_EMAIL, ...(CONTACT_PHONE ? { telephone: CONTACT_PHONE } : {}), areaServed: "EG", availableLanguage: ["en", "ar"] }],
     areaServed: "Egypt",
-    sameAs: [INSTAGRAM_URL, IOS_STORE_URL, ANDROID_STORE_URL],
+    sameAs: [INSTAGRAM_URL, FACEBOOK_URL, TIKTOK_URL, LINKEDIN_URL, IOS_STORE_URL, ANDROID_STORE_URL],
   };
 
   const mobileApplicationSchema = {
@@ -278,153 +162,33 @@ export default function Landing() {
     offers: {
       "@type": "Offer",
       price: "0",
-      priceCurrency: "USD",
+      priceCurrency: "EGP",
     },
     downloadUrl: [IOS_STORE_URL, ANDROID_STORE_URL],
+    publisher: { "@id": `${BASE_URL}/#organization` },
   };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
-      setIsMobileMenuOpen(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white font-poppins">
-      <OpeningScreen reducedMotion={reducedMotion} />
+    <div className="min-h-screen bg-white">
       <Seo
-        title="TwoPaws | Pet care app in Egypt"
+        title="TwoPaws | Pet supplies, vets and pet care app in Egypt"
         description="TwoPaws connects pet families in Egypt with vets, clinics, a supplies marketplace, community features, and delivery."
         canonicalUrl="/"
-        structuredData={[organizationSchema, mobileApplicationSchema]}
+        structuredData={[organizationSchema, mobileApplicationSchema, faqSchema]}
       />
 
       <div className="w-full bg-white">
-        <nav className="relative z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md">
-          <div className="mx-auto flex min-h-[64px] w-full max-w-[1500px] items-center justify-between px-4 sm:px-8 lg:px-10">
-            <a href="/" className="flex shrink-0 items-center">
-              <img
-                src={twoPawsLogo}
-                alt="TwoPaws"
-                className="h-10 w-auto sm:h-12"
-              />
-            </a>
-
-            {/* Desktop */}
-            <div className="hidden items-center gap-7 text-sm font-medium text-gray-600 md:flex">
-              <button
-                onClick={() => scrollToSection("features")}
-                className="nav-link-interactive transition-colors hover:text-brand-purple"
-              >
-                Features
-              </button>
-              <button
-                onClick={() => scrollToSection("about")}
-                className="nav-link-interactive transition-colors hover:text-brand-purple"
-              >
-                About
-              </button>
-              <button
-                onClick={() => scrollToSection("faq")}
-                className="nav-link-interactive transition-colors hover:text-brand-purple"
-              >
-                FAQ
-              </button>
-              <a
-                href="/shop"
-                className="nav-link-interactive transition-colors hover:text-brand-purple"
-              >
-                Shop
-              </a>
-              <a
-                href="/terms"
-                className="nav-link-interactive transition-colors hover:text-brand-purple"
-              >
-                Terms &amp; Conditions
-              </a>
-              <a
-                href="/privacy"
-                className="nav-link-interactive transition-colors hover:text-brand-purple"
-              >
-                Privacy Policy
-              </a>
-            </div>
-
-            <div className="hidden md:block">
-              <Button
-                asChild
-                className="h-9 rounded-md bg-brand-purple px-5 text-white hover:opacity-90"
-              >
-                <a href="/download">Download</a>
-              </Button>
-            </div>
-
-            {/* Mobile toggle */}
-            <button
-              className="inline-flex h-10 w-10 items-center justify-center text-brand-purple md:hidden"
-              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              aria-label="Toggle menu"
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
-          </div>
-
-          {isMobileMenuOpen ? (
-            <div className="border-t border-gray-100 px-4 py-4 md:hidden">
-              <div className="flex flex-col gap-3 text-sm font-medium text-gray-700">
-                <button
-                  onClick={() => scrollToSection("features")}
-                  className="text-left"
-                >
-                  Features
-                </button>
-                <button
-                  onClick={() => scrollToSection("about")}
-                  className="text-left"
-                >
-                  About
-                </button>
-                <button
-                  onClick={() => scrollToSection("faq")}
-                  className="text-left"
-                >
-                  FAQ
-                </button>
-                <a href="/shop">Shop</a>
-                <a href="/terms">Terms &amp; Conditions</a>
-                <a href="/privacy">Privacy Policy</a>
-                <Button
-                  asChild
-                  className="mt-2 w-full rounded-md bg-brand-purple text-white hover:opacity-90"
-                >
-                  <a href="/download">Download</a>
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </nav>
+        <SiteHeader />
 
         {/* HERO (matches reference) */}
-        <section
-          ref={heroRef}
-          className="relative z-20 overflow-hidden bg-brand-yellow"
-          onPointerMove={(event) => {
-            if (reducedMotion) return;
-            const bounds = event.currentTarget.getBoundingClientRect();
-            pointerX.set((event.clientX - bounds.left) / bounds.width - 0.5);
-            pointerY.set((event.clientY - bounds.top) / bounds.height - 0.5);
-          }}
-          onPointerLeave={() => {
-            pointerX.set(0);
-            pointerY.set(0);
-          }}
-        >
+        <section className="relative z-20 bg-brand-yellow">
           <div className="relative mx-auto w-full max-w-[1500px] overflow-visible">
             {/* Adjust collage overlap via the CSS variables on this container */}
             <div
@@ -442,28 +206,26 @@ export default function Landing() {
                 lg:[--illus-right-x:970px] lg:[--illus-right-h:250px]"
             >
               {/* Headline */}
-              <motion.div
+              <div
                 className="absolute z-30"
                 style={{
                   left: "var(--headline-x)",
                   bottom: "var(--headline-y)",
-                  y: reducedMotion ? 0 : headlineScrollY,
                 }}
-                initial={reducedMotion ? false : "hidden"}
-                animate="visible"
-                variants={reveal}
-                transition={revealTransition}
               >
                 <h1 className="font-marvin text-[1.5rem] uppercase leading-[0.9] tracking-tight text-white sm:text-[3.7rem] lg:text-[5.1rem]">
                   YOUR PET,
                   <br />
                   OUR PRIORITY
+                  <span className="mt-2 block font-sans text-[0.65rem] font-semibold normal-case leading-snug tracking-normal text-white sm:mt-3 sm:text-base lg:text-lg">
+                    Egypt&apos;s pet care app: vets, pet hotels, shop and health tracking
+                  </span>
                 </h1>
                 <div className="mt-4 flex flex-row gap-1 sm:gap-3 sm:items-center">
                   <Button
                     asChild
                     size="sm"
-                    className="interactive-button h-6 px-1.5 text-[10px] bg-brand-purple text-white hover:opacity-90 sm:h-10 sm:px-4 sm:text-sm"
+                    className="h-6 px-1.5 text-[10px] bg-brand-purple text-white hover:opacity-90 sm:h-10 sm:px-4 sm:text-sm"
                   >
                     <a href={IOS_STORE_URL} target="_blank" rel="noreferrer">
                       Download on App Store
@@ -473,88 +235,81 @@ export default function Landing() {
                     asChild
                     size="sm"
                     variant="outline"
-                    className="interactive-button h-6 px-1.5 text-[10px] whitespace-nowrap border-white bg-transparent text-white hover:bg-white hover:text-brand-purple sm:h-10 sm:px-4 sm:text-sm"
+                    className="h-6 px-1.5 text-[10px] whitespace-nowrap border-white bg-transparent text-white hover:bg-white hover:text-brand-purple sm:h-10 sm:px-4 sm:text-sm"
                   >
                     <a href={ANDROID_STORE_URL} target="_blank" rel="noreferrer">
                       Get it on Google Play
                     </a>
                   </Button>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Dog */}
-              <motion.img
-                src="/iStock-157527277.webp"
+              <img
+                src="/hero-dog-916.webp"
+                srcSet="/hero-dog-460.webp 460w, /hero-dog-916.webp 916w"
+                sizes="(min-width: 1024px) 364px, 60vw"
+                width={916}
+                height={1184}
                 alt="Dog"
                 decoding="async"
+                fetchPriority="high"
                 className="pointer-events-none absolute w-auto max-w-none object-contain"
                 style={{
                   right: "var(--dog-right)",
                   bottom: "var(--dog-bottom)",
                   height: "var(--dog-h)",
                   zIndex: "var(--dog-z)",
-                  x: reducedMotion ? 0 : dogX,
-                  y: reducedMotion ? 0 : dogY,
-                  scale: reducedMotion ? 1 : heroMediaScale,
                 }}
-                initial={reducedMotion ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ ...revealTransition, delay: 0.12 }}
               />
 
               {/* Cat */}
-              <motion.img
-                src="/iStock-1143440918.webp"
+              <img
+                src="/hero-cat-498.webp"
+                width={498}
+                height={458}
                 alt="Cat"
                 decoding="async"
+                fetchPriority="low"
                 className="pointer-events-none absolute w-auto -translate-x-1/2 object-contain"
                 style={{
                   left: "var(--cat-x)",
                   bottom: "var(--cat-bottom)",
                   height: "var(--cat-h)",
                   zIndex: "var(--cat-z)",
-                  x: reducedMotion ? 0 : catX,
-                  y: reducedMotion ? 0 : catY,
                 }}
-                initial={reducedMotion ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ ...revealTransition, delay: 0.3 }}
               />
 
               {/* Illustration (left) */}
-              <motion.img
+              <img
                 src="/illustration-2.svg"
                 alt=""
                 aria-hidden
                 decoding="async"
+                fetchPriority="low"
                 className="pointer-events-none absolute w-auto -translate-x-1/2 object-contain"
                 style={{
                   left: "var(--illus-left-x)",
                   bottom: "var(--illus-left-bottom)",
                   height: "var(--illus-left-h)",
                   zIndex: "var(--illus-left-z)",
-                  x: reducedMotion ? 0 : illustrationX,
                 }}
-                animate={reducedMotion ? undefined : { y: [0, -8, 0], rotate: [0, 1.5, 0] }}
-                transition={{ duration: 5.5, ease: "easeInOut", repeat: Infinity }}
               />
 
               {/* Illustration (right) - no more legs leaking into About */}
-              <motion.img
+              <img
                 src="/illustration-1.svg"
                 alt=""
                 aria-hidden
                 decoding="async"
+                fetchPriority="low"
                 className="pointer-events-none absolute w-auto -translate-x-1/2 object-contain"
                 style={{
                   left: "var(--illus-right-x)",
                   bottom: "var(--illus-right-bottom)",
                   height: "var(--illus-right-h)",
                   zIndex: "var(--illus-right-z)",
-                  x: reducedMotion ? 0 : illustrationX,
                 }}
-                animate={reducedMotion ? undefined : { y: [0, 7, 0], rotate: [0, -1.5, 0] }}
-                transition={{ duration: 6.5, ease: "easeInOut", repeat: Infinity }}
               />
             </div>
           </div>
@@ -565,19 +320,8 @@ export default function Landing() {
           id="about"
           className="relative overflow-visible bg-white px-4 pb-10 pt-24 sm:px-8 sm:pb-12 sm:pt-28 lg:px-10 lg:pb-14 lg:pt-32"
         >
-          <motion.div
-            className="relative z-20 mx-auto grid w-full max-w-[1366px] items-start gap-6 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-10"
-            initial={reducedMotion ? false : "hidden"}
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={reveal}
-            transition={revealTransition}
-          >
-            <motion.div
-              className="flex justify-center pt-1 lg:justify-start lg:pt-0"
-              whileHover={reducedMotion ? undefined : { y: -12, rotate: -2 }}
-              transition={{ type: "spring", stiffness: 220, damping: 18 }}
-            >
+          <div className="relative z-20 mx-auto grid w-full max-w-[1366px] items-start gap-6 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-10">
+            <div className="flex justify-center pt-1 lg:justify-start lg:pt-0">
               <img
                 src={phoneMockup}
                 alt="TwoPaws app preview"
@@ -587,7 +331,7 @@ export default function Landing() {
                 decoding="async"
                 className="w-[190px] max-w-full object-contain sm:w-[205px] lg:w-[220px]"
               />
-            </motion.div>
+            </div>
 
             <div className="text-right">
               <h2 className="font-marvin text-4xl uppercase text-brand-purple sm:text-5xl lg:text-[3.35rem]">
@@ -625,7 +369,7 @@ export default function Landing() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
 
          
         </section>
@@ -636,27 +380,20 @@ export default function Landing() {
           className="relative z-20 bg-white px-4 pb-14 sm:px-8 sm:pb-20 lg:px-12"
         >
           <div className="relative z-20 mx-auto w-full max-w-[1650px]">
-            <motion.h2
-              className="font-marvin text-5xl uppercase text-brand-purple sm:text-5xl lg:text-[3.35rem]"
-              initial={reducedMotion ? false : "hidden"}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.6 }}
-              variants={reveal}
-              transition={revealTransition}
-            >
+            <h2 className="font-marvin text-5xl uppercase text-brand-purple sm:text-5xl lg:text-[3.35rem]">
               WHAT WE OFFER
-            </motion.h2>
+            </h2>
 
-            <div className="feature-rails mt-10 space-y-8 overflow-hidden py-3">
-              <div className="feature-track feature-track-forward flex w-max gap-4 sm:gap-7">
-                {[...offerRowOne, ...offerRowOne].map((item, index) => (
-                  <OfferCell key={`row-one-${index}`} item={item} reducedMotion={reducedMotion} />
+            <div className="mt-10 space-y-10">
+              <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-8">
+                {offerRowOne.map((item, index) => (
+                  <OfferCell key={`row-one-${index}`} item={item} />
                 ))}
               </div>
 
-              <div className="feature-track feature-track-reverse flex w-max gap-4 sm:gap-7">
-                {[...offerRowTwo, ...offerRowTwo, ...offerRowTwo].map((item, index) => (
-                  <OfferCell key={`row-two-${index}`} item={item} reducedMotion={reducedMotion} />
+              <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-8">
+                {offerRowTwo.map((item, index) => (
+                  <OfferCell key={`row-two-${index}`} item={item} />
                 ))}
               </div>
             </div>
@@ -691,14 +428,7 @@ export default function Landing() {
             </p>
 
             <div className="mt-10 grid gap-8 md:grid-cols-2 md:items-start lg:mt-12 lg:gap-14">
-              <motion.div
-                className="md:justify-self-start"
-                initial={reducedMotion ? false : { opacity: 0, x: -36 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.35 }}
-                whileHover={reducedMotion ? undefined : { x: 8 }}
-                transition={revealTransition}
-              >
+              <div className="md:justify-self-start">
                 <h3 className="font-marvin text-4xl uppercase text-brand-purple sm:text-5xl lg:text-[2.65rem]">
                   AMIRA SAMEH
                 </h3>
@@ -710,16 +440,9 @@ export default function Landing() {
                   loves turning everyday pet parent struggles into intuitive,
                   tech-powered solutions for the whole community.
                 </p>
-              </motion.div>
+              </div>
 
-              <motion.div
-                className="md:justify-self-start md:text-right md:mt-12 lg:mt-14"
-                initial={reducedMotion ? false : { opacity: 0, x: 36 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.35 }}
-                whileHover={reducedMotion ? undefined : { x: -8 }}
-                transition={revealTransition}
-              >
+              <div className="md:justify-self-start md:text-right md:mt-12 lg:mt-14">
                 <h3 className="font-marvin text-4xl uppercase text-brand-purple sm:text-5xl lg:text-[2.65rem]">
                   HASSAN REDA
                 </h3>
@@ -731,7 +454,7 @@ export default function Landing() {
                   ideas at lightning speed, obsessed with details that make
                   Egypt&rsquo;s pet community smarter, safer, and more fun.
                 </p>
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
@@ -773,7 +496,7 @@ export default function Landing() {
                         {faq.question}
                       </span>
                     </AccordionTrigger>
-                    <AccordionContent className="px-6 pb-5">
+                    <AccordionContent forceMount className="px-6 pb-5">
                       <p className="text-lg leading-tight text-brand-yellow sm:text-xl">
                         {faq.answer}
                       </p>
@@ -917,38 +640,12 @@ export default function Landing() {
             <div>
               <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-gray-400">
-                <li>
-                  <button
-                    onClick={() => scrollToSection?.("features")}
-                    className="hover:text-black transition-colors"
-                  >
-                    Features
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => scrollToSection?.("about")}
-                    className="hover:text-black transition-colors"
-                  >
-                    About&nbsp;Us
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => scrollToSection?.("testimonials")}
-                    className="hover:text-black transition-colors"
-                  >
-                    Reviews
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => scrollToSection?.("faq")}
-                    className="hover:text-black transition-colors"
-                  >
-                    FAQ
-                  </button>
-                </li>
+                <li><a href="#features" className="hover:text-black transition-colors">Features</a></li>
+                <li><a href="/about/" className="hover:text-black transition-colors">About Us</a></li>
+                <li><a href="/egypt/" className="hover:text-black transition-colors">TwoPaws in Egypt</a></li>
+                <li><a href="/contact/" className="hover:text-black transition-colors">Contact</a></li>
+                <li><a href="/shipping-and-returns/" className="hover:text-black transition-colors">Shipping &amp; Returns</a></li>
+                <li><a href="#faq" className="hover:text-black transition-colors">FAQ</a></li>
               </ul>
             </div>
 
@@ -966,7 +663,7 @@ export default function Landing() {
                 </li>
                 <li>
                   <a
-                    href="/privacy"
+                    href="/privacy/"
                     className="hover:text-black transition-colors"
                   >
                     Privacy&nbsp;Policy
@@ -974,7 +671,7 @@ export default function Landing() {
                 </li>
                 <li>
                   <a
-                    href="/terms"
+                    href="/terms/"
                     className="hover:text-black transition-colors"
                   >
                     Terms&nbsp;&amp;&nbsp;Conditions
@@ -987,8 +684,7 @@ export default function Landing() {
           {/* --- Bottom Bar ---------------------------------------------- */}
           <div className="border-t border-gray-200 pt-8 flex flex-col sm:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              (c) {new Date().getFullYear()} TwoPaws Digital Solutions. All
-              rights reserved.
+              (c) {new Date().getFullYear()} TwoPaws Digital Solutions LLC. Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt. All rights reserved.
             </p>
           </div>
         </div>

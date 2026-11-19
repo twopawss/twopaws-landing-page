@@ -1,15 +1,19 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { doc, onSnapshot } from "firebase/firestore";
 import ShopShell from "@/components/shop/ShopShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
-import { META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
+import { createMetaEventId, META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
 import Seo from "@/lib/seo/Seo";
+import { useCart } from "@/hooks/useCart";
+
+const GUEST_PENDING_ORDER_STORAGE_KEY = "twopaws:guest-checkout:pending-order";
 
 export default function PaymentReturnPage() {
   const location = useLocation();
+  const { clearCart } = useCart();
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const orderId = useMemo(() => {
     return (
@@ -19,12 +23,19 @@ export default function PaymentReturnPage() {
       null
     );
   }, [params]);
+  const eventSlug =
+    params.get("eventSlug") ||
+    window.sessionStorage.getItem("twopaws:pending-event-slug");
+  const pendingEventOrder =
+    window.sessionStorage.getItem("twopaws:pending-event-order");
   const [status, setStatus] = useState<string | null>(null);
   const [orderSummary, setOrderSummary] = useState<{
     totalPrice?: number;
     paymentMethod?: string;
+    verifiedPaid?: boolean;
   } | null>(null);
   const trackedRef = useRef<string | null>(null);
+  const clearedGuestCartRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -37,11 +48,14 @@ export default function PaymentReturnPage() {
         success?: boolean;
         totalPrice?: number;
         paymentMethod?: string;
+        paymentStatus?: string;
       };
       setStatus(data.status ?? data.orderStatus ?? (data.success ? "PAID" : null));
       setOrderSummary({
         totalPrice: typeof data.totalPrice === "number" ? data.totalPrice : undefined,
         paymentMethod: data.paymentMethod,
+        verifiedPaid: String(data.paymentStatus ?? data.status ?? data.orderStatus ?? "")
+          .toUpperCase() === "PAID",
       });
     });
     return () => unsubscribe();
@@ -70,21 +84,56 @@ export default function PaymentReturnPage() {
     const normalized = status.toUpperCase();
     const isPaid = normalized.includes("PAID") || normalized.includes("SUCCESS");
     if (!isPaid) return;
-    trackMetaEvent("Purchase", {
-      value: orderSummary?.totalPrice ?? 0,
-      currency: META_PIXEL_CURRENCY,
-      order_id: orderId,
-      payment_method: orderSummary?.paymentMethod,
-    });
+    trackMetaEvent(
+      "Purchase",
+      {
+        value: orderSummary?.totalPrice ?? 0,
+        currency: META_PIXEL_CURRENCY,
+        order_id: orderId,
+        payment_method: orderSummary?.paymentMethod,
+      },
+      { eventId: createMetaEventId("Purchase", orderId) }
+    );
     trackedRef.current = orderId;
   }, [orderId, status, orderSummary]);
+
+  useEffect(() => {
+    if (!orderId || !status || !orderSummary?.verifiedPaid || clearedGuestCartRef.current === orderId) return;
+    const normalized = status.toUpperCase();
+    const isPaid = normalized.includes("PAID") || normalized.includes("SUCCESS");
+    if (!isPaid) return;
+    const pendingGuestOrder = window.sessionStorage.getItem(GUEST_PENDING_ORDER_STORAGE_KEY);
+    if (pendingGuestOrder !== orderId) return;
+    clearedGuestCartRef.current = orderId;
+    clearCart()
+      .then(() => {
+        window.sessionStorage.removeItem(GUEST_PENDING_ORDER_STORAGE_KEY);
+      })
+      .catch(() => {
+        clearedGuestCartRef.current = null;
+      });
+  }, [clearCart, orderId, orderSummary, status]);
+
+  const eventOrderId = orderId || pendingEventOrder;
+  if (
+    eventSlug &&
+    eventOrderId &&
+    (pendingEventOrder || params.get("eventOrder") === "true")
+  ) {
+    return (
+      <Navigate
+        replace
+        to={`/events/${encodeURIComponent(eventSlug)}/payment-result?orderId=${encodeURIComponent(eventOrderId)}`}
+      />
+    );
+  }
 
   return (
     <ShopShell>
       <Seo
         title="Payment Status | TwoPaws Shop"
         description="View your TwoPaws payment result."
-        canonicalUrl="/payment/return"
+        canonicalUrl="/payment/return/"
         noIndex
       />
       <header className="space-y-2">

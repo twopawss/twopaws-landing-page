@@ -1,23 +1,37 @@
-import { ANDROID_STORE_URL, CONTACT_EMAIL, INSTAGRAM_URL, IOS_STORE_URL } from "@/lib/seo/constants";
+import {
+  ANDROID_STORE_URL,
+  COMPANY_ADDRESS_TEXT,
+  COMPANY_LEGAL_NAME,
+  CONTACT_EMAIL,
+  CONTACT_PHONE,
+  CONTACT_PHONE_DISPLAY,
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
+  IOS_STORE_URL,
+  LINKEDIN_URL,
+  TIKTOK_URL,
+} from "@/lib/seo/constants";
 import { LOGO_SRC } from "./SiteHeader";
 
 const columns = [
   {
     title: "Explore",
     links: [
-      { href: "/features", label: "Features" },
-      { href: "/shop", label: "Shop" },
-      { href: "/about", label: "About us" },
-      { href: "/egypt", label: "TwoPaws in Egypt" },
+      { href: "/shop/", label: "Shop" },
+      { href: "/events", label: "Events" },
+      { href: "/features/", label: "Features" },
+      { href: "/about/", label: "About us" },
     ],
   },
   {
     title: "Support",
     links: [
-      { href: "/contact", label: "Contact us" },
+      { href: "/contact/", label: "Contact us" },
       { href: `mailto:${CONTACT_EMAIL}`, label: CONTACT_EMAIL },
-      { href: "/privacy", label: "Privacy Policy" },
-      { href: "/terms", label: "Terms & Conditions" },
+      { href: `tel:${CONTACT_PHONE}`, label: CONTACT_PHONE_DISPLAY },
+      { href: "/shipping-and-returns/", label: "Shipping & Returns" },
+      { href: "/privacy/", label: "Privacy Policy" },
+      { href: "/terms/", label: "Terms & Conditions" },
     ],
   },
   {
@@ -31,9 +45,9 @@ const columns = [
     title: "Follow",
     links: [
       { href: INSTAGRAM_URL, label: "Instagram", external: true },
-      { href: "https://www.facebook.com/twopawsapp/", label: "Facebook", external: true },
-      { href: "https://www.tiktok.com/@twopaws.app", label: "TikTok", external: true },
-      { href: "https://www.linkedin.com/company/twopaws/", label: "LinkedIn", external: true },
+      { href: FACEBOOK_URL, label: "Facebook", external: true },
+      { href: TIKTOK_URL, label: "TikTok", external: true },
+      { href: LINKEDIN_URL, label: "LinkedIn", external: true },
     ],
   },
 ];
@@ -69,7 +83,7 @@ export default function SiteFooter() {
           ))}
         </div>
         <p className="mt-12 border-t border-[#783F6A]/15 pt-6 text-sm text-[#3d1f3a]/60">
-          &copy; {new Date().getFullYear()} TwoPaws Digital Solutions. All rights reserved.
+          &copy; {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. {COMPANY_ADDRESS_TEXT}. All rights reserved.
         </p>
       </div>
     </footer>

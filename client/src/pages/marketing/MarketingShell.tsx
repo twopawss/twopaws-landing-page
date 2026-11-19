@@ -22,7 +22,7 @@ export default function MarketingShell({ children }: MarketingShellProps) {
 
       <div
         aria-hidden
-        className="relative mt-16 h-40 overflow-hidden sm:h-52"
+        className="relative h-40 overflow-hidden sm:h-52"
         style={{ background: "linear-gradient(#7CC4F2, #BDE2FA)" }}
       >
         <motion.img

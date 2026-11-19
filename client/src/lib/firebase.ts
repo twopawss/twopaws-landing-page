@@ -1,8 +1,8 @@
-﻿import { initializeApp, getApp, getApps } from "firebase/app";
+import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,8 +17,20 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = (() => {
+  try {
+    return initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+    });
+  } catch {
+    return getFirestore(app);
+  }
+})();
 const storage = getStorage(app);
 const functions = getFunctions(app);
+// The catalogue callables (catalogueBrowse, catalogueSuggest, catalogueCart, catalogueCheckout) run in
+// europe-west1, next to the eur3 Firestore database. Every other callable, including createPaymobPayment,
+// stays in us-central1 and uses `functions`.
+const catalogueFunctions = getFunctions(app, "europe-west1");
 
-export { app, auth, db, storage, functions };
+export { app, auth, db, storage, functions, catalogueFunctions };

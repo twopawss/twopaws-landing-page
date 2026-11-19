@@ -1,6 +1,6 @@
 import SiteFooter from "@/components/layout/SiteFooter";
-import SiteHeader from "@/components/layout/SiteHeader";
 import { Card, CardContent } from "@/components/ui/card";
+import SiteHeader from "@/components/layout/SiteHeader";
 import facebook from "../../../attached_assets/facebook.svg";
 import tiktok from "../../../attached_assets/tiktok.svg";
 
@@ -14,11 +14,11 @@ export default function Terms() {
       <Seo
         title="Terms & Conditions | TwoPaws"
         description="Terms and conditions for TwoPaws, the pet care app for Egypt with vets, clinics, community features, and delivery."
-        canonicalUrl="/terms"
+        canonicalUrl="/terms/"
       />
-            <SiteHeader />
+      <SiteHeader />
 
-      <main className="flex-grow bg-gray-50 pb-16 pt-24 px-4">
+      <main className="flex-grow px-4 pb-16 pt-10">
         <div className="w-full max-w-4xl mx-auto space-y-8">
           <MarketingIntro />
           <Card className="w-full">
@@ -129,7 +129,7 @@ export default function Terms() {
               <p>We may update these Terms; well update the Last updated date above and, where required, provide in-app or email notice. Continued use after changes means you accept the updated Terms.</p>
 
               <h2 className="text-2xl font-bold mt-6">19) Contact</h2>
-              <p>TwoPaws Digital Solutions LLC - Legal<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>
+              <p>TwoPaws Digital Solutions LLC - Legal<br />Plus Mall, South Investment, New Cairo, Cairo 11835, Egypt<br />Email: <a href="mailto:info@twopaws.pet">info@twopaws.pet</a></p>
             </CardContent>
           </Card>
         </div>

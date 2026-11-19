@@ -1,11 +1,16 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   collection,
   doc,
+  documentId,
   getDoc,
   getDocs,
+  limit,
   onSnapshot,
+  orderBy,
+  query,
+  where,
   type DocumentData,
   type Timestamp,
 } from "firebase/firestore";
@@ -27,7 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useCart, type SupplierMismatchError } from "@/hooks/useCart";
-import { useProducts, type ProductDoc } from "@/hooks/useProducts";
+import { type ProductDoc } from "@/hooks/useProducts";
 import { formatCurrency } from "@/lib/format";
 import { useToast } from "@/hooks/use-toast";
 import { META_PIXEL_CURRENCY, trackMetaEvent } from "@/lib/metaPixel";
@@ -35,6 +40,15 @@ import Seo from "@/lib/seo/Seo";
 import { BASE_URL } from "@/lib/seo/constants";
 import { isReactSnapPrerender } from "@/lib/isPrerender";
 import { toPrerenderSafeImageSrc } from "@/lib/prerenderImage";
+
+declare global {
+  interface Window {
+    __TWOPAWS_PRODUCT_CANONICAL__?: {
+      sourceId: string;
+      canonicalId: string;
+    };
+  }
+}
 
 const getPhoto = (photoUrl?: string[] | string) => {
   if (Array.isArray(photoUrl)) return photoUrl;
@@ -61,6 +75,8 @@ const getUnitPrice = (price?: number, salePrice?: number, onSale?: boolean) => {
 };
 const IMAGE_LENS_SIZE = 180;
 const IMAGE_ZOOM_SCALE = 2.2;
+const RECOMMENDED_QUERY_LIMIT = 32;
+const RECOMMENDED_VISIBLE_LIMIT = 8;
 
 const toAbsoluteUrl = (value?: string | null) => {
   if (!value) return null;
@@ -74,6 +90,61 @@ const toSeoDescription = (value: string, maxLength = 160) => {
   if (!cleaned) return "";
   if (cleaned.length <= maxLength) return cleaned;
   return `${cleaned.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
+};
+
+const PRODUCT_BRAND_KEYS = [
+  "brand",
+  "brand_name",
+  "brandName",
+  "manufacturer",
+  "vendor",
+] as const;
+const PRODUCT_SKU_KEYS = ["sku", "item_sku", "itemSku"] as const;
+const PRODUCT_MPN_KEYS = ["mpn", "manufacturer_part_number", "manufacturerPartNumber"] as const;
+const PRODUCT_GTIN_KEYS = [
+  "gtin",
+  "gtin8",
+  "gtin12",
+  "gtin13",
+  "gtin14",
+  "barcode",
+  "barcodeNumber",
+  "barcode_number",
+  "ean",
+  "upc",
+] as const;
+const PRODUCT_CATEGORY_KEYS = ["google_product_category", "product_type", "categoryName"] as const;
+const PRODUCT_CONDITION_KEYS = ["condition", "itemCondition", "item_condition"] as const;
+
+const getFirstString = (record: Record<string, unknown>, keys: readonly string[]) => {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return undefined;
+};
+
+const normalizeGtin = (value?: string) => {
+  if (!value) return undefined;
+  const digits = value.replace(/\D+/g, "");
+  if (!digits) return undefined;
+  if ([8, 12, 13, 14].includes(digits.length)) return digits;
+  return undefined;
+};
+
+const resolveItemCondition = (raw?: string) => {
+  const condition = String(raw || "").trim().toLowerCase();
+  if (condition.includes("used")) return "https://schema.org/UsedCondition";
+  if (condition.includes("refurb")) return "https://schema.org/RefurbishedCondition";
+  return "https://schema.org/NewCondition";
+};
+
+const buildPriceValidUntil = (daysAhead = 30) => {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + daysAhead);
+  return date.toISOString().slice(0, 10);
 };
 
 type ShippingZoneDoc = {
@@ -90,10 +161,10 @@ export default function ProductDetailPage() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { products } = useProducts();
   const { supplierMap } = useSuppliers();
   const { addItem, clearCart, activeSupplierRef, cartItems } = useCart();
   const [product, setProduct] = useState<ProductDoc | null>(null);
+  const [recommendedProducts, setRecommendedProducts] = useState<ProductDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -103,6 +174,14 @@ export default function ProductDetailPage() {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [pendingAdd, setPendingAdd] = useState(false);
   const viewTrackedRef = useRef<string | null>(null);
+  const recommendedSupplierId = product?.supplierRef?.id ?? null;
+  const recommendedCategoryKey = useMemo(
+    () =>
+      getCategoryIds(product?.categories as unknown[])
+        .sort()
+        .join("|"),
+    [product?.categories]
+  );
 
   useEffect(() => {
     if (!productId) return;
@@ -164,6 +243,70 @@ export default function ProductDetailPage() {
     return () => unsubscribe();
   }, [product?.supplierRef]);
 
+  useEffect(() => {
+    if (!product?.id || !recommendedSupplierId) {
+      setRecommendedProducts([]);
+      return;
+    }
+
+    const supplierRef = doc(db, "suppliers", recommendedSupplierId);
+    const currentCategoryIds = new Set(getCategoryIds(product.categories as unknown[]));
+    let cancelled = false;
+
+    const loadRecommended = async () => {
+      const productsQuery = query(
+        collection(db, "products"),
+        where("supplierRef", "==", supplierRef),
+        orderBy(documentId()),
+        limit(RECOMMENDED_QUERY_LIMIT)
+      );
+      const snap = await getDocs(productsQuery);
+      if (cancelled) return;
+
+      const candidates = snap.docs
+        .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() } as ProductDoc))
+        .filter((candidate) => {
+          if (!candidate.id || candidate.id === product.id) return false;
+          const unitPrice = getUnitPrice(
+            candidate.price,
+            candidate.sale_price,
+            candidate.on_sale
+          );
+          if (unitPrice <= 0) return false;
+          const quantity =
+            typeof candidate.quantity === "number" ? candidate.quantity : 1;
+          return quantity > 0;
+        });
+
+      const ranked = candidates
+        .map((candidate) => {
+          const candidateCategories = getCategoryIds(
+            candidate.categories as unknown[]
+          );
+          const overlapCount = candidateCategories.reduce(
+            (count, categoryId) =>
+              currentCategoryIds.has(categoryId) ? count + 1 : count,
+            0
+          );
+          return { candidate, overlapCount };
+        })
+        .sort((a, b) => b.overlapCount - a.overlapCount)
+        .map(({ candidate }) => candidate)
+        .slice(0, RECOMMENDED_VISIBLE_LIMIT);
+
+      setRecommendedProducts(ranked);
+    };
+
+    loadRecommended().catch(() => {
+      if (cancelled) return;
+      setRecommendedProducts([]);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product?.id, recommendedCategoryKey, recommendedSupplierId]);
+
   const images = getPhoto(product?.photo_url);
   const imageUrls = images
     .map((image) => toAbsoluteUrl(image))
@@ -187,37 +330,98 @@ export default function ProductDetailPage() {
   const stock = typeof product?.quantity === "number" ? product?.quantity : 0;
   const maxQty = Math.max(1, Math.min(stock || 1, 10));
   const productName = product?.name ?? "Product";
-  const rawDescription =
-    product?.description ?? "Shop premium pet supplies and accessories at TwoPaws.";
+  const existingDescription = String(product?.description ?? "").trim();
+  const baseDescription = existingDescription.length >= 20
+    ? existingDescription
+    : `Buy ${productName} online from TwoPaws in Egypt. Check current price, availability and delivery options.`;
+  const rawDescription = supplier?.name
+    ? `Shop ${productName} from ${supplier.name} on TwoPaws Egypt. ${baseDescription}`
+    : baseDescription;
   const seoDescription = toSeoDescription(rawDescription);
-  const canonicalPath = product ? `/shop/product/${product.id}/` : "/shop/";
+  const seoTitle = supplier?.name
+    ? `${productName} from ${supplier.name} | TwoPaws Shop`
+    : `${productName} | TwoPaws Shop`;
+  const generatedCanonicalContext = typeof window !== "undefined"
+    ? window.__TWOPAWS_PRODUCT_CANONICAL__
+    : undefined;
+  const generatedCanonical = generatedCanonicalContext
+    && generatedCanonicalContext.sourceId === productId
+    ? generatedCanonicalContext.canonicalId
+    : productId;
+  const canonicalPath = generatedCanonical ? `/shop/product/${generatedCanonical}/` : "/shop/";
   const primaryImage = imageUrls[0];
   const offerPrice = showSale ? salePrice : price;
+  const productRecord = (product ?? {}) as Record<string, unknown>;
+  const sku = getFirstString(productRecord, PRODUCT_SKU_KEYS) ?? product?.id;
+  const brandName =
+    getFirstString(productRecord, PRODUCT_BRAND_KEYS) ??
+    supplier?.name ??
+    "TwoPaws";
+  const mpn = getFirstString(productRecord, PRODUCT_MPN_KEYS);
+  const gtin = normalizeGtin(getFirstString(productRecord, PRODUCT_GTIN_KEYS));
+  const productCategory = getFirstString(productRecord, PRODUCT_CATEGORY_KEYS);
+  const itemCondition = resolveItemCondition(
+    getFirstString(productRecord, PRODUCT_CONDITION_KEYS)
+  );
+  const priceValidUntil = buildPriceValidUntil();
+  const cheapestZone = useMemo(() => {
+    if (!shippingZones.length) return null;
+    return [...shippingZones].sort(
+      (a, b) => (a.rateEGP ?? 0) - (b.rateEGP ?? 0)
+    )[0];
+  }, [shippingZones]);
+  const shippingDetails =
+    cheapestZone && typeof cheapestZone.rateEGP === "number"
+      ? {
+          "@type": "OfferShippingDetails",
+          shippingRate: {
+            "@type": "MonetaryAmount",
+            value: cheapestZone.rateEGP,
+            currency: META_PIXEL_CURRENCY,
+          },
+          shippingDestination: {
+            "@type": "DefinedRegion",
+            addressCountry: "EG",
+          },
+        }
+      : undefined;
   const structuredData = product
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
+        "@id": `${BASE_URL}${canonicalPath}#product`,
         name: productName,
         description: seoDescription,
         url: `${BASE_URL}${canonicalPath}`,
-        image: imageUrls.length ? imageUrls : undefined,
-        sku: product.id,
-        brand: supplier?.name
-          ? {
-              "@type": "Brand",
-              name: supplier.name,
-            }
-          : undefined,
+        image: imageUrls.length ? imageUrls : primaryImage ? [primaryImage] : undefined,
+        sku,
+        mpn,
+        gtin,
+        category: productCategory,
+        brand: {
+          "@type": "Brand",
+          name: brandName,
+        },
         offers: {
           "@type": "Offer",
+          "@id": `${BASE_URL}${canonicalPath}#offer`,
           priceCurrency: META_PIXEL_CURRENCY,
           price: offerPrice,
           availability:
             stock > 0
               ? "https://schema.org/InStock"
               : "https://schema.org/OutOfStock",
-          itemCondition: "https://schema.org/NewCondition",
+          itemCondition,
           url: `${BASE_URL}${canonicalPath}`,
+          priceValidUntil,
+          shippingDetails,
+          seller: {
+            "@type": "Organization",
+            name: supplier?.name ?? "TwoPaws",
+            url: supplier?.id
+              ? `${BASE_URL}/shop/supplier/${supplier.id}/`
+              : BASE_URL,
+          },
         },
       }
     : undefined;
@@ -231,27 +435,6 @@ export default function ProductDetailPage() {
       return acc;
     }, {});
   }, [cartItems]);
-  const recommendedProducts = useMemo(() => {
-    if (!product?.id) return [] as ProductDoc[];
-    const supplierId = product.supplierRef?.id;
-    if (!supplierId) return [] as ProductDoc[];
-    const currentCategoryIds = new Set(getCategoryIds(product.categories as unknown[]));
-    if (currentCategoryIds.size === 0) return [] as ProductDoc[];
-
-    return products
-      .filter((candidate) => {
-        if (!candidate.id || candidate.id === product.id) return false;
-        if (candidate.supplierRef?.id !== supplierId) return false;
-        const candidateCategories = getCategoryIds(candidate.categories as unknown[]);
-        const sameCategory = candidateCategories.some((id) => currentCategoryIds.has(id));
-        if (!sameCategory) return false;
-        const unitPrice = getUnitPrice(candidate.price, candidate.sale_price, candidate.on_sale);
-        if (unitPrice <= 0) return false;
-        const quantity = typeof candidate.quantity === "number" ? candidate.quantity : 1;
-        return quantity > 0;
-      })
-      .slice(0, 8);
-  }, [products, product]);
   const selectedImageUrl = safeImageUrls[selectedImage] ?? null;
 
   useEffect(() => {
@@ -270,13 +453,6 @@ export default function ProductDetailPage() {
     });
     viewTrackedRef.current = product.id;
   }, [product, price, salePrice, showSale]);
-
-  const cheapestZone = useMemo(() => {
-    if (!shippingZones.length) return null;
-    return [...shippingZones].sort(
-      (a, b) => (a.rateEGP ?? 0) - (b.rateEGP ?? 0)
-    )[0];
-  }, [shippingZones]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -349,12 +525,13 @@ export default function ProductDetailPage() {
   return (
     <ShopShell>
       <Seo
-        title={`${productName} | TwoPaws Shop`}
+        title={seoTitle}
         description={seoDescription}
         canonicalUrl={canonicalPath}
         ogType="product"
         ogImageUrl={primaryImage}
         structuredData={structuredData}
+        noIndex={!loading && !product}
       />
       {loading && <p className="text-sm text-slate-500">Loading product...</p>}
       {!loading && !product && (

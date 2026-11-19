@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import facebook from "../../../attached_assets/facebook.svg"
 import tiktok from "../../../attached_assets/tiktok.svg"
-import { Helmet } from "react-helmet-async";
+import Seo from "@/lib/seo/Seo";
 
 import { functions } from '@/lib/firebase';
 
@@ -33,13 +33,12 @@ export default function DeleteAccount() {
   });
 
   return (
-  <div className="clay-bg min-h-screen flex flex-col items-center p-4">
-      <Helmet>
-        <title>Delete Account | TwoPaws</title>
-        <meta name="description" content="Request deletion of your TwoPaws account." />
-        <meta name="robots" content="noindex, nofollow" />
-        <link rel="canonical" href="https://twopaws.pet/delete-account" />
-      </Helmet>
+  <div className="clay-bg min-h-screen flex flex-col items-center">
+      <Seo
+        title="Delete Account | TwoPaws"
+        description="Request deletion of your TwoPaws account."
+        canonicalUrl="/delete-account/"
+      />
       <SiteHeader />
     <Card className="w-full max-w-md my-24">
         <CardContent className="pt-6 space-y-4">
