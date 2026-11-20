@@ -24,6 +24,7 @@ const FirebaseShell = lazy(() => import("@/app/FirebaseShell"));
 const AboutPage = lazy(() => import("@/pages/marketing/about"));
 const ContactPage = lazy(() => import("@/pages/marketing/contact"));
 const ShippingReturnsPage = lazy(() => import("@/pages/marketing/shipping-returns"));
+const ClausPage = lazy(() => import("@/pages/claus"));
 const EgyptPage = lazy(() => import("@/pages/marketing/egypt"));
 const FeaturesPage = lazy(() => import("@/pages/marketing/features"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -181,6 +182,7 @@ function App() {
                 <Route path="/egypt" element={<EgyptPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/shipping-and-returns" element={<ShippingReturnsPage />} />
+                <Route path="/claus" element={<ClausPage />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/download" element={<DownloadRedirect />} />

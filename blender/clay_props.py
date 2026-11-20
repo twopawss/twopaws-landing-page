@@ -1,10 +1,11 @@
 """Small clay props used as decoration on the light sections of the site.
 
 Renders each prop on a transparent background:
-  <out_dir>/prop-paw.webp, prop-bone.webp, prop-ball.webp, prop-bowl.webp
+  <out_dir>/prop-paw.webp, prop-bone.webp, prop-ball.webp, prop-bowl.webp,
+  and for /claus: prop-letter.webp, prop-gift.webp, prop-heart.webp
 
 Run headless:
-  /Applications/Blender.app/Contents/MacOS/Blender -b -P blender/clay_props.py -- <out_dir> [samples] [size_px]
+  /Applications/Blender.app/Contents/MacOS/Blender -b -P blender/clay_props.py -- <out_dir> [samples] [size_px] [only,these,props]
 """
 import bpy, sys, os
 from math import radians, cos, sin, pi
@@ -120,6 +121,50 @@ for i in range(8):
 parts.append(ball(YELLOW, (0, 0, 0.5), 0.14))
 PROPS["bowl"] = group("bowl", parts)
 
+# ---- festive props for the TwoPaws Claus page ----
+RED = clay("#E5484D")
+
+
+def box(mat, loc, size, rot=(0, 0, 0), bevel=0.06):
+    bpy.ops.mesh.primitive_cube_add(size=1, location=loc, rotation=[radians(a) for a in rot])
+    o = bpy.context.object
+    o.scale = size
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    o.data.materials.append(mat)
+    if bevel:
+        mod = o.modifiers.new("bevel", "BEVEL")
+        mod.width = bevel
+        mod.segments = 6
+    return o
+
+
+# envelope: white letter, purple flap, yellow paw seal
+parts = [box(WHITE, (0, 0, 0), (2.0, 0.16, 1.35))]
+bpy.ops.mesh.primitive_cylinder_add(vertices=3, radius=0.78, depth=0.1, location=(0, -0.09, 0.285),
+                                    rotation=(radians(90), radians(180), 0))
+flap = bpy.context.object            # a triangle pointing down from the top edge
+flap.scale = (1.42, 1.0, 1.0)
+flap.data.materials.append(PURPLE)
+parts.append(flap)
+parts += [ball(YELLOW, (0, -0.17, -0.2), (0.2, 0.07, 0.17))]
+for x, z, r in ((-0.24, 0.0, 0.075), (-0.08, 0.12, 0.085), (0.08, 0.12, 0.085), (0.24, 0.0, 0.075)):
+    parts.append(ball(YELLOW, (x, -0.17, z), (r, 0.06, r * 1.2)))
+PROPS["letter"] = group("letter", parts, rot=(8, -10, -8))
+
+# gift: purple box, yellow ribbon and bow
+parts = [box(PURPLE, (0, 0, 0), (1.5, 1.5, 1.3)),
+         box(YELLOW, (0, 0, 0), (0.32, 1.54, 1.34), bevel=0.03),
+         box(YELLOW, (0, 0, 0), (1.54, 0.32, 1.34), bevel=0.03),
+         torus(YELLOW, (-0.3, 0, 0.82), 0.24, 0.09, rot=(90, 0, 25)),
+         torus(YELLOW, (0.3, 0, 0.82), 0.24, 0.09, rot=(90, 0, -25)),
+         ball(YELLOW, (0, 0, 0.74), 0.14)]
+PROPS["gift"] = group("gift", parts, rot=(0, 0, 28))
+
+# heart: for the pets a letter helps
+parts = [ball(PINK, (-0.37, 0, 0.26), (0.53, 0.42, 0.53)), ball(PINK, (0.37, 0, 0.26), (0.53, 0.42, 0.53)),
+         box(PINK, (0, 0, -0.11), (1.05, 0.72, 1.05), rot=(0, 45, 0), bevel=0.16)]   # two rounds on a diamond
+PROPS["heart"] = group("heart", parts, rot=(6, -10, 0))
+
 # camera and soft studio light
 target = bpy.data.objects.new("target", None)
 scene.collection.objects.link(target)
@@ -173,7 +218,11 @@ scene.render.image_settings.file_format = "WEBP"
 scene.render.image_settings.color_mode = "RGBA"
 scene.render.image_settings.quality = 88
 
+ONLY = set(argv[3].split(",")) if len(argv) > 3 else None  # e.g. "letter,gift,heart"
+
 for name in PROPS:
+    if ONLY and name not in ONLY:
+        continue
     for other, (_, objs) in PROPS.items():
         for o in objs:
             o.hide_render = other != name

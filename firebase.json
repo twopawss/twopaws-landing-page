@@ -234,6 +234,14 @@
         "destination": "/200.html"
       },
       {
+        "source": "/claus",
+        "destination": "/200.html"
+      },
+      {
+        "source": "/claus/**",
+        "destination": "/200.html"
+      },
+      {
         "source": "/shipping-and-returns",
         "destination": "/200.html"
       },

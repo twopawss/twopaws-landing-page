@@ -22,6 +22,7 @@ export const LOGO_SRC = "/clay/logo-purple.webp";
 export const siteNavLinks = [
   { href: "/", label: "Home" },
   { href: "/shop/", label: "Shop" },
+  { href: "/claus/", label: "TwoPaws Claus" },
   { href: "/about/", label: "About" },
   { href: "/contact/", label: "Contact" },
 ];

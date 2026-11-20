@@ -18,6 +18,7 @@ const columns = [
     title: "Explore",
     links: [
       { href: "/shop/", label: "Shop" },
+      { href: "/claus/", label: "TwoPaws Claus" },
       { href: "/features/", label: "Features" },
       { href: "/about/", label: "About us" },
     ],

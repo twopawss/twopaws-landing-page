@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 
 type ClayPropProps = {
-  name: "paw" | "bone" | "ball" | "bowl";
+  name: "paw" | "bone" | "ball" | "bowl" | "letter" | "gift" | "heart";
   /** Position and width, e.g. "right-[4%] top-10 w-28". */
   className?: string;
   /** Resting tilt in degrees. */

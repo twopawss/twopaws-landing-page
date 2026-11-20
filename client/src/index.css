@@ -123,6 +123,51 @@
 }
 
 @layer utilities {
+  /* TwoPaws Claus: twinkling stars and an airmail border whose stripes travel. */
+  .twinkle {
+    animation: twinkle 2.8s ease-in-out infinite;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+  }
+
+  @keyframes twinkle {
+    0%, 100% { transform: scale(0.35) rotate(0deg); opacity: 0.25; }
+    50% { transform: scale(1) rotate(20deg); opacity: 1; }
+  }
+
+  .airmail {
+    background-image: repeating-linear-gradient(135deg, #783f6a 0 16px, #ffffff 16px 32px, #df93c0 32px 48px, #ffffff 48px 64px);
+    background-size: 90.51px 90.51px; /* one full stripe cycle (64px) measured along the x axis */
+    animation: airmail-slide 6s linear infinite;
+  }
+
+  @keyframes airmail-slide {
+    to { background-position: 90.51px 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .twinkle, .airmail { animation: none; }
+  }
+
+  /* Falling snow for the TwoPaws Claus hero. */
+  .snowflake {
+    position: absolute;
+    top: -3%;
+    border-radius: 9999px;
+    background: #ffffff;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    animation: snow-fall linear infinite;
+  }
+
+  @keyframes snow-fall {
+    0% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(18px, 52vh, 0); }
+    100% { transform: translate3d(-10px, 106vh, 0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .snowflake { display: none; }
+  }
+
   /* Clay theme for the light parts of the site: a soft tinted backdrop, puffy cards, and floating props. */
   .clay-bg {
     background-color: #fdf6fa;
