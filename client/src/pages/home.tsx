@@ -595,15 +595,15 @@ export default function Home() {
               All features
             </ArrowLink>
           </Reveal>
-          <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-6">
+          <ul className="mt-10 grid grid-cols-2 gap-3 sm:mt-12 sm:gap-5 lg:mt-16 lg:grid-cols-3 lg:gap-6">
             {featureIndex.map(([name, text], i) => (
-              <li key={name} className="clay-card clay-rise flex gap-5 p-6">
-                <span className="w-6 pt-1 text-xs tabular-nums text-[#783F6A]/60">{String(i + 1).padStart(2, "0")}</span>
+              <li key={name} className="clay-card clay-rise flex flex-col gap-1.5 p-4 last:col-span-2 sm:flex-row sm:gap-5 sm:p-6 lg:last:col-span-1">
+                <span className="w-6 text-xs tabular-nums text-[#783F6A]/60 sm:pt-1">{String(i + 1).padStart(2, "0")}</span>
                 <div>
-                  <p style={display} className="text-xl text-[#3d1f3a]">
+                  <p style={display} className="text-lg leading-tight text-[#3d1f3a] sm:text-xl">
                     {name}
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-[#3d1f3a]/70">{text}</p>
+                  <p className="mt-1 text-[13px] leading-snug text-[#3d1f3a]/70 sm:text-sm sm:leading-relaxed">{text}</p>
                 </div>
               </li>
             ))}
